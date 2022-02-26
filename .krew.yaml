@@ -1,0 +1,52 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: pod
+spec:
+  version: {{ .TagName }}
+  platforms:
+  - selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+    {{addURIAndSha https://github.com/NimbleArchitect/kubectl-pod/releases/download/{{ .TagName }}/pod_{{ .TagName }}_linux_amd64.tar.gz .TagName }}
+    files:
+    - from: "./pod"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "pod"
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    {{addURIAndSha https://github.com/NimbleArchitect/kubectl-pod/releases/download/{{ .TagName }}/pod_{{ .TagName }}_darwin_amd64.tar.gz .TagName }}
+    files:
+    - from: "./pod"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "pod"
+  - selector:
+      matchLabels:
+        os: windows
+        arch: amd64
+    {{addURIAndSha https://github.com/NimbleArchitect/kubectl-pod/releases/download/{{ .TagName }}/pod_{{ .TagName }}_windows_amd64.zip .TagName }}
+    files:
+    - from: "/pod.exe"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "pod.exe"
+  shortDescription: A new plugin
+  homepage: https://github.com/NimbleArchitect/kubectl-pod
+  caveats: |
+    Usage:
+      $ kubectl pod
+
+    For additional options:
+      $ kubectl pod --help
+      or https://github.com/NimbleArchitect/kubectl-pod/blob/v0.1.0/doc/USAGE.md
+
+  description: |
+    This is a new plugin
