@@ -7,7 +7,7 @@ test:
 
 .PHONY: bin
 bin: fmt vet
-	go build -o bin/pod github.com/NimbleArchitect/kubectl-pod/cmd/plugin
+	go build -o bin/kubectl-pod github.com/NimbleArchitect/kubectl-pod/cmd/plugin
 
 .PHONY: fmt
 fmt:
