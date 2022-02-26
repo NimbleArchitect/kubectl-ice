@@ -1,0 +1,28 @@
+project_name: pod
+release:
+  github:
+    owner: NimbleArchitect
+    name: kubectl-pod
+builds:
+  - id: pod
+    goos:
+    - linux
+    - windows
+    - darwin
+    goarch:
+    - amd64
+    - "386"
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+    main: cmd/plugin/main.go
+    ldflags: -s -w
+      -X github.com/NimbleArchitect/kubectl-pod/pkg/version.version=
+archives:
+  - id: pod
+    builds:
+    - pod
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+    - goos: windows
+      format: zip
