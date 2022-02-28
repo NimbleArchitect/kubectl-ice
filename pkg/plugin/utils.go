@@ -46,8 +46,9 @@ func loadMetricConfig(configFlags *genericclioptions.ConfigFlags) (metricsclient
 }
 
 // returns a list of pods or a list with one pod when given a pod name
-func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.ConfigFlags, podname string, allNamespaces bool) ([]v1.Pod, error) {
+func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.ConfigFlags, podNameList []string, allNamespaces bool) ([]v1.Pod, error) {
 	namespace := "" // get/list pods will search all namespaces in the current context
+	podList := []v1.Pod{}
 
 	if !allNamespaces {
 		// only set the namespace if we are not searching all namespaces
@@ -57,16 +58,20 @@ func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.Conf
 		}
 	}
 
-	if podname != "" {
-		// single pod
-		pod, err := clientSet.CoreV1().Pods(namespace).Get(context.TODO(), podname, metav1.GetOptions{})
-		if err == nil {
-			podList := []v1.Pod{*pod}
-			return podList, nil
-		} else {
-			return []v1.Pod{}, fmt.Errorf("failed to retrieve pod from server: %w", err)
+	if len(podNameList) > 0 {
+		for _, podname := range podNameList {
+			// single pod
+			pod, err := clientSet.CoreV1().Pods(namespace).Get(context.TODO(), podname, metav1.GetOptions{})
+			if err == nil {
+				podList = append(podList, []v1.Pod{*pod}...)
+			} else {
+				return []v1.Pod{}, fmt.Errorf("failed to retrieve pod from server: %w", err)
+			}
 		}
+
+		return podList, nil
 	} else {
+		// multi pods
 		podList, err := clientSet.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err == nil {
 			return podList.Items, nil
@@ -74,11 +79,13 @@ func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.Conf
 			return []v1.Pod{}, fmt.Errorf("failed to retrieve pod list from server: %w", err)
 		}
 	}
+
 }
 
 //get an array of pod metrics
-func getMetricPods(clientSet metricsclientset.Clientset, configFlags *genericclioptions.ConfigFlags, podname string, allNamespaces bool) ([]v1beta1.PodMetrics, error) {
+func getMetricPods(clientSet metricsclientset.Clientset, configFlags *genericclioptions.ConfigFlags, podNameList []string, allNamespaces bool) ([]v1beta1.PodMetrics, error) {
 	namespace := "" // get/list pods will search all namespaces in the current context
+	podList := []v1beta1.PodMetrics{}
 
 	if !allNamespaces {
 		// only set the namespace if we are not searching all namespaces
@@ -88,15 +95,18 @@ func getMetricPods(clientSet metricsclientset.Clientset, configFlags *genericcli
 		}
 	}
 
-	if podname != "" {
-		// single pod
-		pod, err := clientSet.MetricsV1beta1().PodMetricses(namespace).Get(context.TODO(), podname, metav1.GetOptions{})
-		if err == nil {
-			podList := []v1beta1.PodMetrics{*pod}
-			return podList, nil
-		} else {
-			return []v1beta1.PodMetrics{}, fmt.Errorf("failed to retrieve pod from metrics: %w", err)
+	if len(podNameList) > 0 {
+		for _, podname := range podNameList {
+			// single pod
+			pod, err := clientSet.MetricsV1beta1().PodMetricses(namespace).Get(context.TODO(), podname, metav1.GetOptions{})
+			if err == nil {
+				podList = append(podList, []v1beta1.PodMetrics{*pod}...)
+			} else {
+				return []v1beta1.PodMetrics{}, fmt.Errorf("failed to retrieve pod from metrics: %w", err)
+			}
 		}
+
+		return podList, nil
 	} else {
 		podList, err := clientSet.MetricsV1beta1().PodMetricses(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err == nil {
