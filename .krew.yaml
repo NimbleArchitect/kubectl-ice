@@ -1,7 +1,7 @@
 apiVersion: krew.googlecontainertools.github.com/v1alpha2
 kind: Plugin
 metadata:
-  name: pod
+  name: ice
 spec:
   version: {{ .TagName }}
   platforms:
@@ -9,44 +9,44 @@ spec:
       matchLabels:
         os: linux
         arch: amd64
-    {{addURIAndSha https://github.com/NimbleArchitect/kubectl-pod/releases/download/{{ .TagName }}/pod_{{ .TagName }}_linux_amd64.tar.gz .TagName }}
+    {{addURIAndSha https://github.com/NimbleArchitect/kubectl-ice/releases/download/{{ .TagName }}/ice_{{ .TagName }}_linux_amd64.tar.gz .TagName }}
     files:
-    - from: "./pod"
+    - from: "./ice"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "pod"
+    bin: "ice"
   - selector:
       matchLabels:
         os: darwin
         arch: amd64
-    {{addURIAndSha https://github.com/NimbleArchitect/kubectl-pod/releases/download/{{ .TagName }}/pod_{{ .TagName }}_darwin_amd64.tar.gz .TagName }}
+    {{addURIAndSha https://github.com/NimbleArchitect/kubectl-ice/releases/download/{{ .TagName }}/ice_{{ .TagName }}_darwin_amd64.tar.gz .TagName }}
     files:
-    - from: "./pod"
+    - from: "./ice"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "pod"
+    bin: "ice"
   - selector:
       matchLabels:
         os: windows
         arch: amd64
-    {{addURIAndSha https://github.com/NimbleArchitect/kubectl-pod/releases/download/{{ .TagName }}/pod_{{ .TagName }}_windows_amd64.zip .TagName }}
+    {{addURIAndSha https://github.com/NimbleArchitect/kubectl-ice/releases/download/{{ .TagName }}/ice_{{ .TagName }}_windows_amd64.zip .TagName }}
     files:
-    - from: "/pod.exe"
+    - from: "/ice.exe"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "pod.exe"
+    bin: "ice.exe"
   shortDescription: A new plugin
-  homepage: https://github.com/NimbleArchitect/kubectl-pod
+  homepage: https://github.com/NimbleArchitect/kubectl-ice
   caveats: |
     Usage:
-      $ kubectl pod
+      $ kubectl ice
 
     For additional options:
-      $ kubectl pod --help
-      or https://github.com/NimbleArchitect/kubectl-pod/blob/{{ .TagName }}/README.md
+      $ kubectl ice --help
+      or https://github.com/NimbleArchitect/kubectl-ice/blob/{{ .TagName }}/README.md
 
   description: |
     Plugin to view info on the containers within a pod

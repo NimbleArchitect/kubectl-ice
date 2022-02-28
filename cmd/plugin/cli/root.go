@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/NimbleArchitect/kubectl-pod/pkg/plugin"
+	"github.com/NimbleArchitect/kubectl-ice/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -17,7 +17,7 @@ var (
 
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "pod",
+		Use:           "ice",
 		Short:         "",
 		Long:          `.`,
 		SilenceErrors: true,
