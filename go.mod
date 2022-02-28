@@ -1,4 +1,4 @@
-module github.com/NimbleArchitect/kubectl-pod
+module github.com/NimbleArchitect/kubectl-ice
 
 go 1.16
 

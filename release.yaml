@@ -1,7 +1,7 @@
 apiVersion: krew.googlecontainertools.github.com/v1alpha2
 kind: Plugin
 metadata:
-  name: pod
+  name: ice
 spec:
   version: "v0.1.0"
   platforms:
@@ -9,47 +9,47 @@ spec:
       matchLabels:
         os: linux
         arch: amd64
-    uri: https://github.com/NimbleArchitect/kubectl-pod/releases/download/v0.1.0/pod_linux_amd64.tar.gz
+    uri: https://github.com/NimbleArchitect/kubectl-ice/releases/download/v0.1.0/ice_linux_amd64.tar.gz
     sha256: ""
     files:
-    - from: "./pod"
+    - from: "./ice"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "pod"
+    bin: "ice"
   - selector:
       matchLabels:
         os: darwin
         arch: amd64
-    uri: https://github.com/NimbleArchitect/kubectl-pod/releases/download/v0.1.0/pod_darwin_amd64.tar.gz
+    uri: https://github.com/NimbleArchitect/kubectl-ice/releases/download/v0.1.0/ice_darwin_amd64.tar.gz
     sha256: ""
     files:
-    - from: "./pod"
+    - from: "./ice"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "pod"
+    bin: "ice"
   - selector:
       matchLabels:
         os: windows
         arch: amd64
-    uri: https://github.com/NimbleArchitect/kubectl-pod/releases/download/v0.1.0/pod_windows_amd64.zip
+    uri: https://github.com/NimbleArchitect/kubectl-ice/releases/download/v0.1.0/ice_windows_amd64.zip
     sha256: ""
     files:
-    - from: "/pod.exe"
+    - from: "/ice.exe"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "pod.exe"
+    bin: "ice.exe"
   shortDescription: A new plugin
-  homepage: https://github.com/NimbleArchitect/kubectl-pod
+  homepage: https://github.com/NimbleArchitect/kubectl-ice
   caveats: |
     Usage:
-      $ kubectl pod
+      $ kubectl ice
 
     For additional options:
-      $ kubectl pod --help
-      or https://github.com/NimbleArchitect/kubectl-pod/blob/v0.1.0/doc/USAGE.md
+      $ kubectl ice --help
+      or https://github.com/NimbleArchitect/kubectl-ice/blob/v0.1.0/doc/USAGE.md
 
   description: |
     This is a new plugin
