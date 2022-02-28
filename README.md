@@ -1,5 +1,6 @@
-(Still in development)
-
+## *Still in development*
+```
+```
 # kubectl-ice
 
 This plugin shows useful information about the containers inside a pod
@@ -21,13 +22,12 @@ go get https://github.com/NimbleArchitect/kubectl-ice
 
 The following command are available for `kubectl ice`
 ```
-kubectl ice cpu        # return cpu requests size and limits of each container
+kubectl ice cpu        # return cpu requests size, limits and usage of each container
 kubectl ice help       # Shows the help screen
 kubectl ice image      # list the image name and pull status for each container
 kubectl ice ip         # list ip addresses of all pods in the namespace listed
-kubectl ice memory     # return memory requests size and limits of each container
+kubectl ice memory     # return memory requests size, limits and usage of each container
 kubectl ice restarts   # show restart counts for each container in a named pod
-kubectl ice stats      # list resource usage of each container in a pod
 kubectl ice status     # list status of each container in a pod
 kubectl ice volumes    # list all container volumes with mount points
 ```
@@ -40,17 +40,19 @@ Usage:
   ice cpu [flags]
 
 Flags:
-  -h, --help   help for cpu
+  -A, --all-namespaces   list containers form pods in all namespaces
+  -h, --help             help for status
 ```
+also includes standard common kubctl flags
 
 #### Example
 ```shell
 $ kubectl ice cpu myapp
-T  NAME         REQUEST  LIMIT
-S  app-watcher  20m      50m
-S  app-broken   20m      50m
-S  myapp        500m     1
-I  app-init     0        0
+T  NAME         USED  REQUEST  LIMIT   %REQ  %LIMIT
+S  app-watcher  0     20m      50m     0     0
+S  app-broken   0     20m      50m     0     0
+S  myapp        1     500m     1       200   100
+I  app-init     0        0     0       0     0
 ```
 
 ### Image
@@ -64,8 +66,10 @@ Aliases:
   image, im
 
 Flags:
-  -h, --help   help for image
+  -A, --all-namespaces   list containers form pods in all namespaces
+  -h, --help             help for status
 ```
+also includes standard common kubctl flags
 
 #### Example
 ```shell
@@ -85,8 +89,10 @@ Usage:
   ice ip [flags]
 
 Flags:
-  -h, --help   help for ip
+  -A, --all-namespaces   list containers form pods in all namespaces
+  -h, --help             help for status
 ```
+also includes standard common kubctl flags
 
 #### Example
 ```shell
@@ -106,17 +112,19 @@ Aliases:
   memory, mem
 
 Flags:
-  -h, --help   help for memory
+  -A, --all-namespaces   list containers form pods in all namespaces
+  -h, --help             help for status
 ```
+also includes standard common kubctl flags
 
 #### Example
 ```shell
 $ kubectl ice memory myapp
-T  NAME         REQUEST  LIMIT
-S  app-watcher  500Mi    800Mi
-S  app-broken   500Mi    800Mi
-S  myapp        500Mi    800Mi
-I  app-init     0        0
+T  NAME         USED  REQUEST  LIMIT   %REQ  %LIMIT
+S  app-watcher  0     500Mi    800Mi   0     0
+S  app-broken   0     500Mi    800Mi   0     0
+S  myapp        1     500Mi    800Mi   0.12  0
+I  app-init     0        0     -       -     -
 ```
 
 ### Restarts
@@ -130,8 +138,10 @@ Aliases:
   restarts, restart
 
 Flags:
-  -h, --help   help for restarts
+  -A, --all-namespaces   list containers form pods in all namespaces
+  -h, --help             help for status
 ```
+also includes standard common kubctl flags
 
 #### Example
 ```shell
@@ -154,9 +164,11 @@ Aliases:
   stats, top, ps
 
 Flags:
-  -h, --help   help for stats
-  -r, --raw    show raw uncooked values
+  -A, --all-namespaces   list containers form pods in all namespaces
+  -h, --help             help for status
+  -r, --raw              show raw uncooked values
 ```
+also includes standard common kubctl flags
 
 #### Example
 ```shell
@@ -179,8 +191,12 @@ Aliases:
   status, st
 
 Flags:
-  -h, --help       help for status
-  -p, --previous   show previous state
+  -A, --all-namespaces   list containers form pods in all namespaces
+  -h, --help             help for status
+  -p, --previous         show previous state
+```
+also includes standard common kubctl flags
+
 ```
 
 #### Example
@@ -205,8 +221,11 @@ Aliases:
   volumes, volume, vol
 
 Flags:
-  -h, --help   help for volumes
+  -A, --all-namespaces   list containers form pods in all namespaces
+  -h, --help             help for status
 ```
+also includes standard common kubctl flags
+
 
 #### Example
 ```shell

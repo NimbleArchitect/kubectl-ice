@@ -107,7 +107,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 
 	var cmdMemory = &cobra.Command{
 		Use:     "memory",
-		Short:   "return memory requests size and limits of each container",
+		Short:   "return memory requests size, limits and usage of each container",
 		Long:    "",
 		Aliases: []string{"mem"},
 		// SuggestFor: []string{""},
@@ -127,7 +127,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 
 	var cmdCPU = &cobra.Command{
 		Use:   "cpu",
-		Short: "return cpu requests size and limits of each container",
+		Short: "return cpu requests size, limits and usage of each container",
 		Long:  "",
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {

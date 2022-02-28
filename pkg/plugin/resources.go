@@ -10,7 +10,7 @@ import (
 )
 
 func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string, resourceType string) error {
-	var podname string
+	var podname []string
 	var showPodName bool = true
 	var showRaw bool
 	var idx int
@@ -21,11 +21,10 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		return err
 	}
 
-	// fmt.Println(args)
-	//TODO: allow multipule pods to be specified on cmdline
+	// if a single pod is selected we dont need to show its name
 	if len(args) >= 1 {
-		podname = args[0]
-		if len(podname) >= 1 {
+		podname = args
+		if len(podname[0]) >= 1 {
 			showPodName = false
 		}
 	}
@@ -116,7 +115,7 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, conta
 				}
 				// check cpu requests has a value
 				if container.Resources.Requests.Cpu().AsApproximateFloat64() == 0 {
-					percentLimit = "-"
+					percentRequest = "-"
 				} else {
 					val := validateFloat64(cpuVal / container.Resources.Requests.Cpu().AsApproximateFloat64() * 100)
 					percentRequest = fmt.Sprintf(floatfmt, val)
@@ -147,7 +146,7 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, conta
 				}
 				// check memory requests has a value
 				if container.Resources.Requests.Memory().AsApproximateFloat64() == 0 {
-					percentLimit = "-"
+					percentRequest = "-"
 				} else {
 					val := validateFloat64(memVal / container.Resources.Requests.Memory().AsApproximateFloat64() * 100)
 					percentRequest = fmt.Sprintf(floatfmt, val)
@@ -160,8 +159,8 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, conta
 		containerType,
 		container.Name,
 		displayValue,
-		limit,
 		request,
+		limit,
 		percentRequest,
 		percentLimit,
 	}
