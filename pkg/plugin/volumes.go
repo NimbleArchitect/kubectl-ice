@@ -13,8 +13,9 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	var podname string
 	var showPodName bool = true
 	var idx int
+	var allNamespaces bool
 
-	clientset, err := loadConfig(kubeFlags, cmd)
+	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
 		return err
 	}
@@ -28,7 +29,11 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 		}
 	}
 
-	podList, err := getPods(clientset, kubeFlags, podname)
+	if cmd.Flag("all-namespaces").Value.String() == "true" {
+		allNamespaces = true
+	}
+
+	podList, err := getPods(clientset, kubeFlags, podname, allNamespaces)
 	if err != nil {
 		return err
 	}
@@ -36,7 +41,7 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	table := make(map[int][]string)
 	table[0] = []string{"CONTAINER", "VOLUME", "TYPE", "BACKING", "SIZE", "RO", "MOUNT-POINT"}
 
-	if showPodName == true {
+	if showPodName {
 		// we need to add the pod name to the table
 		table[0] = append([]string{"PODNAME"}, table[0]...)
 	}
@@ -49,7 +54,7 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 			for _, mount := range container.VolumeMounts {
 				idx++
 				table[idx] = volumesBuildRow(container, podVolumes, mount)
-				if showPodName == true {
+				if showPodName {
 					table[idx] = append([]string{pod.Name}, table[idx]...)
 				}
 			}
@@ -69,7 +74,7 @@ func createVolumeMap(volumes []v1.Volume) map[string]map[string]string {
 		// fmt.Println("===", v.Kind())
 
 		for i := 0; i < v.NumField(); i++ {
-			if v.Field(i).IsZero() == false {
+			if !v.Field(i).IsZero() {
 				name := fmt.Sprintf("%v", typeOfS.Field(i).Name)
 				podMap[vol.Name] = decodeVolumeType(name, vol.VolumeSource)
 			}

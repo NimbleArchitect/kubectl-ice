@@ -11,27 +11,6 @@ import (
 func InitSubCommands(rootCmd *cobra.Command) {
 	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
 
-	var cmdStats = &cobra.Command{
-		Use:     "stats",
-		Short:   "list resource usage of each container in a pod",
-		Long:    "",
-		Aliases: []string{"top", "ps"},
-		// SuggestFor: []string{""},
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlags(cmd.Flags())
-		},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := Stats(cmd, KubernetesConfigFlags, args); err != nil {
-				return errors.Unwrap(err)
-			}
-
-			return nil
-		},
-	}
-	KubernetesConfigFlags.AddFlags(cmdStats.Flags())
-	cmdStats.Flags().BoolP("raw", "r", false, "show raw values")
-	rootCmd.AddCommand(cmdStats)
-
 	var cmdStatus = &cobra.Command{
 		Use:     "status",
 		Short:   "list status of each container in a pod",
@@ -51,6 +30,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	KubernetesConfigFlags.AddFlags(cmdStatus.Flags())
 	cmdStatus.Flags().BoolP("previous", "p", false, "show previous state")
+	addCommonFlags(cmdStatus)
 	rootCmd.AddCommand(cmdStatus)
 
 	var cmdVolume = &cobra.Command{
@@ -68,6 +48,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdVolume.Flags())
+	addCommonFlags(cmdVolume)
 	rootCmd.AddCommand(cmdVolume)
 
 	var cmdIP = &cobra.Command{
@@ -84,6 +65,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdIP.Flags())
+	addCommonFlags(cmdIP)
 	rootCmd.AddCommand(cmdIP)
 
 	var cmdImage = &cobra.Command{
@@ -101,6 +83,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdImage.Flags())
+	addCommonFlags(cmdImage)
 	rootCmd.AddCommand(cmdImage)
 
 	var cmdRestart = &cobra.Command{
@@ -119,6 +102,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdRestart.Flags())
+	addCommonFlags(cmdRestart)
 	rootCmd.AddCommand(cmdRestart)
 
 	var cmdMemory = &cobra.Command{
@@ -137,6 +121,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdMemory.Flags())
+	cmdMemory.Flags().BoolP("raw", "r", false, "show raw values")
+	addCommonFlags(cmdMemory)
 	rootCmd.AddCommand(cmdMemory)
 
 	var cmdCPU = &cobra.Command{
@@ -153,5 +139,11 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdCPU.Flags())
+	cmdCPU.Flags().BoolP("raw", "r", false, "show raw values")
+	addCommonFlags(cmdCPU)
 	rootCmd.AddCommand(cmdCPU)
+}
+
+func addCommonFlags(cmdObj *cobra.Command) {
+	cmdObj.Flags().BoolP("all-namespaces", "A", false, "list containers form pods in all namespaces")
 }

@@ -13,6 +13,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	var showPodName bool = true
 	var showPrevious bool
 	var idx int
+	var allNamespaces bool
 
 	// onfigTest(cmd, kubeFlags, args)
 	// if true {
@@ -20,7 +21,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	// }
 
 	// kubeFlags.AddFlags(flagList)
-	clientset, err := loadConfig(kubeFlags, cmd)
+	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
 		return err
 	}
@@ -34,7 +35,11 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		}
 	}
 
-	podList, err := getPods(clientset, kubeFlags, podname)
+	if cmd.Flag("all-namespaces").Value.String() == "true" {
+		allNamespaces = true
+	}
+
+	podList, err := getPods(clientset, kubeFlags, podname, allNamespaces)
 	if err != nil {
 		return err
 	}
@@ -44,13 +49,13 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	}
 
 	table := make(map[int][]string)
-	if showPrevious == false {
+	if !showPrevious {
 		table[0] = []string{"T", "NAME", "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE"}
 	} else {
 		table[0] = []string{"T", "NAME", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE"}
 	}
 
-	if showPodName == true {
+	if showPodName {
 		// we need to add the pod name to the table
 		table[0] = append([]string{"PODNAME"}, table[0]...)
 	}
@@ -59,14 +64,14 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		for _, container := range pod.Status.ContainerStatuses {
 			idx++
 			table[idx] = statusBuildRow(container, "S", showPrevious)
-			if showPodName == true {
+			if showPodName {
 				table[idx] = append([]string{pod.Name}, table[idx]...)
 			}
 		}
 		for _, container := range pod.Status.InitContainerStatuses {
 			idx++
 			table[idx] = statusBuildRow(container, "I", showPrevious)
-			if showPodName == true {
+			if showPodName {
 				table[idx] = append([]string{pod.Name}, table[idx]...)
 			}
 		}
@@ -88,7 +93,7 @@ func statusBuildRow(container v1.ContainerStatus, containerType string, showPrev
 
 	// fmt.Println("F:statusBuildRow:Name=", container.Name)
 
-	if showPrevious == true {
+	if showPrevious {
 		state = container.LastTerminationState
 	} else {
 		state = container.State
@@ -120,7 +125,7 @@ func statusBuildRow(container v1.ContainerStatus, containerType string, showPrev
 	ready := fmt.Sprintf("%t", container.Ready)
 	restarts := fmt.Sprintf("%d", container.RestartCount)
 
-	if showPrevious == true {
+	if showPrevious {
 		return []string{
 			containerType,
 			container.Name,

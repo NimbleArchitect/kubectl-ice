@@ -1,3 +1,5 @@
+(Still in development)
+
 # kubectl-ice
 
 This plugin shows useful information about the containers inside a pod
