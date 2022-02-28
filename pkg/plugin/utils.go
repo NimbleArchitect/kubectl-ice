@@ -6,7 +6,6 @@ import (
 	"math"
 	"strings"
 
-	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -16,14 +15,13 @@ import (
 )
 
 //load config for the k8s endpoint
-func loadConfig(configFlags *genericclioptions.ConfigFlags, cmd *cobra.Command) (kubernetes.Clientset, error) {
+func loadConfig(configFlags *genericclioptions.ConfigFlags) (kubernetes.Clientset, error) {
 
 	config, err := configFlags.ToRESTConfig()
 	if err != nil {
 		return kubernetes.Clientset{}, fmt.Errorf("failed to read kubeconfig: %w", err)
 	}
 
-	// clientcmd.ModifyConfig(clientcmd.NewDefaultPathOptions(), config, true)
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return kubernetes.Clientset{}, fmt.Errorf("failed to create clientset: %w", err)
@@ -48,45 +46,65 @@ func loadMetricConfig(configFlags *genericclioptions.ConfigFlags) (metricsclient
 }
 
 // returns a list of pods or a list with one pod when given a pod name
-func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.ConfigFlags, podname string) ([]v1.Pod, error) {
-	var err error
+func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.ConfigFlags, podname string, allNamespaces bool) ([]v1.Pod, error) {
+	namespace := "" // get/list pods will search all namespaces in the current context
 
-	namespace := *configFlags.Namespace
+	if !allNamespaces {
+		// only set the namespace if we are not searching all namespaces
+		namespace = *configFlags.Namespace
+		if namespace == "" {
+			namespace = "default"
+		}
+	}
+
 	if podname != "" {
 		// single pod
 		pod, err := clientSet.CoreV1().Pods(namespace).Get(context.TODO(), podname, metav1.GetOptions{})
 		if err == nil {
 			podList := []v1.Pod{*pod}
 			return podList, nil
+		} else {
+			return []v1.Pod{}, fmt.Errorf("failed to retrieve pod from server: %w", err)
 		}
 	} else {
 		podList, err := clientSet.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err == nil {
 			return podList.Items, nil
+		} else {
+			return []v1.Pod{}, fmt.Errorf("failed to retrieve pod list from server: %w", err)
 		}
 	}
-	return nil, err
 }
 
 //get an array of pod metrics
-func getMetricPods(clientSet metricsclientset.Clientset, configFlags *genericclioptions.ConfigFlags, podname string) ([]v1beta1.PodMetrics, error) {
-	var err error
+func getMetricPods(clientSet metricsclientset.Clientset, configFlags *genericclioptions.ConfigFlags, podname string, allNamespaces bool) ([]v1beta1.PodMetrics, error) {
+	namespace := "" // get/list pods will search all namespaces in the current context
 
-	namespace := *configFlags.Namespace
+	if !allNamespaces {
+		// only set the namespace if we are not searching all namespaces
+		namespace = *configFlags.Namespace
+		if namespace == "" {
+			namespace = "default"
+		}
+	}
+
 	if podname != "" {
 		// single pod
 		pod, err := clientSet.MetricsV1beta1().PodMetricses(namespace).Get(context.TODO(), podname, metav1.GetOptions{})
 		if err == nil {
 			podList := []v1beta1.PodMetrics{*pod}
 			return podList, nil
+		} else {
+			return []v1beta1.PodMetrics{}, fmt.Errorf("failed to retrieve pod from metrics: %w", err)
 		}
 	} else {
 		podList, err := clientSet.MetricsV1beta1().PodMetricses(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err == nil {
 			return podList.Items, nil
+		} else {
+			return []v1beta1.PodMetrics{}, fmt.Errorf("failed to retrieve pod list from metrics: %w", err)
 		}
 	}
-	return nil, err
 }
 
 //print the array as a table, auto adjusts column widths

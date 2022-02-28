@@ -6,14 +6,17 @@ import (
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	v1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 )
 
 func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string, resourceType string) error {
 	var podname string
 	var showPodName bool = true
+	var showRaw bool
 	var idx int
+	var allNamespaces bool
 
-	clientset, err := loadConfig(kubeFlags, cmd)
+	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
 		return err
 	}
@@ -27,59 +30,151 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		}
 	}
 
-	podList, err := getPods(clientset, kubeFlags, podname)
+	if cmd.Flag("all-namespaces").Value.String() == "true" {
+		allNamespaces = true
+	}
+
+	podList, err := getPods(clientset, kubeFlags, podname, allNamespaces)
 	if err != nil {
 		return err
 	}
 
-	table := make(map[int][]string)
-	table[0] = []string{"T", "NAME", "REQUEST", "LIMIT"}
+	metricset, err := loadMetricConfig(kubeFlags)
+	if err != nil {
+		return err
+	}
+	podStateList, err := getMetricPods(metricset, kubeFlags, podname, allNamespaces)
+	if err != nil {
+		return err
+	}
 
-	if showPodName == true {
+	if cmd.Flag("raw").Value.String() == "true" {
+		showRaw = true
+	}
+
+	table := make(map[int][]string)
+	table[0] = []string{"T", "NAME", "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT"}
+
+	if showPodName {
 		// we need to add the pod name to the table
 		table[0] = append([]string{"PODNAME"}, table[0]...)
 	}
 
+	podState := podMetrics2Hashtable(podStateList)
 	for _, pod := range podList {
-		for _, container := range pod.Spec.Containers {
+		// process init containers
+		for _, container := range pod.Spec.InitContainers {
 			idx++
-			table[idx] = resourcesBuildRow(container, "S", resourceType)
-			if showPodName == true {
+			table[idx] = statsProcessTableRow(container, podState[pod.Name][container.Name], "I", resourceType, showRaw)
+			if showPodName {
+				// add podname to the beginning of the row
 				table[idx] = append([]string{pod.Name}, table[idx]...)
 			}
 		}
-		for _, container := range pod.Spec.InitContainers {
+
+		// process standard containers
+		for _, container := range pod.Spec.Containers {
 			idx++
-			table[idx] = resourcesBuildRow(container, "I", resourceType)
-			if showPodName == true {
+			table[idx] = statsProcessTableRow(container, podState[pod.Name][container.Name], "S", resourceType, showRaw)
+			if showPodName {
+				// add podname to the beginning of the row
 				table[idx] = append([]string{pod.Name}, table[idx]...)
 			}
 		}
 	}
+
 	showTable(table)
 	return nil
-
 }
 
-func resourcesBuildRow(container v1.Container, containerType string, resourceType string) []string {
-	var request string
-	var limit string
+func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, containerType string, resource string, showRaw bool) []string {
+	floatfmt := "%f"
+	displayValue := ""
+	request := ""
+	limit := ""
+	percentLimit := ""
+	percentRequest := ""
 
-	if resourceType == "cpu" {
-		limit = container.Resources.Limits.Cpu().String()
-		request = container.Resources.Requests.Cpu().String()
-	} else if resourceType == "memory" {
-		limit = container.Resources.Limits.Memory().String()
-		request = container.Resources.Requests.Memory().String()
-	} else {
-		fmt.Println("EROR: invalid resource")
+	if resource == "cpu" {
+		if metrics.Cpu() != nil {
+			if showRaw {
+				displayValue = metrics.Cpu().String()
+			} else {
+				displayValue = fmt.Sprintf("%d", metrics.Cpu().MilliValue())
+				floatfmt = "%.2f"
+			}
+
+			limit = container.Resources.Limits.Cpu().String()
+			request = container.Resources.Requests.Cpu().String()
+			if cpuVal := metrics.Cpu().AsApproximateFloat64(); cpuVal > 0 {
+				// check cpu limits has a value
+				if container.Resources.Limits.Cpu().AsApproximateFloat64() == 0 {
+					percentLimit = "-"
+				} else {
+					val := validateFloat64(cpuVal / container.Resources.Limits.Cpu().AsApproximateFloat64() * 100)
+					percentLimit = fmt.Sprintf(floatfmt, val)
+				}
+				// check cpu requests has a value
+				if container.Resources.Requests.Cpu().AsApproximateFloat64() == 0 {
+					percentLimit = "-"
+				} else {
+					val := validateFloat64(cpuVal / container.Resources.Requests.Cpu().AsApproximateFloat64() * 100)
+					percentRequest = fmt.Sprintf(floatfmt, val)
+				}
+			}
+		}
+
+	}
+
+	if resource == "memory" {
+		if metrics.Memory() != nil {
+			if showRaw {
+				displayValue = fmt.Sprintf("%d", metrics.Memory().Value())
+			} else {
+				displayValue = memoryHumanReadable(metrics.Memory().Value())
+				floatfmt = "%.2f"
+			}
+
+			limit = container.Resources.Limits.Memory().String()
+			request = container.Resources.Requests.Memory().String()
+			if memVal := metrics.Memory().AsApproximateFloat64(); memVal > 0 {
+				// check memory limits has a value
+				if container.Resources.Limits.Memory().AsApproximateFloat64() == 0 {
+					percentLimit = "-"
+				} else {
+					val := validateFloat64(memVal / container.Resources.Limits.Memory().AsApproximateFloat64() * 100)
+					percentLimit = fmt.Sprintf(floatfmt, val)
+				}
+				// check memory requests has a value
+				if container.Resources.Requests.Memory().AsApproximateFloat64() == 0 {
+					percentLimit = "-"
+				} else {
+					val := validateFloat64(memVal / container.Resources.Requests.Memory().AsApproximateFloat64() * 100)
+					percentRequest = fmt.Sprintf(floatfmt, val)
+				}
+			}
+		}
 	}
 
 	return []string{
 		containerType,
 		container.Name,
-		request,
+		displayValue,
 		limit,
+		request,
+		percentRequest,
+		percentLimit,
 	}
+}
 
+func podMetrics2Hashtable(stateList []v1beta1.PodMetrics) map[string]map[string]v1.ResourceList {
+	podState := make(map[string]map[string]v1.ResourceList)
+
+	for _, pod := range stateList {
+		podState[pod.Name] = make(map[string]v1.ResourceList)
+		for _, container := range pod.Containers {
+			podState[pod.Name][container.Name] = container.Usage
+		}
+	}
+	return podState
 }

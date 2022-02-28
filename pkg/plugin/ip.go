@@ -9,8 +9,9 @@ func IP(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []str
 	var podname string
 	var showPodName bool
 	var idx int
+	var allNamespaces bool
 
-	clientset, err := loadConfig(kubeFlags, cmd)
+	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
 		return err
 	}
@@ -25,7 +26,11 @@ func IP(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []str
 		}
 	}
 
-	podList, err := getPods(clientset, kubeFlags, podname)
+	if cmd.Flag("all-namespaces").Value.String() == "true" {
+		allNamespaces = true
+	}
+
+	podList, err := getPods(clientset, kubeFlags, podname, allNamespaces)
 	if err != nil {
 		return err
 	}
@@ -33,7 +38,7 @@ func IP(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []str
 	table := make(map[int][]string)
 	table[0] = []string{"NAME", "IP"}
 
-	if showPodName == true {
+	if showPodName {
 		// we need to add the pod name to the table
 		table[0] = append([]string{"PODNAME"}, table[0]...)
 	}
