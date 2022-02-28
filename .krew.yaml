@@ -46,7 +46,7 @@ spec:
 
     For additional options:
       $ kubectl pod --help
-      or https://github.com/NimbleArchitect/kubectl-pod/blob/v0.1.0/doc/USAGE.md
+      or https://github.com/NimbleArchitect/kubectl-pod/blob/{{ .TagName }}/README.md
 
   description: |
-    This is a new plugin
+    Plugin to view info on the containers within a pod
