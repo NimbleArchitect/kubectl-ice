@@ -1,9 +1,11 @@
 ## *Still in development*
-```
-```
+
 # kubectl-ice
 
-This plugin shows useful information about the containers inside a pod
+This plugin shows useful information about the containers inside a pod useful for trouble shooting container issues
+
+
+** *requires metrics server* **
 
 # Installation
 
@@ -15,7 +17,8 @@ This plugin shows useful information about the containers inside a pod
 ## From Source
 
 ```shell
-go get https://github.com/NimbleArchitect/kubectl-ice
+git clone https://github.com/NimbleArchitect/kubectl-ice.git
+make bin
 ```
 
 ## Usage
