@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	v1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
 )
@@ -45,18 +47,42 @@ func loadMetricConfig(configFlags *genericclioptions.ConfigFlags) (metricsclient
 	return *metricset, nil
 }
 
+func getNamespace(configFlags *genericclioptions.ConfigFlags, allNamespaces bool) string {
+	namespace := ""
+	ctx := ""
+
+	if allNamespaces {
+		// get/list pods will search all namespaces in the current context
+		return ""
+	}
+
+	// was a namespace specified on the cmd line
+	if len(*configFlags.Namespace) > 0 {
+		return *configFlags.Namespace
+	}
+
+	// now try to load the current namespace for our context
+	clientCfg, _ := clientcmd.NewDefaultClientConfigLoadingRules().Load()
+	// if context was suppiled on cmd line use that
+	if len(*configFlags.Context) > 0 {
+		ctx = *configFlags.Context
+	} else {
+		ctx = clientCfg.CurrentContext
+	}
+
+	namespace = clientCfg.Contexts[ctx].Namespace
+	if len(namespace) > 0 {
+		return namespace
+	}
+
+	return "default"
+}
+
 // returns a list of pods or a list with one pod when given a pod name
 func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.ConfigFlags, podNameList []string, allNamespaces bool) ([]v1.Pod, error) {
-	namespace := "" // get/list pods will search all namespaces in the current context
 	podList := []v1.Pod{}
 
-	if !allNamespaces {
-		// only set the namespace if we are not searching all namespaces
-		namespace = *configFlags.Namespace
-		if namespace == "" {
-			namespace = "default"
-		}
-	}
+	namespace := getNamespace(configFlags, allNamespaces)
 
 	if len(podNameList) > 0 {
 		for _, podname := range podNameList {
@@ -74,7 +100,11 @@ func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.Conf
 		// multi pods
 		podList, err := clientSet.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err == nil {
-			return podList.Items, nil
+			if len(podList.Items) == 0 {
+				return []v1.Pod{}, errors.New("No pods found in default namespace.")
+			} else {
+				return podList.Items, nil
+			}
 		} else {
 			return []v1.Pod{}, fmt.Errorf("failed to retrieve pod list from server: %w", err)
 		}
@@ -84,16 +114,9 @@ func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.Conf
 
 //get an array of pod metrics
 func getMetricPods(clientSet metricsclientset.Clientset, configFlags *genericclioptions.ConfigFlags, podNameList []string, allNamespaces bool) ([]v1beta1.PodMetrics, error) {
-	namespace := "" // get/list pods will search all namespaces in the current context
 	podList := []v1beta1.PodMetrics{}
 
-	if !allNamespaces {
-		// only set the namespace if we are not searching all namespaces
-		namespace = *configFlags.Namespace
-		if namespace == "" {
-			namespace = "default"
-		}
-	}
+	namespace := getNamespace(configFlags, allNamespaces)
 
 	if len(podNameList) > 0 {
 		for _, podname := range podNameList {
@@ -110,7 +133,11 @@ func getMetricPods(clientSet metricsclientset.Clientset, configFlags *genericcli
 	} else {
 		podList, err := clientSet.MetricsV1beta1().PodMetricses(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err == nil {
-			return podList.Items, nil
+			if len(podList.Items) == 0 {
+				return []v1beta1.PodMetrics{}, errors.New("No pods found in default namespace.")
+			} else {
+				return podList.Items, nil
+			}
 		} else {
 			return []v1beta1.PodMetrics{}, fmt.Errorf("failed to retrieve pod list from metrics: %w", err)
 		}

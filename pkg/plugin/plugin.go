@@ -1,8 +1,6 @@
 package plugin
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -22,7 +20,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := Status(cmd, KubernetesConfigFlags, args); err != nil {
-				return errors.Unwrap(err)
+				return err
 			}
 
 			return nil
@@ -41,7 +39,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := Volumes(cmd, KubernetesConfigFlags, args); err != nil {
-				return errors.Unwrap(err)
+				return err
 			}
 
 			return nil
@@ -58,7 +56,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := IP(cmd, KubernetesConfigFlags, args); err != nil {
-				return errors.Unwrap(err)
+				return err
 			}
 
 			return nil
@@ -76,7 +74,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := Image(cmd, KubernetesConfigFlags, args); err != nil {
-				return errors.Unwrap(err)
+				return err
 			}
 
 			return nil
@@ -95,7 +93,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		// Example: "",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := Restarts(cmd, KubernetesConfigFlags, args); err != nil {
-				return errors.Unwrap(err)
+				return err
 			}
 
 			return nil
@@ -114,7 +112,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		// Example: "",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := Resources(cmd, KubernetesConfigFlags, args, "memory"); err != nil {
-				return errors.Unwrap(err)
+				return err
 			}
 
 			return nil
@@ -132,7 +130,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := Resources(cmd, KubernetesConfigFlags, args, "cpu"); err != nil {
-				return errors.Unwrap(err)
+				return err
 			}
 
 			return nil
