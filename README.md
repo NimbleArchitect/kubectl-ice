@@ -156,6 +156,29 @@ S  myapp        http      8080  TCP
 S  keycloak     https     8443  TCP
 ```
 
+### Probes
+shows details of configured startup, readiness and liveness probes of each container
+
+Usage:
+  ice probes [flags]
+
+Aliases:
+  probes, probe
+
+Flags:
+  -A, --all-namespaces   list containers form pods in all namespaces
+  -h, --help             help for status
+```
+also includes standard common kubectl flags
+
+#### Example
+```shell
+$kubectl ice probes myapp
+CONTAINER     PROBE     DELAY  PERIOD  TIMEOUT  SUCCESS  FAILURE  CHECK    ACTION
+myapp         liveness  0      10      1        1        3        HTTPGet  http://:http/health
+app-broken    liveness  0      10      1        1        3        HTTPGet  http://:http/health
+```
+
 ### Restarts
 show restart counts for each container in a named pod
 
