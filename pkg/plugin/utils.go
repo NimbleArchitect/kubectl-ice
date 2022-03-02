@@ -157,14 +157,15 @@ func showTable(table map[int][]string) {
 	// fmt.Println("F:showTable:len(table)=", len(table))
 	for row := 0; row <= len(table); row++ {
 		//for _, row := range table {
+		line := ""
 		for idx, word := range table[row] {
 			if len(word) == 0 {
 				word = "-"
 			}
 			pad := strings.Repeat(" ", colWidth[idx]-len(word))
-			fmt.Print(word, pad)
+			line += fmt.Sprint(word, pad)
 		}
-		fmt.Println()
+		fmt.Println(strings.TrimRight(line, " "))
 	}
 }
 
