@@ -9,6 +9,142 @@ import (
 func InitSubCommands(rootCmd *cobra.Command) {
 	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
 
+	//cpu
+	var cmdCPU = &cobra.Command{
+		Use:   "cpu",
+		Short: "return cpu requests size, limits and usage of each container",
+		Long:  "",
+		// SuggestFor: []string{""},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := Resources(cmd, KubernetesConfigFlags, args, "cpu"); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	KubernetesConfigFlags.AddFlags(cmdCPU.Flags())
+	cmdCPU.Flags().BoolP("raw", "r", false, "show raw values")
+	addCommonFlags(cmdCPU)
+	rootCmd.AddCommand(cmdCPU)
+
+	//ip
+	var cmdIP = &cobra.Command{
+		Use:   "ip",
+		Short: "list ip addresses of all pods in the namespace listed",
+		Long:  "",
+		// SuggestFor: []string{""},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := IP(cmd, KubernetesConfigFlags, args); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	KubernetesConfigFlags.AddFlags(cmdIP.Flags())
+	addCommonFlags(cmdIP)
+	rootCmd.AddCommand(cmdIP)
+
+	//image
+	var cmdImage = &cobra.Command{
+		Use:     "image",
+		Short:   "list the image name and pull status for each container",
+		Long:    "",
+		Aliases: []string{"im"},
+		// SuggestFor: []string{""},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := Image(cmd, KubernetesConfigFlags, args); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	KubernetesConfigFlags.AddFlags(cmdImage.Flags())
+	addCommonFlags(cmdImage)
+	rootCmd.AddCommand(cmdImage)
+
+	//memory
+	var cmdMemory = &cobra.Command{
+		Use:     "memory",
+		Short:   "return memory requests size, limits and usage of each container",
+		Long:    "",
+		Aliases: []string{"mem"},
+		// SuggestFor: []string{""},
+		// Example: "",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := Resources(cmd, KubernetesConfigFlags, args, "memory"); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	KubernetesConfigFlags.AddFlags(cmdMemory.Flags())
+	cmdMemory.Flags().BoolP("raw", "r", false, "show raw values")
+	addCommonFlags(cmdMemory)
+	rootCmd.AddCommand(cmdMemory)
+
+	//ports
+	var cmdPorts = &cobra.Command{
+		Use:     "ports",
+		Short:   "shows ports exposed by the containers in a pod",
+		Long:    "",
+		Aliases: []string{"port", "po"},
+		// SuggestFor: []string{""},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := Ports(cmd, KubernetesConfigFlags, args); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	KubernetesConfigFlags.AddFlags(cmdPorts.Flags())
+	addCommonFlags(cmdPorts)
+	rootCmd.AddCommand(cmdPorts)
+
+	//probes
+	var cmdProbes = &cobra.Command{
+		Use:     "probes",
+		Short:   "shows details of configured startup, readiness and liveness probes of each container",
+		Long:    "",
+		Aliases: []string{"probe"},
+		// SuggestFor: []string{""},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := Probes(cmd, KubernetesConfigFlags, args); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	KubernetesConfigFlags.AddFlags(cmdProbes.Flags())
+	addCommonFlags(cmdProbes)
+	rootCmd.AddCommand(cmdProbes)
+
+	//restarts
+	var cmdRestart = &cobra.Command{
+		Use:     "restarts",
+		Short:   "show restart counts for each container in a named pod",
+		Long:    "",
+		Aliases: []string{"restart"},
+		// SuggestFor: []string{""},
+		// Example: "",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := Restarts(cmd, KubernetesConfigFlags, args); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	KubernetesConfigFlags.AddFlags(cmdRestart.Flags())
+	addCommonFlags(cmdRestart)
+	rootCmd.AddCommand(cmdRestart)
+
+	//status
 	var cmdStatus = &cobra.Command{
 		Use:     "status",
 		Short:   "list status of each container in a pod",
@@ -31,6 +167,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdStatus)
 	rootCmd.AddCommand(cmdStatus)
 
+	//volumes
 	var cmdVolume = &cobra.Command{
 		Use:     "volumes",
 		Short:   "list all container volumes with mount points",
@@ -49,115 +186,6 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdVolume)
 	rootCmd.AddCommand(cmdVolume)
 
-	var cmdIP = &cobra.Command{
-		Use:   "ip",
-		Short: "list ip addresses of all pods in the namespace listed",
-		Long:  "",
-		// SuggestFor: []string{""},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := IP(cmd, KubernetesConfigFlags, args); err != nil {
-				return err
-			}
-
-			return nil
-		},
-	}
-	KubernetesConfigFlags.AddFlags(cmdIP.Flags())
-	addCommonFlags(cmdIP)
-	rootCmd.AddCommand(cmdIP)
-
-	var cmdImage = &cobra.Command{
-		Use:     "image",
-		Short:   "list the image name and pull status for each container",
-		Long:    "",
-		Aliases: []string{"im"},
-		// SuggestFor: []string{""},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := Image(cmd, KubernetesConfigFlags, args); err != nil {
-				return err
-			}
-
-			return nil
-		},
-	}
-	KubernetesConfigFlags.AddFlags(cmdImage.Flags())
-	addCommonFlags(cmdImage)
-	rootCmd.AddCommand(cmdImage)
-
-	var cmdRestart = &cobra.Command{
-		Use:     "restarts",
-		Short:   "show restart counts for each container in a named pod",
-		Long:    "",
-		Aliases: []string{"restart"},
-		// SuggestFor: []string{""},
-		// Example: "",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := Restarts(cmd, KubernetesConfigFlags, args); err != nil {
-				return err
-			}
-
-			return nil
-		},
-	}
-	KubernetesConfigFlags.AddFlags(cmdRestart.Flags())
-	addCommonFlags(cmdRestart)
-	rootCmd.AddCommand(cmdRestart)
-
-	var cmdMemory = &cobra.Command{
-		Use:     "memory",
-		Short:   "return memory requests size, limits and usage of each container",
-		Long:    "",
-		Aliases: []string{"mem"},
-		// SuggestFor: []string{""},
-		// Example: "",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := Resources(cmd, KubernetesConfigFlags, args, "memory"); err != nil {
-				return err
-			}
-
-			return nil
-		},
-	}
-	KubernetesConfigFlags.AddFlags(cmdMemory.Flags())
-	cmdMemory.Flags().BoolP("raw", "r", false, "show raw values")
-	addCommonFlags(cmdMemory)
-	rootCmd.AddCommand(cmdMemory)
-
-	var cmdCPU = &cobra.Command{
-		Use:   "cpu",
-		Short: "return cpu requests size, limits and usage of each container",
-		Long:  "",
-		// SuggestFor: []string{""},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := Resources(cmd, KubernetesConfigFlags, args, "cpu"); err != nil {
-				return err
-			}
-
-			return nil
-		},
-	}
-	KubernetesConfigFlags.AddFlags(cmdCPU.Flags())
-	cmdCPU.Flags().BoolP("raw", "r", false, "show raw values")
-	addCommonFlags(cmdCPU)
-	rootCmd.AddCommand(cmdCPU)
-
-	var cmdPorts = &cobra.Command{
-		Use:     "ports",
-		Short:   "shows ports exposed by the containers in a pod",
-		Long:    "",
-		Aliases: []string{"port", "po"},
-		// SuggestFor: []string{""},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := Ports(cmd, KubernetesConfigFlags, args); err != nil {
-				return err
-			}
-
-			return nil
-		},
-	}
-	KubernetesConfigFlags.AddFlags(cmdPorts.Flags())
-	addCommonFlags(cmdPorts)
-	rootCmd.AddCommand(cmdPorts)
 }
 
 // adds common flags to the passed command
