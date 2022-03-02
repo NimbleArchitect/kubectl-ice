@@ -46,12 +46,12 @@ Flags:
   -A, --all-namespaces   list containers form pods in all namespaces
   -h, --help             help for status
 ```
-also includes standard common kubctl flags
+also includes standard common kubectl flags
 
 #### Example
 ```shell
 $ kubectl ice cpu myapp
-T  NAME         USED  REQUEST  LIMIT   %REQ  %LIMIT
+T  CONTAINER    USED  REQUEST  LIMIT   %REQ  %LIMIT
 S  app-watcher  0     20m      50m     0     0
 S  app-broken   0     20m      50m     0     0
 S  myapp        1     500m     1       200   100
@@ -72,12 +72,12 @@ Flags:
   -A, --all-namespaces   list containers form pods in all namespaces
   -h, --help             help for status
 ```
-also includes standard common kubctl flags
+also includes standard common kubectl flags
 
 #### Example
 ```shell
 $ kubectl ice image myapp
-T  NAME        PULL          IMAGE
+T  CONTAINER   PULL          IMAGE
 S  app-watcher Always        amouat/network-utils
 S  app-broken  IfNotPresent  busybox:1.28
 S  myapp       Always        amouat/network-utils
@@ -95,7 +95,7 @@ Flags:
   -A, --all-namespaces   list containers form pods in all namespaces
   -h, --help             help for status
 ```
-also includes standard common kubctl flags
+also includes standard common kubectl flags
 
 #### Example
 ```shell
@@ -118,16 +118,42 @@ Flags:
   -A, --all-namespaces   list containers form pods in all namespaces
   -h, --help             help for status
 ```
-also includes standard common kubctl flags
+also includes standard common kubectl flags
 
 #### Example
 ```shell
 $ kubectl ice memory myapp
-T  NAME         USED  REQUEST  LIMIT   %REQ  %LIMIT
+T  CONTAINER    USED  REQUEST  LIMIT   %REQ  %LIMIT
 S  app-watcher  0     500Mi    800Mi   0     0
 S  app-broken   0     500Mi    800Mi   0     0
 S  myapp        1     500Mi    800Mi   0.12  0
 I  app-init     0        0     -       -     -
+```
+
+### Ports
+shows ports exposed by the containers in a pod
+
+``` shell
+Usage:
+  ice ports [flags]
+
+Aliases:
+  ports, port, po
+
+Flags:
+  -A, --all-namespaces   list containers form pods in all namespaces
+  -h, --help             help for status
+```
+also includes standard common kubectl flags
+
+#### Example
+```shell
+$kubectl ice ports myapp
+T  CONTAINER    PORTNAME  PORT  PROTO  HOSTPORT 
+S  app-broken   -         8000  TCP    
+S  app-watcher  -         8080  TCP    
+S  myapp        http      8080  TCP    
+S  keycloak     https     8443  TCP
 ```
 
 ### Restarts
@@ -144,12 +170,12 @@ Flags:
   -A, --all-namespaces   list containers form pods in all namespaces
   -h, --help             help for status
 ```
-also includes standard common kubctl flags
+also includes standard common kubectl flags
 
 #### Example
 ```shell
 $kubectl ice restarts myapp
-T  NAME        RESTARTS
+T  CONTAINER   RESTARTS
 S  app-broken  0
 S  app-watcher 0
 S  myapp       0
@@ -171,12 +197,12 @@ Flags:
   -h, --help             help for status
   -r, --raw              show raw uncooked values
 ```
-also includes standard common kubctl flags
+also includes standard common kubectl flags
 
 #### Example
 ```shell
 $ kubectl ice stats myapp   
-NAME         USED_CPU  CPU_%_REQ  CPU_%_LIMIT  USED_MEM  MEM_%_REQ  MEM_%_LIMIT  
+CONTAINER    USED_CPU  CPU_%_REQ  CPU_%_LIMIT  USED_MEM  MEM_%_REQ  MEM_%_LIMIT  
 app-init     0         0          0            0         0          0
 app-watcher  0         0.00       0.00         0.92Mi    0.18       0.12
 app-broken   0         0.00       0.00         3.95Mi    0.79       0.49
@@ -198,14 +224,14 @@ Flags:
   -h, --help             help for status
   -p, --previous         show previous state
 ```
-also includes standard common kubctl flags
+also includes standard common kubectl flags
 
 ```
 
 #### Example
 ```shell
 $ kubectl ice status myapp
-T  NAME         READY STARTED  RESTARTS  STATE       REASON     EXIT-CODE  SIGNAL  TIMESTAMP                      MESSAGE  
+T  CONTAINER    READY STARTED  RESTARTS  STATE       REASON     EXIT-CODE  SIGNAL  TIMESTAMP                      MESSAGE  
 S  app-broken   true  true     0         Running                                   2022-02-28 11:04:24 +0000 GMT           
 S  app-watcher  true  true     0         Running                                   2022-02-28 11:04:24 +0000 GMT           
 S  myapp        true  true     0         Running                                   2022-02-28 11:04:26 +0000 GMT           
@@ -227,7 +253,7 @@ Flags:
   -A, --all-namespaces   list containers form pods in all namespaces
   -h, --help             help for status
 ```
-also includes standard common kubctl flags
+also includes standard common kubectl flags
 
 
 #### Example
