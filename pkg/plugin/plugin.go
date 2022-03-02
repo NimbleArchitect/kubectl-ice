@@ -140,8 +140,27 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	cmdCPU.Flags().BoolP("raw", "r", false, "show raw values")
 	addCommonFlags(cmdCPU)
 	rootCmd.AddCommand(cmdCPU)
+
+	var cmdPorts = &cobra.Command{
+		Use:     "ports",
+		Short:   "shows ports exposed by the containers in a pod",
+		Long:    "",
+		Aliases: []string{"port", "po"},
+		// SuggestFor: []string{""},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := Ports(cmd, KubernetesConfigFlags, args); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	KubernetesConfigFlags.AddFlags(cmdPorts.Flags())
+	addCommonFlags(cmdPorts)
+	rootCmd.AddCommand(cmdPorts)
 }
 
+// adds common flags to the passed command
 func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().BoolP("all-namespaces", "A", false, "list containers form pods in all namespaces")
 }
