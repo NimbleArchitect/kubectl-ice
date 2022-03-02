@@ -9,6 +9,25 @@ import (
 func InitSubCommands(rootCmd *cobra.Command) {
 	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
 
+	//commands
+	var cmdCommands = &cobra.Command{
+		Use:     "command",
+		Short:   "retrieves the command line and any arguments specified at the container level",
+		Long:    "",
+		Aliases: []string{"cmd", "exec", "args"},
+		// SuggestFor: []string{""},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := Commands(cmd, KubernetesConfigFlags, args); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	KubernetesConfigFlags.AddFlags(cmdCommands.Flags())
+	addCommonFlags(cmdCommands)
+	rootCmd.AddCommand(cmdCommands)
+
 	//cpu
 	var cmdCPU = &cobra.Command{
 		Use:   "cpu",

@@ -25,16 +25,44 @@ make bin
 
 The following command are available for `kubectl ice`
 ```
+kubectl ice command    # retrieves the command line and any arguments specified at the container level
 kubectl ice cpu        # return cpu requests size, limits and usage of each container
 kubectl ice help       # Shows the help screen
 kubectl ice image      # list the image name and pull status for each container
 kubectl ice ip         # list ip addresses of all pods in the namespace listed
 kubectl ice memory     # return memory requests size, limits and usage of each container
+kubectl ice ports      # shows ports exposed by the containers in a pod
+kubectl ice probes     # shows details of configured startup, readiness and liveness probes of each container
 kubectl ice restarts   # show restart counts for each container in a named pod
 kubectl ice status     # list status of each container in a pod
 kubectl ice volumes    # list all container volumes with mount points
 ```
 
+### Command
+retrieves the command line and any arguments specified at the container level
+
+``` shell
+Usage:
+  ice command [flags]
+
+Aliases:
+  command, cmd, exec, args
+
+Flags:
+  -A, --all-namespaces   list containers form pods in all namespaces
+  -h, --help             help for status
+```
+also includes standard common kubectl flags
+
+#### Example
+```shell
+$ kubectl ice command myapp
+T  CONTAINER     COMMAND    ARGUMENTS
+S  app-watcher   -          -
+S  app-broken    /bin/bash  -s exit 1
+S  myapp         -          -
+I  app-init      init.sh    -
+```
 ### CPU
 shows the configured CPU resource requests and limits of each container
 
