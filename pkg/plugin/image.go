@@ -35,7 +35,7 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	}
 
 	table := make(map[int][]string)
-	table[0] = []string{"T", "NAME", "PULL", "IMAGE"}
+	table[0] = []string{"T", "CONTAINER", "PULL", "IMAGE"}
 
 	if showPodName {
 		// we need to add the pod name to the table
