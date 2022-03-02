@@ -52,7 +52,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	}
 
 	table := make(map[int][]string)
-	table[0] = []string{"T", "NAME", "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT"}
+	table[0] = []string{"T", "CONTAINER", "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT"}
 
 	if showPodName {
 		// we need to add the pod name to the table

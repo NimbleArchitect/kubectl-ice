@@ -37,7 +37,7 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	}
 
 	table := make(map[int][]string)
-	table[0] = []string{"T", "NAME", "RESTARTS"}
+	table[0] = []string{"T", "CONTAINER", "RESTARTS"}
 
 	if showPodName {
 		// we need to add the pod name to the table

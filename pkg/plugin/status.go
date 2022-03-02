@@ -49,9 +49,9 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 	table := make(map[int][]string)
 	if !showPrevious {
-		table[0] = []string{"T", "NAME", "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE"}
+		table[0] = []string{"T", "CONTAINER", "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE"}
 	} else {
-		table[0] = []string{"T", "NAME", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE"}
+		table[0] = []string{"T", "CONTAINER", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE"}
 	}
 
 	if showPodName {
