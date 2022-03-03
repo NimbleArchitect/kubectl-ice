@@ -215,7 +215,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 // adds common flags to the passed command
 func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().BoolP("all-namespaces", "A", false, "list containers form pods in all namespaces")
-	cmdObj.Flags().StringP("selector", "l", "", `: Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2`)
+	cmdObj.Flags().StringP("selector", "l", "", `Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2`)
 
 }
 
