@@ -3,37 +3,26 @@ package cli
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/NimbleArchitect/kubectl-ice/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-)
-
-var (
-	KubernetesConfigFlags *genericclioptions.ConfigFlags
 )
 
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "ice",
-		Short:         "",
-		Long:          `.`,
+		Use:   "ice",
+		Short: "view container settings",
+		Long: `ice lets you view configuration settings of containers inside pods.
+you can run ice through kubectl with: kubectl ice [command]`,
 		SilenceErrors: true,
 		SilenceUsage:  true,
-		PreRun: func(cmd *cobra.Command, args []string) {
-			viper.BindPFlags(cmd.Flags())
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Help()
 		},
 	}
 
 	cobra.OnInitialize(initConfig)
-
-	KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
-	KubernetesConfigFlags.AddFlags(cmd.Flags())
-
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-
 	plugin.InitSubCommands(cmd)
 
 	return cmd
