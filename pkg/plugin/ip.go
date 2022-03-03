@@ -7,7 +7,7 @@ import (
 
 func IP(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
-	var showPodName bool
+	var showPodName bool = true
 	var idx int
 	var allNamespaces bool
 
@@ -16,12 +16,10 @@ func IP(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []str
 		return err
 	}
 
-	// fmt.Println(args)
-	//TODO: allow multipule pods to be specified on cmdline
-	showPodName = false
+	// if a single pod is selected we dont need to show its name
 	if len(args) >= 1 {
 		podname = args
-		if len(podname) >= 1 {
+		if len(podname[0]) >= 1 {
 			showPodName = false
 		}
 	}
