@@ -1,7 +1,7 @@
 apiVersion: krew.googlecontainertools.github.com/v1alpha2
 kind: Plugin
 metadata:
-  name: ice
+  name: kubectl-ice
 spec:
   version: "v0.1.0"
   platforms:
@@ -12,11 +12,11 @@ spec:
     uri: https://github.com/NimbleArchitect/kubectl-ice/releases/download/v0.1.0/ice_linux_amd64.tar.gz
     sha256: ""
     files:
-    - from: "./ice"
+    - from: "./kubectl-ice"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "ice"
+    bin: "kubectl-ice"
   - selector:
       matchLabels:
         os: darwin
@@ -24,11 +24,11 @@ spec:
     uri: https://github.com/NimbleArchitect/kubectl-ice/releases/download/v0.1.0/ice_darwin_amd64.tar.gz
     sha256: ""
     files:
-    - from: "./ice"
+    - from: "./kubectl-ice"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "ice"
+    bin: "kubectl-ice"
   - selector:
       matchLabels:
         os: windows
@@ -36,12 +36,12 @@ spec:
     uri: https://github.com/NimbleArchitect/kubectl-ice/releases/download/v0.1.0/ice_windows_amd64.zip
     sha256: ""
     files:
-    - from: "/ice.exe"
+    - from: "/kubectl-ice.exe"
       to: "."
     - from: LICENSE
       to: "."
-    bin: "ice.exe"
-  shortDescription: A new plugin
+    bin: "kubectl-ice.exe"
+  shortDescription: ice lets you view configuration settings of containers inside pods.
   homepage: https://github.com/NimbleArchitect/kubectl-ice
   caveats: |
     Usage:
@@ -52,4 +52,6 @@ spec:
       or https://github.com/NimbleArchitect/kubectl-ice/blob/v0.1.0/doc/USAGE.md
 
   description: |
-    ice lets you view configuration settings of containers inside pods.
+    With ice you can peer inside a pod and easily see volume, image, port and exec configurations,
+    along with cpu and memory metrics all at the container level (requires metrics server)
+    

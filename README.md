@@ -1,6 +1,15 @@
 # kubectl-ice
-
 This plugin shows useful information about the containers inside a pod useful for trouble shooting container issues
+
+With ice you can peer inside a pod and easily see volume, image, port and exec configurations, along with cpu and memory metrics all at the container level (requires metrics server)
+
+supports all the standard kubectl flags including:
+
+Flags:
+  -A, --all-namespaces                 list containers form pods in all namespaces
+      --context string                 The name of the kubeconfig context to use
+  -n, --namespace string               If present, the namespace scope for this CLI request
+  -l, --selector string                Selector (label query) to filter on
 
 # Installation
 
