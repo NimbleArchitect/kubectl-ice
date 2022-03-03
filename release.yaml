@@ -52,4 +52,4 @@ spec:
       or https://github.com/NimbleArchitect/kubectl-ice/blob/v0.1.0/doc/USAGE.md
 
   description: |
-    This is a new plugin
+    ice lets you view configuration settings of containers inside pods.

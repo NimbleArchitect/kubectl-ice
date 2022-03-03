@@ -9,6 +9,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+// auto updated version via gorelaser
+var version = "0.0.0"
+
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ice",
@@ -17,6 +20,7 @@ func RootCmd() *cobra.Command {
 you can run ice through kubectl with: kubectl ice [command]`,
 		SilenceErrors: true,
 		SilenceUsage:  true,
+		Version:       version,
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
 		},

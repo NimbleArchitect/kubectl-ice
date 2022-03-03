@@ -12,12 +12,13 @@ builds:
     goarch:
     - amd64
     - "386"
+    - arm64
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
     main: cmd/plugin/main.go
     ldflags: -s -w
-      -X github.com/NimbleArchitect/kubectl-ice/pkg/version.version=
+      -X github.com/NimbleArchitect/kubectl-ice/cmd/plugin/cli.version=
 archives:
   - id: ice
     builds:
