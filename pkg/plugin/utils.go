@@ -79,14 +79,19 @@ func getNamespace(configFlags *genericclioptions.ConfigFlags, allNamespaces bool
 }
 
 // returns a list of pods or a list with one pod when given a pod name
-func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.ConfigFlags, podNameList []string, allNamespaces bool) ([]v1.Pod, error) {
+func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.ConfigFlags, podNameList []string, flags commonFlags) ([]v1.Pod, error) {
 	podList := []v1.Pod{}
+	selector := metav1.ListOptions{}
 
-	namespace := getNamespace(configFlags, allNamespaces)
+	namespace := getNamespace(configFlags, flags.allNamespaces)
 
 	if len(podNameList) > 0 {
+		if len(flags.labels) > 0 {
+			return []v1.Pod{}, fmt.Errorf("error: you cannot specify a pod name and a selector together")
+		}
+
+		// single pod
 		for _, podname := range podNameList {
-			// single pod
 			pod, err := clientSet.CoreV1().Pods(namespace).Get(context.TODO(), podname, metav1.GetOptions{})
 			if err == nil {
 				podList = append(podList, []v1.Pod{*pod}...)
@@ -98,7 +103,11 @@ func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.Conf
 		return podList, nil
 	} else {
 		// multi pods
-		podList, err := clientSet.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+		if len(flags.labels) > 0 {
+			selector.LabelSelector = flags.labels
+		}
+
+		podList, err := clientSet.CoreV1().Pods(namespace).List(context.TODO(), selector)
 		if err == nil {
 			if len(podList.Items) == 0 {
 				return []v1.Pod{}, errors.New("No pods found in default namespace.")
@@ -113,13 +122,18 @@ func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.Conf
 }
 
 //get an array of pod metrics
-func getMetricPods(clientSet metricsclientset.Clientset, configFlags *genericclioptions.ConfigFlags, podNameList []string, allNamespaces bool) ([]v1beta1.PodMetrics, error) {
+func getMetricPods(clientSet metricsclientset.Clientset, configFlags *genericclioptions.ConfigFlags, podNameList []string, flags commonFlags) ([]v1beta1.PodMetrics, error) {
 	podList := []v1beta1.PodMetrics{}
+	selector := metav1.ListOptions{}
 
-	namespace := getNamespace(configFlags, allNamespaces)
+	namespace := getNamespace(configFlags, flags.allNamespaces)
 
 	if len(podNameList) > 0 {
 		for _, podname := range podNameList {
+			if len(flags.labels) > 0 {
+				return []v1beta1.PodMetrics{}, fmt.Errorf("error: you cannot specify a pod name and a selector together")
+			}
+
 			// single pod
 			pod, err := clientSet.MetricsV1beta1().PodMetricses(namespace).Get(context.TODO(), podname, metav1.GetOptions{})
 			if err == nil {
@@ -131,7 +145,11 @@ func getMetricPods(clientSet metricsclientset.Clientset, configFlags *genericcli
 
 		return podList, nil
 	} else {
-		podList, err := clientSet.MetricsV1beta1().PodMetricses(namespace).List(context.TODO(), metav1.ListOptions{})
+		if len(flags.labels) > 0 {
+			selector.LabelSelector = flags.labels
+		}
+
+		podList, err := clientSet.MetricsV1beta1().PodMetricses(namespace).List(context.TODO(), selector)
 		if err == nil {
 			if len(podList.Items) == 0 {
 				return []v1beta1.PodMetrics{}, errors.New("No pods found in default namespace.")

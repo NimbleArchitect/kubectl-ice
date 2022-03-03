@@ -6,6 +6,11 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
+type commonFlags struct {
+	allNamespaces bool
+	labels        string
+}
+
 func InitSubCommands(rootCmd *cobra.Command) {
 	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
 
@@ -210,4 +215,23 @@ func InitSubCommands(rootCmd *cobra.Command) {
 // adds common flags to the passed command
 func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().BoolP("all-namespaces", "A", false, "list containers form pods in all namespaces")
+	cmdObj.Flags().StringP("selector", "l", "", `: Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2`)
+
+}
+
+func processCommonFlags(cmd *cobra.Command) commonFlags {
+	f := commonFlags{}
+
+	if cmd.Flag("all-namespaces").Value.String() == "true" {
+		f.allNamespaces = true
+	}
+
+	//fmt.Println(cmd.Flag("selector"))
+	if cmd.Flag("selector") != nil {
+		if len(cmd.Flag("selector").Value.String()) > 0 {
+			f.labels = cmd.Flag("selector").Value.String()
+		}
+	}
+
+	return f
 }

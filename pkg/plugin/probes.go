@@ -22,7 +22,6 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	var podname []string
 	var showPodName bool = true
 	var idx int
-	var allNamespaces bool
 
 	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
@@ -37,11 +36,9 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		}
 	}
 
-	if cmd.Flag("all-namespaces").Value.String() == "true" {
-		allNamespaces = true
-	}
+	commonFlagList := processCommonFlags(cmd)
 
-	podList, err := getPods(clientset, kubeFlags, podname, allNamespaces)
+	podList, err := getPods(clientset, kubeFlags, podname, commonFlagList)
 	if err != nil {
 		return err
 	}

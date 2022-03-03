@@ -14,7 +14,6 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	var showPodName bool = true
 	var showRaw bool
 	var idx int
-	var allNamespaces bool
 
 	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
@@ -29,11 +28,9 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		}
 	}
 
-	if cmd.Flag("all-namespaces").Value.String() == "true" {
-		allNamespaces = true
-	}
+	commonFlagList := processCommonFlags(cmd)
 
-	podList, err := getPods(clientset, kubeFlags, podname, allNamespaces)
+	podList, err := getPods(clientset, kubeFlags, podname, commonFlagList)
 	if err != nil {
 		return err
 	}
@@ -42,7 +39,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	if err != nil {
 		return err
 	}
-	podStateList, err := getMetricPods(metricset, kubeFlags, podname, allNamespaces)
+	podStateList, err := getMetricPods(metricset, kubeFlags, podname, commonFlagList)
 	if err != nil {
 		return err
 	}
