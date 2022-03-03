@@ -165,6 +165,7 @@ func buildProbeAction(name string, probe *v1.Probe) []probeAction {
 			actionStr += probe.TCPSocket.Host
 		}
 		actionStr += portAsString(probe.TCPSocket.Port)
+		item.action = actionStr
 		probeList = append(probeList, item)
 	}
 
