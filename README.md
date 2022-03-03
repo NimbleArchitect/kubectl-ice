@@ -38,6 +38,7 @@ kubectl ice status     # list status of each container in a pod
 kubectl ice volumes    # list all container volumes with mount points
 ```
 
+
 ### Command
 retrieves the command line and any arguments specified at the container level
 
@@ -47,10 +48,6 @@ Usage:
 
 Aliases:
   command, cmd, exec, args
-
-Flags:
-  -A, --all-namespaces   list containers form pods in all namespaces
-  -h, --help             help for status
 ```
 also includes standard common kubectl flags
 
@@ -71,8 +68,7 @@ Usage:
   ice cpu [flags]
 
 Flags:
-  -A, --all-namespaces   list containers form pods in all namespaces
-  -h, --help             help for status
+  -r, --raw              show raw uncooked values
 ```
 also includes standard common kubectl flags
 
@@ -95,10 +91,6 @@ Usage:
 
 Aliases:
   image, im
-
-Flags:
-  -A, --all-namespaces   list containers form pods in all namespaces
-  -h, --help             help for status
 ```
 also includes standard common kubectl flags
 
@@ -118,10 +110,6 @@ list ip addresses of all pods in the namespace listed
 ``` shell
 Usage:
   ice ip [flags]
-
-Flags:
-  -A, --all-namespaces   list containers form pods in all namespaces
-  -h, --help             help for status
 ```
 also includes standard common kubectl flags
 
@@ -143,8 +131,7 @@ Aliases:
   memory, mem
 
 Flags:
-  -A, --all-namespaces   list containers form pods in all namespaces
-  -h, --help             help for status
+  -r, --raw              show raw uncooked values
 ```
 also includes standard common kubectl flags
 
@@ -167,16 +154,12 @@ Usage:
 
 Aliases:
   ports, port, po
-
-Flags:
-  -A, --all-namespaces   list containers form pods in all namespaces
-  -h, --help             help for status
 ```
 also includes standard common kubectl flags
 
 #### Example
 ```shell
-$kubectl ice ports myapp
+$ kubectl ice ports myapp
 T  CONTAINER    PORTNAME  PORT  PROTO  HOSTPORT 
 S  app-broken   -         8000  TCP    
 S  app-watcher  -         8080  TCP    
@@ -192,16 +175,12 @@ Usage:
 
 Aliases:
   probes, probe
-
-Flags:
-  -A, --all-namespaces   list containers form pods in all namespaces
-  -h, --help             help for status
 ```
 also includes standard common kubectl flags
 
 #### Example
 ```shell
-$kubectl ice probes myapp
+$ kubectl ice probes myapp
 CONTAINER     PROBE     DELAY  PERIOD  TIMEOUT  SUCCESS  FAILURE  CHECK    ACTION
 myapp         liveness  0      10      1        1        3        HTTPGet  http://:http/health
 app-broken    liveness  0      10      1        1        3        HTTPGet  http://:http/health
@@ -216,16 +195,12 @@ Usage:
 
 Aliases:
   restarts, restart
-
-Flags:
-  -A, --all-namespaces   list containers form pods in all namespaces
-  -h, --help             help for status
 ```
 also includes standard common kubectl flags
 
 #### Example
 ```shell
-$kubectl ice restarts myapp
+$ kubectl ice restarts myapp
 T  CONTAINER   RESTARTS
 S  app-broken  0
 S  app-watcher 0
@@ -244,8 +219,6 @@ Aliases:
   stats, top, ps
 
 Flags:
-  -A, --all-namespaces   list containers form pods in all namespaces
-  -h, --help             help for status
   -r, --raw              show raw uncooked values
 ```
 also includes standard common kubectl flags
@@ -271,8 +244,6 @@ Aliases:
   status, st
 
 Flags:
-  -A, --all-namespaces   list containers form pods in all namespaces
-  -h, --help             help for status
   -p, --previous         show previous state
 ```
 also includes standard common kubectl flags
@@ -299,10 +270,6 @@ Usage:
 
 Aliases:
   volumes, volume, vol
-
-Flags:
-  -A, --all-namespaces   list containers form pods in all namespaces
-  -h, --help             help for status
 ```
 also includes standard common kubectl flags
 
