@@ -4,9 +4,6 @@
 
 This plugin shows useful information about the containers inside a pod useful for trouble shooting container issues
 
-
-Note: * *requires metrics server* *
-
 # Installation
 
 ## From binary
