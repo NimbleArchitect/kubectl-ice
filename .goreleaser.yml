@@ -1,10 +1,10 @@
-project_name: ice
+project_name: kubectl-ice
 release:
   github:
     owner: NimbleArchitect
     name: kubectl-ice
 builds:
-  - id: ice
+  - id: kubectl-ice
     goos:
     - linux
     - windows
@@ -18,11 +18,11 @@ builds:
       - GO111MODULE=on
     main: cmd/plugin/main.go
     ldflags: -s -w
-      -X github.com/NimbleArchitect/kubectl-ice/cmd/plugin/cli.version=
+      -X github.com/NimbleArchitect/kubectl-ice/cmd/plugin/cli.version={{ .Version }}
 archives:
-  - id: ice
+  - id: kubectl-ice
     builds:
-    - ice
+    - kubectl-ice
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
     - goos: windows
