@@ -15,12 +15,6 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	var idx int
 	var allNamespaces bool
 
-	// onfigTest(cmd, kubeFlags, args)
-	// if true {
-	// 	return nil
-	// }
-
-	// kubeFlags.AddFlags(flagList)
 	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
 		return err
