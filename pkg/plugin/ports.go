@@ -67,12 +67,17 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 }
 
 func portsBuildRow(container v1.Container, port v1.ContainerPort, containerType string) []string {
+	hostPort := ""
 
+	if port.HostPort > 0 {
+		hostPort = fmt.Sprintf("%d", port.HostPort)
+	}
 	return []string{
 		containerType,
 		container.Name,
 		port.Name,
 		fmt.Sprintf("%d", port.ContainerPort),
 		string(port.Protocol),
+		hostPort,
 	}
 }
