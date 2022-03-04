@@ -3,14 +3,14 @@ This plugin shows useful information about the containers inside a pod useful fo
 
 With ice you can peer inside a pod and easily see volume, image, port and exec configurations, along with cpu and memory metrics all at the container level (requires metrics server)
 
-supports all the standard kubectl flags including:
-
+supports all the standard kubectl flags in addition to:
+```
 Flags:
   -A, --all-namespaces                 list containers form pods in all namespaces
       --context string                 The name of the kubeconfig context to use
   -n, --namespace string               If present, the namespace scope for this CLI request
   -l, --selector string                Selector (label query) to filter on
-
+```
 # Installation
 
 ## From binary
@@ -57,7 +57,7 @@ also includes standard common kubectl flags
 
 #### Example
 ```shell
-$ kubectl ice command myapp
+$ kubectl ice command mypod
 T  CONTAINER     COMMAND    ARGUMENTS
 S  app-watcher   -          -
 S  app-broken    /bin/bash  -s exit 1
@@ -78,7 +78,7 @@ also includes standard common kubectl flags
 
 #### Example
 ```shell
-$ kubectl ice cpu myapp
+$ kubectl ice cpu mypod
 T  CONTAINER    USED  REQUEST  LIMIT   %REQ  %LIMIT
 S  app-watcher  0     20m      50m     0     0
 S  app-broken   0     20m      50m     0     0
@@ -100,7 +100,7 @@ also includes standard common kubectl flags
 
 #### Example
 ```shell
-$ kubectl ice image myapp
+$ kubectl ice image mypod
 T  CONTAINER   PULL          IMAGE
 S  app-watcher Always        amouat/network-utils
 S  app-broken  IfNotPresent  busybox:1.28
@@ -119,7 +119,7 @@ also includes standard common kubectl flags
 
 #### Example
 ```shell
-$ kubectl ice ip myapp   
+$ kubectl ice ip mypod   
 NAME  IP
 myapp 172.17.0.2
 ```
@@ -141,7 +141,7 @@ also includes standard common kubectl flags
 
 #### Example
 ```shell
-$ kubectl ice memory myapp
+$ kubectl ice memory mypod
 T  CONTAINER    USED  REQUEST  LIMIT   %REQ  %LIMIT
 S  app-watcher  0     500Mi    800Mi   0     0
 S  app-broken   0     500Mi    800Mi   0     0
@@ -163,7 +163,7 @@ also includes standard common kubectl flags
 
 #### Example
 ```shell
-$ kubectl ice ports myapp
+$ kubectl ice ports mypod
 T  CONTAINER    PORTNAME  PORT  PROTO  HOSTPORT 
 S  app-broken   -         8000  TCP    
 S  app-watcher  -         8080  TCP    
@@ -173,7 +173,7 @@ S  keycloak     https     8443  TCP
 
 ### Probes
 shows details of configured startup, readiness and liveness probes of each container
-
+```
 Usage:
   ice probes [flags]
 
@@ -184,7 +184,7 @@ also includes standard common kubectl flags
 
 #### Example
 ```shell
-$ kubectl ice probes myapp
+$ kubectl ice probes mypod
 CONTAINER     PROBE     DELAY  PERIOD  TIMEOUT  SUCCESS  FAILURE  CHECK    ACTION
 myapp         liveness  0      10      1        1        3        HTTPGet  http://:http/health
 app-broken    liveness  0      10      1        1        3        HTTPGet  http://:http/health
@@ -204,37 +204,12 @@ also includes standard common kubectl flags
 
 #### Example
 ```shell
-$ kubectl ice restarts myapp
+$ kubectl ice restarts mypod
 T  CONTAINER   RESTARTS
 S  app-broken  0
 S  app-watcher 0
 S  myapp       0
 I  app-init    0
-```
-
-### Stats
-list resource usage of each container in a pod
-
-``` shell
-Usage:
-  ice stats [flags]
-
-Aliases:
-  stats, top, ps
-
-Flags:
-  -r, --raw              show raw uncooked values
-```
-also includes standard common kubectl flags
-
-#### Example
-```shell
-$ kubectl ice stats myapp   
-CONTAINER    USED_CPU  CPU_%_REQ  CPU_%_LIMIT  USED_MEM  MEM_%_REQ  MEM_%_LIMIT  
-app-init     0         0          0            0         0          0
-app-watcher  0         0.00       0.00         0.92Mi    0.18       0.12
-app-broken   0         0.00       0.00         3.95Mi    0.79       0.49
-myapp        34        6.673187   3.336594     0.88Mi    0.18       0.11
 ```
 
 ### Status
@@ -252,11 +227,9 @@ Flags:
 ```
 also includes standard common kubectl flags
 
-```
-
 #### Example
 ```shell
-$ kubectl ice status myapp
+$ kubectl ice status mypod
 T  CONTAINER    READY STARTED  RESTARTS  STATE       REASON     EXIT-CODE  SIGNAL  TIMESTAMP                      MESSAGE  
 S  app-broken   true  true     0         Running                                   2022-02-28 11:04:24 +0000 GMT           
 S  app-watcher  true  true     0         Running                                   2022-02-28 11:04:24 +0000 GMT           
@@ -280,7 +253,7 @@ also includes standard common kubectl flags
 
 #### Example
 ```shell
-$ kubectl ice volumes myapp
+$ kubectl ice volumes mypod
 CONTAINER    VOLUME                 TYPE      BACKING SIZE  RO     MOUNT-POINT                                    
 app-init     kube-api-access-k7hvs  Projected               true   /var/run/secrets/kubernetes.io/serviceaccount  
 app-watcher  appsafe                EmptyDir  Memory        false  /mnt/appsafe                                   
