@@ -44,6 +44,10 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	for _, pod := range podList {
 		for _, container := range pod.Spec.Containers {
 			for _, port := range container.Ports {
+				// should the container be processed
+				if skipContainerName(commonFlagList, container.Name) {
+					continue
+				}
 				idx++
 				table[idx] = portsBuildRow(container, port, "S")
 				if showPodName {
@@ -53,6 +57,10 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 		}
 		for _, container := range pod.Spec.InitContainers {
 			for _, port := range container.Ports {
+				// should the container be processed
+				if skipContainerName(commonFlagList, container.Name) {
+					continue
+				}
 				idx++
 				table[idx] = portsBuildRow(container, port, "I")
 				if showPodName {

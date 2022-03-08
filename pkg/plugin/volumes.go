@@ -48,6 +48,10 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 		containerList := append(pod.Spec.InitContainers, pod.Spec.Containers...)
 		for _, container := range containerList {
 			for _, mount := range container.VolumeMounts {
+				// should the container be processed
+				if skipContainerName(commonFlagList, container.Name) {
+					continue
+				}
 				idx++
 				table[idx] = volumesBuildRow(container, podVolumes, mount)
 				if showPodName {

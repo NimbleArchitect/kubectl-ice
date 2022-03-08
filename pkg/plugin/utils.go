@@ -162,6 +162,21 @@ func getMetricPods(clientSet metricsclientset.Clientset, configFlags *genericcli
 	}
 }
 
+// always returns false if the flagList.container is empty as we expect to show all containers
+// returns true if we dont have a match
+func skipContainerName(flagList commonFlags, containerName string) bool {
+	if len(flagList.container) == 0 {
+		return false
+	}
+
+	if flagList.container == containerName {
+		return false
+	}
+
+	return true
+
+}
+
 //print the array as a table, auto adjusts column widths
 func showTable(table map[int][]string) {
 	colWidth := make([]int, len(table[0]))

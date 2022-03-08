@@ -9,6 +9,7 @@ import (
 type commonFlags struct {
 	allNamespaces bool
 	labels        string
+	container     string
 }
 
 func InitSubCommands(rootCmd *cobra.Command) {
@@ -216,7 +217,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().BoolP("all-namespaces", "A", false, "list containers form pods in all namespaces")
 	cmdObj.Flags().StringP("selector", "l", "", `Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2`)
-
+	cmdObj.Flags().StringP("container", "c", "", `Container name. If omitted show all containers in the pod`)
 }
 
 func processCommonFlags(cmd *cobra.Command) commonFlags {
@@ -230,6 +231,12 @@ func processCommonFlags(cmd *cobra.Command) commonFlags {
 	if cmd.Flag("selector") != nil {
 		if len(cmd.Flag("selector").Value.String()) > 0 {
 			f.labels = cmd.Flag("selector").Value.String()
+		}
+	}
+
+	if cmd.Flag("container") != nil {
+		if len(cmd.Flag("container").Value.String()) > 0 {
+			f.container = cmd.Flag("container").Value.String()
 		}
 	}
 

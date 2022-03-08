@@ -41,6 +41,10 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 	for _, pod := range podList {
 		for _, container := range pod.Spec.Containers {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
 			idx++
 			table[idx] = imageBuildRow(container, "S")
 			if showPodName {
@@ -48,6 +52,10 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 			}
 		}
 		for _, container := range pod.Spec.InitContainers {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
 			idx++
 			table[idx] = imageBuildRow(container, "I")
 			if showPodName {

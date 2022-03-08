@@ -60,6 +60,10 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	for _, pod := range podList {
 		// process init containers
 		for _, container := range pod.Spec.InitContainers {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
 			idx++
 			table[idx] = statsProcessTableRow(container, podState[pod.Name][container.Name], "I", resourceType, showRaw)
 			if showPodName {
@@ -70,6 +74,10 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 		// process standard containers
 		for _, container := range pod.Spec.Containers {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
 			idx++
 			table[idx] = statsProcessTableRow(container, podState[pod.Name][container.Name], "S", resourceType, showRaw)
 			if showPodName {
