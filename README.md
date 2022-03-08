@@ -7,6 +7,7 @@ supports all the standard kubectl flags in addition to:
 ```
 Flags:
   -A, --all-namespaces                 list containers form pods in all namespaces
+  -c, --container string               Container name. If omitted show all containers in the pod
       --context string                 The name of the kubeconfig context to use
   -n, --namespace string               If present, the namespace scope for this CLI request
   -l, --selector string                Selector (label query) to filter on
@@ -84,6 +85,15 @@ S  app-watcher  0     20m      50m     0     0
 S  app-broken   0     20m      50m     0     0
 S  myapp        1     500m     1       200   100
 I  app-init     0        0     0       0     0
+```
+
+You can also show cpu for specific containers in a deployment with the -c flag, the example below shows only the keycloak containers from the pods with the label app=keycloak 
+```shell
+$ kubectl ice cpu -l app=keycloak -c keycloak
+PODNAME                    T  CONTAINER USED  REQUEST  LIMIT  %REQ  %LIMIT
+keycloak-7c5c7f4d7b-96mbc  S  keycloak  6     0        0      -     -
+keycloak-7c5c7f4d7b-cjjdf  S  keycloak  5     0        0      -     -
+keycloak-7c5c7f4d7b-lfq2z  S  keycloak  17    0        0      -     -
 ```
 
 ### Image
@@ -237,6 +247,16 @@ S  myapp        true  true     0         Running                                
 I  app-init     true           0         Terminated  Completed  0          0       2022-02-28 11:04:17 +0000 GMT           
 
 ```
+
+You can also show the status of specific containers in a deployment with the -c flag, the example below shows only the nginx container from the pods with the label myapp 
+```shell
+$ kubectl ice status -l app=myapp -c nginx
+PODNAME                 T  CONTAINER READY STARTED  RESTARTS  STATE    REASON  EXIT-CODE  SIGNAL  TIMESTAMP                      MESSAGE
+mypod-6c5d4947bd-rqh7f  S  nginx     true  true     2         Running  -       -          -       2022-03-07 16:15:25 +0000 GMT  -
+mypod-6c5d4947bd-xj3cd  S  nginx     true  true     0         Running  -       -          -       2022-03-08 19:31:18 +0000 GMT  -
+mypod-6c5d4947bd-je7lq  S  nginx     true  true     0         Running  -       -          -       2022-03-08 19:31:18 +0000 GMT  -
+```
+
 
 ### Volumes
 list all container volumes with mount points
