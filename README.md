@@ -7,7 +7,7 @@ supports all the standard kubectl flags in addition to:
 ```
 Flags:
   -A, --all-namespaces                 list containers form pods in all namespaces
-  -c, --container string               Container name. If omitted show all containers in the pod
+  -c, --container string               Container name. If set shows only the named containers containers in the pod
       --context string                 The name of the kubeconfig context to use
   -n, --namespace string               If present, the namespace scope for this CLI request
   -l, --selector string                Selector (label query) to filter on
