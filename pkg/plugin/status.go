@@ -52,6 +52,10 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 	for _, pod := range podList {
 		for _, container := range pod.Status.ContainerStatuses {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
 			idx++
 			table[idx] = statusBuildRow(container, "S", showPrevious)
 			if showPodName {
@@ -59,6 +63,10 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			}
 		}
 		for _, container := range pod.Status.InitContainerStatuses {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
 			idx++
 			table[idx] = statusBuildRow(container, "I", showPrevious)
 			if showPodName {

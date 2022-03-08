@@ -43,6 +43,10 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	for _, pod := range podList {
 		for _, container := range pod.Status.ContainerStatuses {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
 			idx++
 			table[idx] = restartsBuildRow(container, "S")
 			if showPodName {
@@ -50,6 +54,10 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 			}
 		}
 		for _, container := range pod.Status.InitContainerStatuses {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
 			idx++
 			table[idx] = restartsBuildRow(container, "I")
 			if showPodName {

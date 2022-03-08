@@ -43,6 +43,10 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	for _, pod := range podList {
 		for _, container := range pod.Spec.Containers {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
 			idx++
 			table[idx] = commandsBuildRow(container, "S")
 			if showPodName {
@@ -50,6 +54,10 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 			}
 		}
 		for _, container := range pod.Spec.InitContainers {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
 			idx++
 			table[idx] = commandsBuildRow(container, "I")
 			if showPodName {

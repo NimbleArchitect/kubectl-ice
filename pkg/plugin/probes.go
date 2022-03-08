@@ -59,6 +59,10 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			// loop over all probes build the output table and add the podname if multipule pods will be output
 			for _, probe := range probeList {
 				for _, action := range probe {
+					// should the container be processed
+					if skipContainerName(commonFlagList, container.Name) {
+						continue
+					}
 					idx++
 					table[idx] = probesBuildRow(container, action)
 					if showPodName {
