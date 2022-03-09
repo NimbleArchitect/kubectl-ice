@@ -3,50 +3,46 @@ kind: Plugin
 metadata:
   name: ice
 spec:
-  version: {{ .TagName }}
+  version: "{{ .TagName }}"
   platforms:
   - selector:
       matchLabels:
         os: linux
         arch: amd64
-    {{addURIAndSha https://github.com/NimbleArchitect/kubectl-ice/releases/download/{{ .TagName }}/ice_{{ .TagName }}_linux_amd64.tar.gz .TagName }}
-    files:
-    - from: "./ice"
-      to: "."
-    - from: LICENSE
-      to: "."
-    bin: "ice"
+    {{addURIAndSha "https://github.com/NimbleArchitect/kubectl-ice/releases/download/{{ .TagName }}/kubectl-ice_linux_amd64.tar.gz" .TagName }}
+    bin: "kubectl-ice"
+  - selector:
+      matchLabels:
+        os: linux
+        arch: arm64
+    {{addURIAndSha "https://github.com/NimbleArchitect/kubectl-ice/releases/download/{{ .TagName }}/kubectl-ice_linux_arm64.tar.gz" .TagName }}
+    bin: "kubectl-ice"
   - selector:
       matchLabels:
         os: darwin
         arch: amd64
-    {{addURIAndSha https://github.com/NimbleArchitect/kubectl-ice/releases/download/{{ .TagName }}/ice_{{ .TagName }}_darwin_amd64.tar.gz .TagName }}
-    files:
-    - from: "./ice"
-      to: "."
-    - from: LICENSE
-      to: "."
-    bin: "ice"
+    {{addURIAndSha "https://github.com/NimbleArchitect/kubectl-ice/releases/download/{{ .TagName }}/kubectl-ice_darwin_amd64.tar.gz" .TagName }}
+    bin: "kubectl-ice"
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
+    {{addURIAndSha "https://github.com/NimbleArchitect/kubectl-ice/releases/download/{{ .TagName }}/kubectl-ice_darwin_arm64.tar.gz" .TagName }}
+    bin: "kubectl-ice"
   - selector:
       matchLabels:
         os: windows
         arch: amd64
-    {{addURIAndSha https://github.com/NimbleArchitect/kubectl-ice/releases/download/{{ .TagName }}/ice_{{ .TagName }}_windows_amd64.zip .TagName }}
-    files:
-    - from: "/ice.exe"
-      to: "."
-    - from: LICENSE
-      to: "."
-    bin: "ice.exe"
-  shortDescription: A new plugin
+    {{addURIAndSha "https://github.com/NimbleArchitect/kubectl-ice/releases/download/{{ .TagName }}/kubectl-ice_windows_amd64.zip" .TagName }}
+    bin: "kubectl-ice.exe"
+  - selector:
+      matchLabels:
+        os: windows
+        arch: arm64
+    {{addURIAndSha "https://github.com/NimbleArchitect/kubectl-ice/releases/download/{{ .TagName }}/kubectl-ice_windows_arm64.zip" .TagName }}
+    bin: "kubectl-ice.exe"
+  shortDescription: View configuration settings of containers inside Pods
   homepage: https://github.com/NimbleArchitect/kubectl-ice
-  caveats: |
-    Usage:
-      $ kubectl ice
-
-    For additional options:
-      $ kubectl ice --help
-      or https://github.com/NimbleArchitect/kubectl-ice/blob/{{ .TagName }}/README.md
-
   description: |
-    Plugin to view info on the containers within a pod
+    ice lets you peer inside a Pod and easily see Volume, Image, Port and Exec configurations,
+    along with CPU and Memory metrics all at the container level (requires metrics server)
