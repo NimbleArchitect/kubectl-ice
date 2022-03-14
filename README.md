@@ -14,12 +14,23 @@ Flags:
 ```
 # Installation
 
-## From binary
+## Install using krew
+
+```
+$ kubectl krew install ice
+```
+update with 
+```
+$ kubectl krew upgrade ice
+```
+dont have krew? check it out here [https://github.com/GoogleContainerTools/krew](https://github.com/GoogleContainerTools/krew)
+
+## Install from binary
 - download the required binary from the release page
 - unzip and copy the kubectl-ice file to your path
 - run kubectl ice help to check its working
 
-## From Source
+## Install from Source
 
 ```shell
 git clone https://github.com/NimbleArchitect/kubectl-ice.git
