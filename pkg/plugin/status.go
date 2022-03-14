@@ -12,7 +12,6 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	var podname []string
 	var showPodName bool = true
 	var showPrevious bool
-	var idx int
 
 	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
@@ -38,16 +37,20 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		showPrevious = true
 	}
 
-	table := make(map[int][]string)
+	table := Table{}
 	if !showPrevious {
-		table[0] = []string{"T", "CONTAINER", "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE"}
+		table.SetHeader(
+			"T", "PODNAME", "CONTAINER", "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE",
+		)
 	} else {
-		table[0] = []string{"T", "CONTAINER", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE"}
+		table.SetHeader(
+			"T", "PODNAME", "CONTAINER", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE",
+		)
 	}
 
-	if showPodName {
-		// we need to add the pod name to the table
-		table[0] = append([]string{"PODNAME"}, table[0]...)
+	if !showPodName {
+		// we need to hide the pod name in the table
+		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
@@ -56,30 +59,24 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			idx++
-			table[idx] = statusBuildRow(container, "S", showPrevious)
-			if showPodName {
-				table[idx] = append([]string{pod.Name}, table[idx]...)
-			}
+			tblOut := statusBuildRow(container, pod.Name, "S", showPrevious)
+			table.AddRow(tblOut...)
 		}
 		for _, container := range pod.Status.InitContainerStatuses {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			idx++
-			table[idx] = statusBuildRow(container, "I", showPrevious)
-			if showPodName {
-				table[idx] = append([]string{pod.Name}, table[idx]...)
-			}
+			tblOut := statusBuildRow(container, pod.Name, "I", showPrevious)
+			table.AddRow(tblOut...)
 		}
 	}
-	showTable(table)
+	table.Print()
 	return nil
 
 }
 
-func statusBuildRow(container v1.ContainerStatus, containerType string, showPrevious bool) []string {
+func statusBuildRow(container v1.ContainerStatus, podName string, containerType string, showPrevious bool) []string {
 	var reason string
 	var exitCode string
 	var signal string
@@ -126,6 +123,7 @@ func statusBuildRow(container v1.ContainerStatus, containerType string, showPrev
 	if showPrevious {
 		return []string{
 			containerType,
+			podName,
 			container.Name,
 			strState,
 			reason,
@@ -137,6 +135,7 @@ func statusBuildRow(container v1.ContainerStatus, containerType string, showPrev
 	} else {
 		return []string{
 			containerType,
+			podName,
 			container.Name,
 			ready,
 			started,

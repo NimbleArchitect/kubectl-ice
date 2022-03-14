@@ -12,7 +12,6 @@ import (
 func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
 	var showPodName bool = true
-	var idx int
 
 	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
@@ -34,12 +33,14 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 		return err
 	}
 
-	table := make(map[int][]string)
-	table[0] = []string{"CONTAINER", "VOLUME", "TYPE", "BACKING", "SIZE", "RO", "MOUNT-POINT"}
+	table := Table{}
+	table.SetHeader(
+		"PODNAME", "CONTAINER", "VOLUME", "TYPE", "BACKING", "SIZE", "RO", "MOUNT-POINT",
+	)
 
-	if showPodName {
-		// we need to add the pod name to the table
-		table[0] = append([]string{"PODNAME"}, table[0]...)
+	if !showPodName {
+		// we need to hide the pod name in the table
+		table.HideColumn(0)
 	}
 
 	for _, pod := range podList {
@@ -52,15 +53,12 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 				if skipContainerName(commonFlagList, container.Name) {
 					continue
 				}
-				idx++
-				table[idx] = volumesBuildRow(container, podVolumes, mount)
-				if showPodName {
-					table[idx] = append([]string{pod.Name}, table[idx]...)
-				}
+				tblOut := volumesBuildRow(container, pod.Name, podVolumes, mount)
+				table.AddRow(tblOut...)
 			}
 		}
 	}
-	showTable(table)
+	table.Print()
 	return nil
 
 }
@@ -182,7 +180,7 @@ func decodeVolumeType(volType string, volume v1.VolumeSource) map[string]string 
 	return outMap
 }
 
-func volumesBuildRow(container v1.Container, podVolumes map[string]map[string]string, mount v1.VolumeMount) []string {
+func volumesBuildRow(container v1.Container, podName string, podVolumes map[string]map[string]string, mount v1.VolumeMount) []string {
 	var volumeType string
 	var size string
 	var backing string
@@ -196,6 +194,7 @@ func volumesBuildRow(container v1.Container, podVolumes map[string]map[string]st
 	}
 
 	return []string{
+		podName,
 		container.Name,
 		mount.Name,
 		volumeType,

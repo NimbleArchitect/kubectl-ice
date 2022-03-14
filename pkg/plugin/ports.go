@@ -11,7 +11,6 @@ import (
 func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
 	var showPodName bool = true
-	var idx int
 
 	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
@@ -33,12 +32,14 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 		return err
 	}
 
-	table := make(map[int][]string)
-	table[0] = []string{"T", "CONTAINER", "PORTNAME", "PORT", "PROTO", "HOSTPORT"}
+	table := Table{}
+	table.SetHeader(
+		"T", "PODNAME", "CONTAINER", "PORTNAME", "PORT", "PROTO", "HOSTPORT",
+	)
 
-	if showPodName {
-		// we need to add the pod name to the table
-		table[0] = append([]string{"PODNAME"}, table[0]...)
+	if !showPodName {
+		// we need to hide the pod name in the table
+		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
@@ -48,11 +49,8 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 				if skipContainerName(commonFlagList, container.Name) {
 					continue
 				}
-				idx++
-				table[idx] = portsBuildRow(container, port, "S")
-				if showPodName {
-					table[idx] = append([]string{pod.Name}, table[idx]...)
-				}
+				tblOut := portsBuildRow(container, pod.Name, port, "S")
+				table.AddRow(tblOut...)
 			}
 		}
 		for _, container := range pod.Spec.InitContainers {
@@ -61,20 +59,17 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 				if skipContainerName(commonFlagList, container.Name) {
 					continue
 				}
-				idx++
-				table[idx] = portsBuildRow(container, port, "I")
-				if showPodName {
-					table[idx] = append([]string{pod.Name}, table[idx]...)
-				}
+				tblOut := portsBuildRow(container, pod.Name, port, "I")
+				table.AddRow(tblOut...)
 			}
 		}
 	}
-	showTable(table)
+	table.Print()
 	return nil
 
 }
 
-func portsBuildRow(container v1.Container, port v1.ContainerPort, containerType string) []string {
+func portsBuildRow(container v1.Container, podName string, port v1.ContainerPort, containerType string) []string {
 	hostPort := ""
 
 	if port.HostPort > 0 {
@@ -82,6 +77,7 @@ func portsBuildRow(container v1.Container, port v1.ContainerPort, containerType 
 	}
 	return []string{
 		containerType,
+		podName,
 		container.Name,
 		port.Name,
 		fmt.Sprintf("%d", port.ContainerPort),

@@ -21,7 +21,6 @@ type probeAction struct {
 func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
 	var showPodName bool = true
-	var idx int
 
 	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
@@ -43,12 +42,14 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		return err
 	}
 
-	table := make(map[int][]string)
-	table[0] = []string{"CONTAINER", "PROBE", "DELAY", "PERIOD", "TIMEOUT", "SUCCESS", "FAILURE", "CHECK", "ACTION"}
+	table := Table{}
+	table.SetHeader(
+		"PODNAME", "CONTAINER", "PROBE", "DELAY", "PERIOD", "TIMEOUT", "SUCCESS", "FAILURE", "CHECK", "ACTION",
+	)
 
-	if showPodName {
-		// we need to add the pod name to the table
-		table[0] = append([]string{"PODNAME"}, table[0]...)
+	if !showPodName {
+		// we need to hide the pod name in the table
+		table.HideColumn(0)
 	}
 
 	for _, pod := range podList {
@@ -63,23 +64,21 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 					if skipContainerName(commonFlagList, container.Name) {
 						continue
 					}
-					idx++
-					table[idx] = probesBuildRow(container, action)
-					if showPodName {
-						table[idx] = append([]string{pod.Name}, table[idx]...)
-					}
+					tblOut := probesBuildRow(container, pod.Name, action)
+					table.AddRow(tblOut...)
 				}
 			}
 		}
 	}
-	showTable(table)
+	table.Print()
 	return nil
 
 }
 
-func probesBuildRow(container v1.Container, action probeAction) []string {
+func probesBuildRow(container v1.Container, podName string, action probeAction) []string {
 
 	return []string{
+		podName,
 		container.Name,
 		action.probeName,
 		fmt.Sprintf("%d", action.probe.InitialDelaySeconds),
