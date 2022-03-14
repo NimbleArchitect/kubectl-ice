@@ -48,12 +48,14 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		showRaw = true
 	}
 
-	table := make(map[int][]string)
-	table[0] = []string{"T", "CONTAINER", "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT"}
+	table := Table{}
+	table.SetHeader(
+		"T", "PODNAME", "CONTAINER", "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
+	)
 
-	if showPodName {
-		// we need to add the pod name to the table
-		table[0] = append([]string{"PODNAME"}, table[0]...)
+	if !showPodName {
+		// we need to hide the pod name in the table
+		table.HideColumn(1)
 	}
 
 	podState := podMetrics2Hashtable(podStateList)
@@ -65,11 +67,8 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 				continue
 			}
 			idx++
-			table[idx] = statsProcessTableRow(container, podState[pod.Name][container.Name], "I", resourceType, showRaw)
-			if showPodName {
-				// add podname to the beginning of the row
-				table[idx] = append([]string{pod.Name}, table[idx]...)
-			}
+			tblOut := statsProcessTableRow(container, podState[pod.Name][container.Name], pod.Name, "I", resourceType, showRaw)
+			table.AddRow(tblOut...)
 		}
 
 		// process standard containers
@@ -79,19 +78,16 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 				continue
 			}
 			idx++
-			table[idx] = statsProcessTableRow(container, podState[pod.Name][container.Name], "S", resourceType, showRaw)
-			if showPodName {
-				// add podname to the beginning of the row
-				table[idx] = append([]string{pod.Name}, table[idx]...)
-			}
+			tblOut := statsProcessTableRow(container, podState[pod.Name][container.Name], pod.Name, "S", resourceType, showRaw)
+			table.AddRow(tblOut...)
 		}
 	}
 
-	showTable(table)
+	table.Print()
 	return nil
 }
 
-func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, containerType string, resource string, showRaw bool) []string {
+func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podName, containerType string, resource string, showRaw bool) []string {
 	floatfmt := "%f"
 	displayValue := ""
 	request := ""
@@ -104,7 +100,7 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, conta
 			if showRaw {
 				displayValue = metrics.Cpu().String()
 			} else {
-				displayValue = fmt.Sprintf("%d", metrics.Cpu().MilliValue())
+				displayValue = fmt.Sprintf("%dm", metrics.Cpu().MilliValue())
 				floatfmt = "%.2f"
 			}
 
@@ -162,6 +158,7 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, conta
 
 	return []string{
 		containerType,
+		podName,
 		container.Name,
 		displayValue,
 		request,
