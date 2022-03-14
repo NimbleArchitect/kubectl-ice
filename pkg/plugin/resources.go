@@ -13,7 +13,6 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	var podname []string
 	var showPodName bool = true
 	var showRaw bool
-	var idx int
 
 	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
@@ -66,7 +65,6 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			idx++
 			tblOut := statsProcessTableRow(container, podState[pod.Name][container.Name], pod.Name, "I", resourceType, showRaw)
 			table.AddRow(tblOut...)
 		}
@@ -77,7 +75,6 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			idx++
 			tblOut := statsProcessTableRow(container, podState[pod.Name][container.Name], pod.Name, "S", resourceType, showRaw)
 			table.AddRow(tblOut...)
 		}

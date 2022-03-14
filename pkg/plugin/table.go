@@ -13,10 +13,12 @@ type headerRow struct {
 }
 
 type Table struct {
-	currentRow int
-	headCount  int
-	head       []headerRow
-	data       [][]string
+	currentRow  int
+	headCount   int
+	columnOrder []int
+	rowOrder    []int
+	head        []headerRow
+	data        [][]string
 }
 
 // sets the header row to the specified array of strings
@@ -25,6 +27,10 @@ func (t *Table) SetHeader(headItem ...string) {
 
 	t.head = make([]headerRow, len(headItem))
 
+	if len(t.columnOrder) == 0 {
+		t.columnOrder = []int{}
+	}
+
 	for i := 0; i < len(headItem); i++ {
 		tmpHead := headerRow{}
 		tmpHead.title = headItem[i]
@@ -32,6 +38,8 @@ func (t *Table) SetHeader(headItem ...string) {
 		tmpHead.sort = 0
 
 		t.head[i] = tmpHead
+
+		t.columnOrder = append(t.columnOrder, i)
 	}
 
 	t.headCount = len(headItem)
@@ -50,6 +58,31 @@ func (t *Table) AddRow(row ...string) {
 	t.currentRow += 1
 }
 
+//  changes the order of columns displayed in the table, specifying a subset of the column
+// numbers will place those at the front in the order specified all other columns remain untouched
+func (t *Table) Order(items ...int) {
+	// rather then reordering all columns we have an order array that we can loop through
+	// order contains the actual column number to use next
+	orderedList := []int{}
+
+	for i := 0; i < len(t.columnOrder); i++ {
+		found := false
+		for c := 0; c < len(items); c++ {
+			if items[c] == t.columnOrder[i] {
+				found = true
+			}
+		}
+		if !found {
+			//fmt.Println(t.columnOrder[i])
+			orderedList = append(orderedList, t.columnOrder[i])
+		}
+	}
+	orderedList = append(items, orderedList...)
+
+	t.columnOrder = orderedList
+
+}
+
 // select the column number to hide, columns numbers are the unsorted column number
 func (t *Table) HideColumn(columnNumber int) {
 	if len(t.head) >= columnNumber {
@@ -61,8 +94,9 @@ func (t *Table) HideColumn(columnNumber int) {
 func (t *Table) Print() {
 	headLine := ""
 	// loop through all headers and make a single line properly spaced
-	for idx := 0; idx < t.headCount; idx++ {
+	for col := 0; col < t.headCount; col++ {
 		// columnOrder contains the actual column number to use next
+		idx := t.columnOrder[col]
 		if t.head[idx].hidden {
 			continue
 		}
@@ -82,7 +116,8 @@ func (t *Table) Print() {
 		line := ""
 		row := t.data[rowNum]
 		// now loop through each column the the currentl selected row
-		for idx := 0; idx < t.headCount; idx++ {
+		for col := 0; col < t.headCount; col++ {
+			idx := t.columnOrder[col]
 			if t.head[idx].hidden {
 				continue
 			}
@@ -96,4 +131,41 @@ func (t *Table) Print() {
 		}
 		fmt.Println(strings.TrimRight(line, " "))
 	}
+}
+
+// Prints the table on the terminal as json, all fileds are shown and all are unsorted as
+// programs like jq can be used to filter and sort
+func (t *Table) PrintJson() {
+	// loop through each row
+	fmt.Println("{\"data\":[")
+	for rowNum := 0; rowNum < len(t.data); rowNum++ {
+		line := "{"
+		row := t.data[rowNum]
+		// now loop through each column the the currentl selected row
+		for col := 0; col < t.headCount; col++ {
+			word := row[col]
+			if len(word) == 0 {
+				word = ""
+			}
+			line += fmt.Sprintf("\"%s\": \"%s\"", t.head[col].title, word)
+			// add , to the end of every key/value except the last
+			if col+1 < t.headCount {
+				line += ", "
+			}
+		}
+
+		line += "}"
+		// again add the , to end of every line except the last
+		if rowNum+1 < len(t.data) {
+			line += ", "
+		}
+
+		fmt.Println(line)
+	}
+	fmt.Println("]}")
+
+}
+
+func (t *Table) Sort(columnNumber int, ascending bool) {
+	t.rowOrder[0] = 0
 }

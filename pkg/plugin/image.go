@@ -9,7 +9,6 @@ import (
 func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
 	var showPodName bool = true
-	var idx int
 
 	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
@@ -31,12 +30,14 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 		return err
 	}
 
-	table := make(map[int][]string)
-	table[0] = []string{"T", "CONTAINER", "PULL", "IMAGE"}
+	table := Table{}
+	table.SetHeader(
+		"T", "PODNAME", "CONTAINER", "PULL", "IMAGE",
+	)
 
-	if showPodName {
-		// we need to add the pod name to the table
-		table[0] = append([]string{"PODNAME"}, table[0]...)
+	if !showPodName {
+		// we need to hide the pod name in the table
+		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
@@ -45,32 +46,27 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			idx++
-			table[idx] = imageBuildRow(container, "S")
-			if showPodName {
-				table[idx] = append([]string{pod.Name}, table[idx]...)
-			}
+			tblOut := imageBuildRow(container, pod.Name, "S")
+			table.AddRow(tblOut...)
 		}
 		for _, container := range pod.Spec.InitContainers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			idx++
-			table[idx] = imageBuildRow(container, "I")
-			if showPodName {
-				table[idx] = append([]string{pod.Name}, table[idx]...)
-			}
+			tblOut := imageBuildRow(container, pod.Name, "I")
+			table.AddRow(tblOut...)
 		}
 	}
-	showTable(table)
+	table.Print()
 	return nil
 
 }
 
-func imageBuildRow(container v1.Container, containerType string) []string {
+func imageBuildRow(container v1.Container, podName string, containerType string) []string {
 	return []string{
 		containerType,
+		podName,
 		container.Name,
 		string(container.ImagePullPolicy),
 		container.Image,

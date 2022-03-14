@@ -7,8 +7,6 @@ import (
 
 func IP(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
-	var showPodName bool = true
-	var idx int
 
 	clientset, err := loadConfig(kubeFlags)
 	if err != nil {
@@ -18,9 +16,6 @@ func IP(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []str
 	// if a single pod is selected we dont need to show its name
 	if len(args) >= 1 {
 		podname = args
-		if len(podname[0]) >= 1 {
-			showPodName = false
-		}
 	}
 
 	commonFlagList := processCommonFlags(cmd)
@@ -30,22 +25,19 @@ func IP(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []str
 		return err
 	}
 
-	table := make(map[int][]string)
-	table[0] = []string{"NAME", "IP"}
-
-	if showPodName {
-		// we need to add the pod name to the table
-		table[0] = append([]string{"PODNAME"}, table[0]...)
-	}
+	table := Table{}
+	table.SetHeader(
+		"NAME", "IP",
+	)
 
 	for _, pod := range podList {
-		idx++
-		table[idx] = []string{
+
+		table.AddRow(
 			pod.Name,
 			pod.Status.PodIP,
-		}
+		)
 	}
-	showTable(table)
+	table.Print()
 	return nil
 
 }
