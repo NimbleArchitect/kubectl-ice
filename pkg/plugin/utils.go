@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -177,31 +176,6 @@ func skipContainerName(flagList commonFlags, containerName string) bool {
 
 }
 
-//print the array as a table, auto adjusts column widths
-func showTable(table map[int][]string) {
-	colWidth := make([]int, len(table[0]))
-	for _, row := range table {
-		for idx, word := range row {
-			if colWidth[idx] <= len(word) {
-				colWidth[idx] = len(word) + 2
-			}
-		}
-	}
-	// fmt.Println("F:showTable:len(table)=", len(table))
-	for row := 0; row <= len(table); row++ {
-		//for _, row := range table {
-		line := ""
-		for idx, word := range table[row] {
-			if len(word) == 0 {
-				word = "-"
-			}
-			pad := strings.Repeat(" ", colWidth[idx]-len(word))
-			line += fmt.Sprint(word, pad)
-		}
-		fmt.Println(strings.TrimRight(line, " "))
-	}
-}
-
 //returns a list of memory sizes with their multipacation amount
 func memoryGetUnitLst() map[string]int64 {
 	// Ki | Mi | Gi | Ti | Pi | Ei = 1024 = 1Ki
@@ -257,4 +231,17 @@ func validateFloat64(number float64) float64 {
 		return 0.0
 	}
 	return number
+}
+
+// prints a table on the terminal of a given outType
+func outputTableAs(t Table, outType string) {
+
+	switch outType {
+
+	case "":
+		t.Print()
+	case "json":
+		t.PrintJson()
+	}
+
 }

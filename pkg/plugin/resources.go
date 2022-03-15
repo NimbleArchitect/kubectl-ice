@@ -9,6 +9,9 @@ import (
 	v1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 )
 
+var cpuExample = ``
+var memoryExample = ``
+
 func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string, resourceType string) error {
 	var podname []string
 	var showPodName bool = true
@@ -27,7 +30,10 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		}
 	}
 
-	commonFlagList := processCommonFlags(cmd)
+	commonFlagList, err := processCommonFlags(cmd)
+	if err != nil {
+		return err
+	}
 
 	podList, err := getPods(clientset, kubeFlags, podname, commonFlagList)
 	if err != nil {
@@ -80,7 +86,11 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		}
 	}
 
-	table.Print()
+	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
+		return err
+	}
+
+	outputTableAs(table, commonFlagList.outputAs)
 	return nil
 }
 

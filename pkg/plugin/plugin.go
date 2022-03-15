@@ -1,6 +1,10 @@
 package plugin
 
 import (
+	"errors"
+	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -10,6 +14,8 @@ type commonFlags struct {
 	allNamespaces bool
 	labels        string
 	container     string
+	sortList      []string
+	outputAs      string
 }
 
 func InitSubCommands(rootCmd *cobra.Command) {
@@ -20,6 +26,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		Use:     "command",
 		Short:   "retrieves the command line and any arguments specified at the container level",
 		Long:    "",
+		Example: fmt.Sprintf(commandsExample, rootCmd.CommandPath()),
 		Aliases: []string{"cmd", "exec", "args"},
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -36,9 +43,10 @@ func InitSubCommands(rootCmd *cobra.Command) {
 
 	//cpu
 	var cmdCPU = &cobra.Command{
-		Use:   "cpu",
-		Short: "return cpu requests size, limits and usage of each container",
-		Long:  "",
+		Use:     "cpu",
+		Short:   "return cpu requests size, limits and usage of each container",
+		Long:    "",
+		Example: fmt.Sprintf(cpuExample, rootCmd.CommandPath()),
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := Resources(cmd, KubernetesConfigFlags, args, "cpu"); err != nil {
@@ -55,9 +63,10 @@ func InitSubCommands(rootCmd *cobra.Command) {
 
 	//ip
 	var cmdIP = &cobra.Command{
-		Use:   "ip",
-		Short: "list ip addresses of all pods in the namespace listed",
-		Long:  "",
+		Use:     "ip",
+		Short:   "list ip addresses of all pods in the namespace listed",
+		Long:    "",
+		Example: fmt.Sprintf(ipExample, rootCmd.CommandPath()),
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := IP(cmd, KubernetesConfigFlags, args); err != nil {
@@ -76,6 +85,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		Use:     "image",
 		Short:   "list the image name and pull status for each container",
 		Long:    "",
+		Example: fmt.Sprintf(imageExample, rootCmd.CommandPath()),
 		Aliases: []string{"im"},
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -95,6 +105,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		Use:     "memory",
 		Short:   "return memory requests size, limits and usage of each container",
 		Long:    "",
+		Example: fmt.Sprintf(memoryExample, rootCmd.CommandPath()),
 		Aliases: []string{"mem"},
 		// SuggestFor: []string{""},
 		// Example: "",
@@ -116,6 +127,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		Use:     "ports",
 		Short:   "shows ports exposed by the containers in a pod",
 		Long:    "",
+		Example: fmt.Sprintf(portsExample, rootCmd.CommandPath()),
 		Aliases: []string{"port", "po"},
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -135,6 +147,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		Use:     "probes",
 		Short:   "shows details of configured startup, readiness and liveness probes of each container",
 		Long:    "",
+		Example: fmt.Sprintf(probesExample, rootCmd.CommandPath()),
 		Aliases: []string{"probe"},
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -154,6 +167,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		Use:     "restarts",
 		Short:   "show restart counts for each container in a named pod",
 		Long:    "",
+		Example: fmt.Sprintf(restartsExample, rootCmd.CommandPath()),
 		Aliases: []string{"restart"},
 		// SuggestFor: []string{""},
 		// Example: "",
@@ -174,6 +188,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		Use:     "status",
 		Short:   "list status of each container in a pod",
 		Long:    "",
+		Example: fmt.Sprintf(statusExample, rootCmd.CommandPath()),
 		Aliases: []string{"st"},
 		// SuggestFor: []string{""},
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -195,8 +210,9 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	//volumes
 	var cmdVolume = &cobra.Command{
 		Use:     "volumes",
-		Short:   "list all container volumes with mount points",
+		Short:   "Display container volumes and mount points",
 		Long:    "",
+		Example: fmt.Sprintf(volumesExample, rootCmd.CommandPath()),
 		Aliases: []string{"volume", "vol"},
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -218,9 +234,12 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().BoolP("all-namespaces", "A", false, "list containers form pods in all namespaces")
 	cmdObj.Flags().StringP("selector", "l", "", `Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2`)
 	cmdObj.Flags().StringP("container", "c", "", `Container name. If omitted show all containers in the pod`)
+	cmdObj.Flags().StringP("sort", "", "", `Sort by column`)
+	cmdObj.Flags().StringP("output", "o", "", `Output format, only json is supported`)
+
 }
 
-func processCommonFlags(cmd *cobra.Command) commonFlags {
+func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 	f := commonFlags{}
 
 	if cmd.Flag("all-namespaces").Value.String() == "true" {
@@ -240,5 +259,49 @@ func processCommonFlags(cmd *cobra.Command) commonFlags {
 		}
 	}
 
-	return f
+	if cmd.Flag("output") != nil {
+		if len(cmd.Flag("output").Value.String()) > 0 {
+			outAs := cmd.Flag("output").Value.String()
+			// we use a switch to match -o flag so I can expand in future
+			switch strings.ToLower(outAs) {
+			case "json":
+				f.outputAs = "json"
+
+			default:
+				return commonFlags{}, errors.New("unknown output format only json is supported")
+			}
+		}
+	}
+
+	if cmd.Flag("sort") != nil {
+		// based on a whitelist approach sort just removes invalid chars,
+		// we cant check header names as we dont know them at this point
+		if len(cmd.Flag("sort").Value.String()) > 0 {
+			rawSortString := cmd.Flag("sort").Value.String()
+			rawSortList := strings.Split(rawSortString, ",")
+			for i := 0; i < len(rawSortList); i++ {
+				safeStr := ""
+				rawItem := strings.TrimSpace(rawSortList[i])
+				if len(rawItem) <= 0 {
+					continue
+				}
+
+				// current used chars in headers are A-Z ! and % nothing else is needed
+				// so pointless using regex
+				rawUpper := strings.ToUpper(rawItem)
+				for _, v := range strings.Split(rawUpper, "") {
+					if strings.Contains("ABCDEFGHIJKLMNOPQRSTUVWXYZ!%-", v) {
+						safeStr += v
+					}
+				}
+
+				if len(safeStr) != len(rawItem) {
+					return commonFlags{}, errors.New("invalid characters in column name")
+				}
+				f.sortList = append(f.sortList, safeStr)
+			}
+
+		}
+	}
+	return f, nil
 }

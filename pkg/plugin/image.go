@@ -6,6 +6,8 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
+var imageExample = ``
+
 func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
 	var showPodName bool = true
@@ -23,8 +25,10 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 		}
 	}
 
-	commonFlagList := processCommonFlags(cmd)
-
+	commonFlagList, err := processCommonFlags(cmd)
+	if err != nil {
+		return err
+	}
 	podList, err := getPods(clientset, kubeFlags, podname, commonFlagList)
 	if err != nil {
 		return err
@@ -58,7 +62,12 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 			table.AddRow(tblOut...)
 		}
 	}
-	table.Print()
+
+	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
+		return err
+	}
+
+	outputTableAs(table, commonFlagList.outputAs)
 	return nil
 
 }

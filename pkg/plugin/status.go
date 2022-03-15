@@ -8,6 +8,36 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
+var statusExample = `  # List individual container status from pods
+  %[1]s status
+
+  # List conttainers status from pods output in JSON format
+  %[1]s status -o json
+
+  # List status from all container in a single pod
+  %[1]s status my-pod-4jh36
+
+  # List previous container status from a single pod
+  %[1]s status -p my-pod-4jh36
+
+  # List status of all containers named web-container searching all 
+  # pods in the current namespace
+  %[1]s status -c web-container
+
+  # List status of containers called web-container searching all pods in current
+  # namespace sorted by container name in descending order (notice the ! charator)
+  %[1]s status -c web-container --sort '!CONTAINER'
+
+  # List status of containers called web-container searching all pods in current
+  # namespace sorted by pod name in ascending order
+  %[1]s status -c web-container --sort 'PODNAME"
+
+  # List container status from all pods with label app=web
+  %[1]s status -l app=bms
+
+  # List status from all containers where the pods label app is either web or mail
+  %[1]s status -l "app in (web,mail)"`
+
 func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
 	var showPodName bool = true
@@ -26,7 +56,10 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		}
 	}
 
-	commonFlagList := processCommonFlags(cmd)
+	commonFlagList, err := processCommonFlags(cmd)
+	if err != nil {
+		return err
+	}
 
 	podList, err := getPods(clientset, kubeFlags, podname, commonFlagList)
 	if err != nil {
@@ -71,7 +104,12 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			table.AddRow(tblOut...)
 		}
 	}
-	table.Print()
+
+	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
+		return err
+	}
+
+	outputTableAs(table, commonFlagList.outputAs)
 	return nil
 
 }
