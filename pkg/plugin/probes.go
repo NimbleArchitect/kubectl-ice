@@ -10,7 +10,36 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var probesExample = ``
+var probesShort = "hows details of configured startup, readiness and liveness probes of each container"
+
+var probesDescription = `.`
+
+var probesExample = `  # List containers probe info from pods
+  %[1]s probes
+
+  # List container probe info from pods output in JSON format
+  %[1]s probes -o json
+
+  # List container probe info from a single pod
+  %[1]s probes my-pod-4jh36
+
+  # List probe info for all containers named web-container searching all 
+  # pods in the current namespace
+  %[1]s probes -c web-container
+
+  # List probe info for all containers called web-container searching all pods in current
+  # namespace sorted by container name in descending order (notice the ! charator)
+  %[1]s probes -c web-container --sort '!CONTAINER'
+
+  # List probe info for all containers called web-container searching all pods in current
+  # namespace sorted by pod name in ascending order
+  %[1]s probes -c web-container --sort 'PODNAME"
+
+  # List container probe info from all pods where label app matches web
+  %[1]s probes -l app=web
+
+  # List container probe info from all pods where the pod label app is either web or mail
+  %[1]s probes -l "app in (web,mail)"`
 
 type probeAction struct {
 	probeName  string

@@ -9,32 +9,36 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
+var volumesShort = "Display container volumes and mount points"
+
+var volumesDescription = `.`
+
 var volumesExample = `  # List volumes from containers inside pods from current namespace
-  %[1]s volume
+  %[1]s volumes
 
   # List volumes from conttainers output in JSON format
-  %[1]s volume -o json
+  %[1]s volumes -o json
 
   # List all container volumes from a single pod
-  %[1]s volume my-pod-4jh36
+  %[1]s volumes my-pod-4jh36
 
   # List volumes from all containers named web-container searching all 
   # pods in the current namespace
-  %[1]s volume -c web-container
+  %[1]s volumes -c web-container
 
   # List volumes from container web-container searching all pods in current
   # namespace sorted by volume name in descending order (notice the ! charator)
-  %[1]s volume -c web-container --sort '!VOLUME'
+  %[1]s volumes -c web-container --sort '!VOLUME'
 
   # List volumes from container web-container searching all pods in current
   # namespace sorted by volume name in ascending order
-  %[1]s volume -c web-container --sort 'MOUNT-POINT"
+  %[1]s volumes -c web-container --sort 'MOUNT-POINT"
 
-  # List volume from all pods with label app=web
-  %[1]s volume -l app=bms
+  # List container volume info from all pods where label app equals web
+  %[1]s volumes -l app=web
 
-  # List volumes from all containers where the pods label app is web or mail
-  %[1]s volume -l "app in (web,mail)"`
+  # List volumes from all containers where the pod label app is web or mail
+  %[1]s volumes -l "app in (web,mail)"`
 
 func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string

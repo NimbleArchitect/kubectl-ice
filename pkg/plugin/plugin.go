@@ -24,8 +24,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	//commands
 	var cmdCommands = &cobra.Command{
 		Use:     "command",
-		Short:   "retrieves the command line and any arguments specified at the container level",
-		Long:    "",
+		Short:   commandsShort,
+		Long:    fmt.Sprintf("%s\n\n%s", commandsShort, commandsDescription),
 		Example: fmt.Sprintf(commandsExample, rootCmd.CommandPath()),
 		Aliases: []string{"cmd", "exec", "args"},
 		// SuggestFor: []string{""},
@@ -44,9 +44,9 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	//cpu
 	var cmdCPU = &cobra.Command{
 		Use:     "cpu",
-		Short:   "return cpu requests size, limits and usage of each container",
-		Long:    "",
-		Example: fmt.Sprintf(cpuExample, rootCmd.CommandPath()),
+		Short:   resourceShort("cpu"),
+		Long:    fmt.Sprintf("%s\n\n%s", resourceShort("cpu"), resourceDescription("cpu")),
+		Example: fmt.Sprintf(resourceExample("cpu"), rootCmd.CommandPath()),
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := Resources(cmd, KubernetesConfigFlags, args, "cpu"); err != nil {
@@ -64,8 +64,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	//ip
 	var cmdIP = &cobra.Command{
 		Use:     "ip",
-		Short:   "list ip addresses of all pods in the namespace listed",
-		Long:    "",
+		Short:   ipShort,
+		Long:    fmt.Sprintf("%s\n\n%s", ipShort, ipDescription),
 		Example: fmt.Sprintf(ipExample, rootCmd.CommandPath()),
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -83,8 +83,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	//image
 	var cmdImage = &cobra.Command{
 		Use:     "image",
-		Short:   "list the image name and pull status for each container",
-		Long:    "",
+		Short:   imageShort,
+		Long:    fmt.Sprintf("%s\n\n%s", imageShort, imageDescription),
 		Example: fmt.Sprintf(imageExample, rootCmd.CommandPath()),
 		Aliases: []string{"im"},
 		// SuggestFor: []string{""},
@@ -103,9 +103,9 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	//memory
 	var cmdMemory = &cobra.Command{
 		Use:     "memory",
-		Short:   "return memory requests size, limits and usage of each container",
-		Long:    "",
-		Example: fmt.Sprintf(memoryExample, rootCmd.CommandPath()),
+		Short:   resourceShort("memory"),
+		Long:    fmt.Sprintf("%s\n\n%s", resourceShort("memory"), resourceDescription("memory")),
+		Example: fmt.Sprintf(resourceExample("memory"), rootCmd.CommandPath()),
 		Aliases: []string{"mem"},
 		// SuggestFor: []string{""},
 		// Example: "",
@@ -125,8 +125,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	//ports
 	var cmdPorts = &cobra.Command{
 		Use:     "ports",
-		Short:   "shows ports exposed by the containers in a pod",
-		Long:    "",
+		Short:   portsShort,
+		Long:    fmt.Sprintf("%s\n\n%s", portsShort, portsDescription),
 		Example: fmt.Sprintf(portsExample, rootCmd.CommandPath()),
 		Aliases: []string{"port", "po"},
 		// SuggestFor: []string{""},
@@ -145,8 +145,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	//probes
 	var cmdProbes = &cobra.Command{
 		Use:     "probes",
-		Short:   "shows details of configured startup, readiness and liveness probes of each container",
-		Long:    "",
+		Short:   probesShort,
+		Long:    fmt.Sprintf("%s\n\n%s", probesShort, probesDescription),
 		Example: fmt.Sprintf(probesExample, rootCmd.CommandPath()),
 		Aliases: []string{"probe"},
 		// SuggestFor: []string{""},
@@ -165,8 +165,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	//restarts
 	var cmdRestart = &cobra.Command{
 		Use:     "restarts",
-		Short:   "show restart counts for each container in a named pod",
-		Long:    "",
+		Short:   restartsShort,
+		Long:    fmt.Sprintf("%s\n\n%s", restartsShort, restartsDescription),
 		Example: fmt.Sprintf(restartsExample, rootCmd.CommandPath()),
 		Aliases: []string{"restart"},
 		// SuggestFor: []string{""},
@@ -186,8 +186,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	//status
 	var cmdStatus = &cobra.Command{
 		Use:     "status",
-		Short:   "list status of each container in a pod",
-		Long:    "",
+		Short:   statusShort,
+		Long:    fmt.Sprintf("%s\n\n%s", statusShort, statusDescription),
 		Example: fmt.Sprintf(statusExample, rootCmd.CommandPath()),
 		Aliases: []string{"st"},
 		// SuggestFor: []string{""},
@@ -210,8 +210,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	//volumes
 	var cmdVolume = &cobra.Command{
 		Use:     "volumes",
-		Short:   "Display container volumes and mount points",
-		Long:    "",
+		Short:   volumesShort,
+		Long:    fmt.Sprintf("%s\n\n%s", volumesShort, volumesDescription),
 		Example: fmt.Sprintf(volumesExample, rootCmd.CommandPath()),
 		Aliases: []string{"volume", "vol"},
 		// SuggestFor: []string{""},

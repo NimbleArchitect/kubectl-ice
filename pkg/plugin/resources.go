@@ -9,8 +9,46 @@ import (
 	v1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 )
 
-var cpuExample = ``
-var memoryExample = ``
+// returns a string replacing %[1] with the resourse type r
+func resourceShort(r string) string {
+	return fmt.Sprintf("return %[1]s requests size, limits and usage of each container", r)
+}
+
+// returns a string replacing %[1] with the resourse type r
+func resourceDescription(r string) string {
+	return fmt.Sprintf("Shows current %[1]s usage ", r)
+}
+
+// returns a string replacing %[2] with the resourse type r
+// %[1] is replaced with its self as it is needed later on
+func resourceExample(r string) string {
+	return fmt.Sprintf(`  # List containers %[2]s info from pods
+  %[1]s %[2]s
+
+  # List container %[2]s info from pods output in JSON format
+  %[1]s %[2]s -o json
+
+  # List container %[2]s info from a single pod
+  %[1]s %[2]s my-pod-4jh36
+
+  # List %[2]s info for all containers named web-container searching all 
+  # pods in the current namespace
+  %[1]s %[2]s -c web-container
+
+  # List %[2]s info for all containers called web-container searching all pods in current
+  # namespace sorted by container name in descending order (notice the ! charator)
+  %[1]s %[2]s -c web-container --sort '!CONTAINER'
+
+  # List %[2]s info for all containers called web-container searching all pods in current
+  # namespace sorted by pod name in ascending order
+  %[1]s %[2]s -c web-container --sort 'PODNAME"
+
+  # List container %[2]s info from all pods where label app matches web
+  %[1]s %[2]s -l app=web
+
+  # List container %[2]s info from all pods where the pod label app is either web or mail
+  %[1]s %[2]s -l "app in (web,mail)"`, "%[1]s", r)
+}
 
 func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string, resourceType string) error {
 	var podname []string

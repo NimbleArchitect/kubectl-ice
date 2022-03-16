@@ -5,7 +5,24 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var ipExample = ``
+var ipShort = "list ip addresses of all pods in the namespace listed"
+
+var ipDescription = `.`
+
+var ipExample = `  # List IP address of pods
+  %[1]s ip
+
+  # List IP address of pods output in JSON format
+  %[1]s ip -o json
+
+  # List IP address a single pod
+  %[1]s ip my-pod-4jh36
+
+  # List IP address of all pods where label app matches web
+  %[1]s ip -l app=web
+
+  # List IP address of all pods where the pod label app is either web or mail
+  %[1]s ip -l "app in (web,mail)"`
 
 func IP(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
