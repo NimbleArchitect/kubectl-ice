@@ -8,7 +8,36 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var commandsExample = ``
+var commandsShort = "Retrieves the command line and any arguments specified at the container level"
+
+var commandsDescription = `.`
+
+var commandsExample = `  # List containers command info from pods
+  %[1]s command
+
+  # List container command info from pods output in JSON format
+  %[1]s command -o json
+
+  # List container command info from a single pod
+  %[1]s command my-pod-4jh36
+
+  # List command info for all containers named web-container searching all 
+  # pods in the current namespace
+  %[1]s command -c web-container
+
+  # List command info for all containers called web-container searching all pods in current
+  # namespace sorted by container name in descending order (notice the ! charator)
+  %[1]s command -c web-container --sort '!CONTAINER'
+
+  # List command info for all containers called web-container searching all pods in current
+  # namespace sorted by pod name in ascending order
+  %[1]s command -c web-container --sort 'PODNAME"
+
+  # List container command info from all pods where label app matches web
+  %[1]s command -l app=web
+
+  # List container command info from all pods where the pod label app is either web or mail
+  %[1]s command -l "app in (web,mail)"`
 
 func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string

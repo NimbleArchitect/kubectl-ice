@@ -8,6 +8,10 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
+var statusShort = "list status of each container in a pod"
+
+var statusDescription = `.`
+
 var statusExample = `  # List individual container status from pods
   %[1]s status
 
@@ -32,8 +36,8 @@ var statusExample = `  # List individual container status from pods
   # namespace sorted by pod name in ascending order
   %[1]s status -c web-container --sort 'PODNAME"
 
-  # List container status from all pods with label app=web
-  %[1]s status -l app=bms
+  # List container status from all pods where label app equals web
+  %[1]s status -l app=web
 
   # List status from all containers where the pods label app is either web or mail
   %[1]s status -l "app in (web,mail)"`

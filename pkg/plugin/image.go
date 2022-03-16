@@ -6,7 +6,36 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var imageExample = ``
+var imageShort = "list the image name and pull status for each container"
+
+var imageDescription = `.`
+
+var imageExample = `  # List containers image info from pods
+  %[1]s image
+
+  # List container image info from pods output in JSON format
+  %[1]s image -o json
+
+  # List container image info from a single pod
+  %[1]s image my-pod-4jh36
+
+  # List image info for all containers named web-container searching all 
+  # pods in the current namespace
+  %[1]s image -c web-container
+
+  # List image info for all containers called web-container searching all pods in current
+  # namespace sorted by container name in descending order (notice the ! charator)
+  %[1]s image -c web-container --sort '!CONTAINER'
+
+  # List image info for all containers called web-container searching all pods in current
+  # namespace sorted by pod name in ascending order
+  %[1]s image -c web-container --sort 'PODNAME"
+
+  # List container image info from all pods where label app matches web
+  %[1]s image -l app=web
+
+  # List container image info from all pods where the pod label app is either web or mail
+  %[1]s image -l "app in (web,mail)"`
 
 func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
