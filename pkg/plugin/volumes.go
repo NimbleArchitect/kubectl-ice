@@ -11,7 +11,10 @@ import (
 
 var volumesShort = "Display container volumes and mount points"
 
-var volumesDescription = `.`
+var volumesDescription = ` Prints configured volume information at the container level, volume type, backing information,
+read-write state and mount point are all avaliable, volume size is only available if found in
+the pod configuration. If no name is specified the volume information for all pods in the
+current namespace are shown.`
 
 var volumesExample = `  # List volumes from containers inside pods from current namespace
   %[1]s volumes

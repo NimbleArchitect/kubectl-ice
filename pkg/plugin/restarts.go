@@ -8,9 +8,12 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var restartsShort = "show restart counts for each container in a named pod"
+var restartsShort = "Show restart counts for each container in a named pod"
 
-var restartsDescription = `.`
+var restartsDescription = ` Prints container name and restart count for individual containers. If no name is specified the
+container restart counts of all pods in the current namespace are shown.
+
+The T column in the table output denotes S for Standard and I for init containers`
 
 var restartsExample = `  # List individual container restart count from pods
   %[1]s restarts

@@ -5,9 +5,10 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var ipShort = "list ip addresses of all pods in the namespace listed"
+var ipShort = "List ip addresses of all pods in the namespace listed"
 
-var ipDescription = `.`
+var ipDescription = ` Prints the known IP addresses of the specified pod(s). if no pod is specified the IP address of
+all pods in the current namespace are shown.`
 
 var ipExample = `  # List IP address of pods
   %[1]s ip

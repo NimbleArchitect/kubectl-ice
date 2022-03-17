@@ -8,9 +8,14 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var statusShort = "list status of each container in a pod"
+var statusShort = "List status of each container in a pod"
 
-var statusDescription = `.`
+var statusDescription = ` Prints container status information from pods, current and previous exit code, reason and signal
+are shown slong with current ready and running state. Pods and containers can also be selected
+by name. If no name is specified the container state of all pods in the current namespace is
+shown.
+
+The T column in the table output denotes S for Standard and I for init containers`
 
 var statusExample = `  # List individual container status from pods
   %[1]s status
