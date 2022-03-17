@@ -6,9 +6,13 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var imageShort = "list the image name and pull status for each container"
+var imageShort = "List the image name and pull status for each container"
 
-var imageDescription = `.`
+var imageDescription = ` Print the the image used for running containers in a pod including the pull policy, single pods
+and containers can be selected by name. If no name is specified the image details of all pods in
+the current namespace are shown.
+
+The T column in the table output denotes S for Standard and I for init containers`
 
 var imageExample = `  # List containers image info from pods
   %[1]s image

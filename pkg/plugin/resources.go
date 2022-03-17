@@ -11,12 +11,17 @@ import (
 
 // returns a string replacing %[1] with the resourse type r
 func resourceShort(r string) string {
-	return fmt.Sprintf("return %[1]s requests size, limits and usage of each container", r)
+	return fmt.Sprintf("Show configured %[1]s size, limit and %% usage of each container", r)
 }
 
 // returns a string replacing %[1] with the resourse type r
 func resourceDescription(r string) string {
-	return fmt.Sprintf("Shows current %[1]s usage ", r)
+	return fmt.Sprintf(` Prints the current %[1]s usage along with configured requests and limits. The calculated %% fields
+serve as an easy way to see how close you are to the configured sizes.  By specifying the -r 
+flag you can see raw unfiltered values.  If no name is specified the container %[1]s details
+of all pods in the current namespace are shown.
+
+The T column in the table output denotes S for Standard and I for init containers`, r)
 }
 
 // returns a string replacing %[2] with the resourse type r

@@ -10,9 +10,12 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var probesShort = "hows details of configured startup, readiness and liveness probes of each container"
+var probesShort = "Shows details of configured startup, readiness and liveness probes of each container"
 
-var probesDescription = `.`
+var probesDescription = ` Prints details of the currently configured startup, liveness and rediness probes for each 
+container. Details like the delay timeout and action are printed along with the configured probe
+type. If no name is specified the container probe details of all pods in the current namespace
+are shown.`
 
 var probesExample = `  # List containers probe info from pods
   %[1]s probes

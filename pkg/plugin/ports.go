@@ -8,9 +8,13 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var portsShort = "shows ports exposed by the containers in a pod"
+var portsShort = "Shows ports exposed by the containers in a pod"
 
-var portsDescription = `.`
+var portsDescription = ` Print a details of service ports exposed by containers in a pod. Details include the container 
+name, port number and protocol type. Port name and host port are only show if avaliable. If no
+name is specified the container port details of all pods in the current namespace are shown.
+
+The T column in the table output denotes S for Standard and I for init containers`
 
 var portsExample = `  # List containers port info from pods
   %[1]s ports

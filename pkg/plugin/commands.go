@@ -10,7 +10,11 @@ import (
 
 var commandsShort = "Retrieves the command line and any arguments specified at the container level"
 
-var commandsDescription = `.`
+var commandsDescription = ` Prints command and arguments used to start each container (if specified), single pods and 
+containers can be selected by name.  If no name is specified the container commands of all pods
+in the current namespace are shown.
+
+The T column in the table output denotes S for Standard and I for init containers`
 
 var commandsExample = `  # List containers command info from pods
   %[1]s command
