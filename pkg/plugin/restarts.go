@@ -73,6 +73,14 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	table.SetHeader(
 		"T", "PODNAME", "CONTAINER", "RESTARTS",
 	)
+	table.SetColumnTypeInt(3)
+
+	if len(commonFlagList.filterList) >= 1 {
+		err = table.SetFilter(commonFlagList.filterList)
+		if err != nil {
+			return err
+		}
+	}
 
 	if !showPodName {
 		// we need to hide the pod name in the table

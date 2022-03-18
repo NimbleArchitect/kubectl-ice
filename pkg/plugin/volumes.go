@@ -74,6 +74,14 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	table.SetHeader(
 		"PODNAME", "CONTAINER", "VOLUME", "TYPE", "BACKING", "SIZE", "RO", "MOUNT-POINT",
 	)
+	table.SetColumnTypeInt(5)
+
+	if len(commonFlagList.filterList) >= 1 {
+		err = table.SetFilter(commonFlagList.filterList)
+		if err != nil {
+			return err
+		}
+	}
 
 	if !showPodName {
 		// we need to hide the pod name in the table

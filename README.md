@@ -6,9 +6,10 @@ With ice you can peer inside a pod and easily see volume, image, port and exec c
 supports all the standard kubectl flags in addition to:
 ```
 Flags:
-  -A, --all-namespaces                 list containers form pods in all namespaces
+  -A, --all-namespaces                 List containers form pods in all namespaces
   -c, --container string               Container name. If set shows only the named containers containers in the pod
       --context string                 The name of the kubeconfig context to use
+      --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
   -n, --namespace string               If present, the namespace scope for this CLI request
   -l, --selector string                Selector (label query) to filter on
 ```

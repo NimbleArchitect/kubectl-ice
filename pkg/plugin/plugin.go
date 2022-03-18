@@ -11,11 +11,12 @@ import (
 )
 
 type commonFlags struct {
-	allNamespaces bool
-	labels        string
-	container     string
-	sortList      []string
-	outputAs      string
+	allNamespaces bool     // should we search all namespaces
+	container     string   // name of the container to search for
+	filterList    []string // used to filter out rows form the table during Print function
+	labels        string   // k8s pod labels
+	outputAs      string   // how to output the table, currently only accepts json
+	sortList      []string //column names to sort on when table.Print() is called
 }
 
 func InitSubCommands(rootCmd *cobra.Command) {
@@ -236,10 +237,12 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("container", "c", "", `Container name. If omitted show all containers in the pod`)
 	cmdObj.Flags().StringP("sort", "", "", `Sort by column`)
 	cmdObj.Flags().StringP("output", "o", "", `Output format, only json is supported`)
-
+	cmdObj.Flags().StringP("match", "", "", `Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != `)
 }
 
 func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
+	var err error
+
 	f := commonFlags{}
 
 	if cmd.Flag("all-namespaces").Value.String() == "true" {
@@ -278,30 +281,54 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 		// we cant check header names as we dont know them at this point
 		if len(cmd.Flag("sort").Value.String()) > 0 {
 			rawSortString := cmd.Flag("sort").Value.String()
-			rawSortList := strings.Split(rawSortString, ",")
-			for i := 0; i < len(rawSortList); i++ {
-				safeStr := ""
-				rawItem := strings.TrimSpace(rawSortList[i])
-				if len(rawItem) <= 0 {
-					continue
-				}
-
-				// current used chars in headers are A-Z ! and % nothing else is needed
-				// so pointless using regex
-				rawUpper := strings.ToUpper(rawItem)
-				for _, v := range strings.Split(rawUpper, "") {
-					if strings.Contains("ABCDEFGHIJKLMNOPQRSTUVWXYZ!%-", v) {
-						safeStr += v
-					}
-				}
-
-				if len(safeStr) != len(rawItem) {
-					return commonFlags{}, errors.New("invalid characters in column name")
-				}
-				f.sortList = append(f.sortList, safeStr)
+			f.sortList, err = splitAndFilterList(rawSortString, "ABCDEFGHIJKLMNOPQRSTUVWXYZ!%-")
+			if err != nil {
+				return commonFlags{}, err
 			}
-
 		}
 	}
+
+	if cmd.Flag("match") != nil {
+		if len(cmd.Flag("match").Value.String()) > 0 {
+			rawMatchString := cmd.Flag("match").Value.String()
+			f.filterList, err = splitAndFilterList(rawMatchString, "ABCDEFGHIJKLMNOPQRSTUVWXYZ!%-0123456789<>=")
+			if err != nil {
+				return commonFlags{}, err
+			}
+		}
+	}
+
 	return f, nil
+}
+
+func splitAndFilterList(rawSortString string, filterString string) ([]string, error) {
+	// based on a whitelist approach sort just removes invalid chars,
+	// we cant check header names as we dont know them at this point
+	var sortList []string
+	var rawCase string
+
+	rawSortList := strings.Split(rawSortString, ",")
+	for i := 0; i < len(rawSortList); i++ {
+		safeStr := ""
+		rawItem := strings.TrimSpace(rawSortList[i])
+		if len(rawItem) <= 0 {
+			continue
+		}
+
+		// current used chars in headers are A-Z ! and % nothing else is needed
+		// so pointless using regex
+		rawCase = strings.ToUpper(rawItem)
+		for _, v := range strings.Split(rawCase, "") {
+			if strings.Contains(filterString, v) {
+				safeStr += v
+			}
+		}
+
+		if len(safeStr) != len(rawItem) {
+			return []string{}, errors.New("invalid characters in column name")
+		}
+		sortList = append(sortList, safeStr)
+	}
+
+	return sortList, nil
 }
