@@ -100,6 +100,14 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	table.SetHeader(
 		"T", "PODNAME", "CONTAINER", "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
 	)
+	table.SetColumnTypeInt(3, 4, 5, 6, 7)
+
+	if len(commonFlagList.filterList) >= 1 {
+		err = table.SetFilter(commonFlagList.filterList)
+		if err != nil {
+			return err
+		}
+	}
 
 	if !showPodName {
 		// we need to hide the pod name in the table
@@ -150,7 +158,7 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podNa
 			if showRaw {
 				displayValue = metrics.Cpu().String()
 			} else {
-				displayValue = fmt.Sprintf("%dm", metrics.Cpu().MilliValue())
+				displayValue = fmt.Sprintf("%d", metrics.Cpu().MilliValue())
 				floatfmt = "%.2f"
 			}
 

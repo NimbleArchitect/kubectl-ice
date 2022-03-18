@@ -84,10 +84,19 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		table.SetHeader(
 			"T", "PODNAME", "CONTAINER", "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE",
 		)
+		table.SetColumnTypeInt(5, 8, 9)
 	} else {
 		table.SetHeader(
 			"T", "PODNAME", "CONTAINER", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE",
 		)
+		table.SetColumnTypeInt(5, 6)
+	}
+
+	if len(commonFlagList.filterList) >= 1 {
+		err = table.SetFilter(commonFlagList.filterList)
+		if err != nil {
+			return err
+		}
 	}
 
 	if !showPodName {

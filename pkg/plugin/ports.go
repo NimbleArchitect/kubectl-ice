@@ -74,7 +74,14 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	table.SetHeader(
 		"T", "PODNAME", "CONTAINER", "PORTNAME", "PORT", "PROTO", "HOSTPORT",
 	)
+	table.SetColumnTypeInt(4, 6)
 
+	if len(commonFlagList.filterList) >= 1 {
+		err = table.SetFilter(commonFlagList.filterList)
+		if err != nil {
+			return err
+		}
+	}
 	if !showPodName {
 		// we need to hide the pod name in the table
 		table.HideColumn(1)

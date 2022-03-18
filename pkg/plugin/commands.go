@@ -75,6 +75,13 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 		"T", "PODNAME", "CONTAINER", "COMMAND", "ARGUMENTS",
 	)
 
+	if len(commonFlagList.filterList) >= 1 {
+		err = table.SetFilter(commonFlagList.filterList)
+		if err != nil {
+			return err
+		}
+	}
+
 	if !showPodName {
 		// we need to hide the pod name in the table
 		table.HideColumn(1)
