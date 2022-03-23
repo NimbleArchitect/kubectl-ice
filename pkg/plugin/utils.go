@@ -109,7 +109,7 @@ func getPods(clientSet kubernetes.Clientset, configFlags *genericclioptions.Conf
 		podList, err := clientSet.CoreV1().Pods(namespace).List(context.TODO(), selector)
 		if err == nil {
 			if len(podList.Items) == 0 {
-				return []v1.Pod{}, errors.New("No pods found in default namespace.")
+				return []v1.Pod{}, errors.New("no pods found in default namespace")
 			} else {
 				return podList.Items, nil
 			}
@@ -151,7 +151,7 @@ func getMetricPods(clientSet metricsclientset.Clientset, configFlags *genericcli
 		podList, err := clientSet.MetricsV1beta1().PodMetricses(namespace).List(context.TODO(), selector)
 		if err == nil {
 			if len(podList.Items) == 0 {
-				return []v1beta1.PodMetrics{}, errors.New("No pods found in default namespace.")
+				return []v1beta1.PodMetrics{}, errors.New("no pods found in default namespace")
 			} else {
 				return podList.Items, nil
 			}
