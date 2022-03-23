@@ -291,7 +291,7 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 	if cmd.Flag("match") != nil {
 		if len(cmd.Flag("match").Value.String()) > 0 {
 			rawMatchString := cmd.Flag("match").Value.String()
-			f.filterList, err = splitAndFilterList(rawMatchString, "ABCDEFGHIJKLMNOPQRSTUVWXYZ!%-0123456789<>=")
+			f.filterList, err = splitAndFilterList(rawMatchString, "ABCDEFGHIJKLMNOPQRSTUVWXYZ!%-0123456789<>=*?")
 			if err != nil {
 				return commonFlags{}, err
 			}

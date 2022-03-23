@@ -136,19 +136,19 @@ func (t *Table) Print() {
 			if t.head[idx].hidden {
 				continue
 			}
-			word := row[idx]
-			if len(word) == 0 {
-				word = "-"
+			cell := row[idx]
+			if len(cell) == 0 {
+				cell = "-"
 			}
 
 			// due to looping over every column in the row we only set excludeRow if it hasnt changed
 			if !excludeRow {
 				// do we have an exclude filter set that we need to process
-				excludeRow = t.exclusionFilter(word, idx)
+				excludeRow = t.exclusionFilter(cell, idx)
 			}
 
-			pad := strings.Repeat(" ", t.head[idx].columnLength-len(word))
-			line += fmt.Sprint(word, pad)
+			pad := strings.Repeat(" ", t.head[idx].columnLength-len(cell))
+			line += fmt.Sprint(cell, pad)
 		}
 		if !excludeRow {
 			fmt.Println(strings.TrimRight(line, " "))
@@ -291,7 +291,7 @@ func (t *Table) SetColumnTypeInt(columnID ...int) {
 
 // check if matchWord should be excluded using the given filter idx
 // return true if matchWord should be excluded and false all other times
-func (t *Table) exclusionFilter(matchWord string, idx int) bool {
+func (t *Table) exclusionFilter(matchCell string, idx int) bool {
 	var mValue float64
 	var fValue float64
 
@@ -303,24 +303,25 @@ func (t *Table) exclusionFilter(matchWord string, idx int) bool {
 		return false
 	}
 
-	word := strings.ToUpper(matchWord)
+	cell := strings.ToUpper(matchCell)
 	// equals
 	if filter.compareEql {
-		if word == filter.value {
+		if strMatch(cell, filter.value) {
 			exclude = false
 		}
 	}
 
 	// not
 	if filter.comparison == 3 {
-		if word != filter.value {
+		if !strMatch(cell, filter.value) {
 			exclude = false
 		}
 	}
 
 	intval := ""
+	//column is a number so we allow only numbers
 	if t.head[idx].columnType == 1 {
-		for _, v := range strings.Split(word, "") {
+		for _, v := range strings.Split(cell, "") {
 			if strings.Contains("0123456789.", v) {
 				intval += v
 			}
@@ -341,7 +342,7 @@ func (t *Table) exclusionFilter(matchWord string, idx int) bool {
 				exclude = false
 			}
 		} else {
-			if word > filter.value {
+			if cell > filter.value {
 				exclude = false
 			}
 		}
@@ -354,7 +355,7 @@ func (t *Table) exclusionFilter(matchWord string, idx int) bool {
 				exclude = false
 			}
 		} else {
-			if word < filter.value {
+			if cell < filter.value {
 				exclude = false
 			}
 		}
@@ -443,4 +444,46 @@ func (t *Table) SetFilter(filter []string) error {
 	}
 
 	return nil
+}
+
+//run a pattten match, accepts * and ?
+func strMatch(str string, pattern string) bool {
+	// shamelessly converted from c++ code on web as I was too laszy to work it out myself
+	// source: https://www.geeksforgeeks.org/wildcard-pattern-matching/
+
+	n := len(str)
+	m := len(pattern)
+
+	if m == 0 {
+		return (n == 0)
+	}
+
+	lookup := make([][]bool, n+1)
+	for i := range lookup {
+		lookup[i] = make([]bool, m+1)
+	}
+
+	lookup[0][0] = true
+
+	for i, char := range pattern {
+		j := i + 1
+		if char == []rune("*")[0] {
+			lookup[0][j] = lookup[0][j-1]
+		}
+	}
+
+	for q, s := range str {
+		i := q + 1
+		for w, char := range pattern {
+			j := w + 1
+			if char == []rune("*")[0] {
+				lookup[i][j] = lookup[i][j-1] || lookup[i-1][j]
+			} else if char == []rune("?")[0] || s == char {
+				lookup[i][j] = lookup[i-1][j-1]
+			} else {
+				lookup[i][j] = false
+			}
+		}
+	}
+	return lookup[n][m]
 }
