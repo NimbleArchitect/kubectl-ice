@@ -23,13 +23,20 @@ type headerRow struct {
 	title        string
 }
 
+type Cell struct {
+	text   string
+	number int64
+	float  float64
+	typ    int // 0=string, 1=int64, 2=float64
+}
+
 type Table struct {
 	currentRow  int
 	headCount   int
 	columnOrder []int
 	rowOrder    []int
 	head        []headerRow
-	data        [][]string
+	data        [][]Cell
 }
 
 // sets the header row to the specified array of strings
@@ -57,11 +64,11 @@ func (t *Table) SetHeader(headItem ...string) {
 }
 
 // Adds a new row to the end of the table, accepts an array of strings
-func (t *Table) AddRow(row ...string) {
+func (t *Table) AddRow(row ...Cell) {
 
 	for i := 0; i < t.headCount; i++ {
-		if len(row[i]) >= t.head[i].columnLength {
-			t.head[i].columnLength = len(row[i]) + 2
+		if len(row[i].text) >= t.head[i].columnLength {
+			t.head[i].columnLength = len(row[i].text) + 2
 		}
 	}
 
@@ -136,12 +143,12 @@ func (t *Table) Print() {
 			if t.head[idx].hidden {
 				continue
 			}
-			cell := row[idx]
+			cell := row[idx].text
 			if len(cell) == 0 {
 				cell = "-"
 			}
 
-			// due to looping over every column in the row we only set excludeRow if it hasnt changed
+			// due to looping over every column in the row we only set excludeRow if it is still false
 			if !excludeRow {
 				// do we have an exclude filter set that we need to process
 				excludeRow = t.exclusionFilter(cell, idx)
@@ -167,7 +174,7 @@ func (t *Table) PrintJson() {
 		row := t.data[rowNum]
 		// now loop through each column the the currentl selected row
 		for col := 0; col < t.headCount; col++ {
-			word := row[col]
+			word := row[col].text
 			if len(word) == 0 {
 				word = ""
 			}
@@ -203,8 +210,8 @@ func (t *Table) sort(columnNumber int, ascending bool) {
 			switchOrder := false
 			jLow := t.rowOrder[j]
 			jHigh := t.rowOrder[j+1]
-			wordLow := t.data[jLow][columnNumber]
-			wordHigh := t.data[jHigh][columnNumber]
+			wordLow := t.data[jLow][columnNumber].text
+			wordHigh := t.data[jHigh][columnNumber].text
 
 			if ascending {
 				if wordLow > wordHigh {
@@ -486,4 +493,26 @@ func strMatch(str string, pattern string) bool {
 		}
 	}
 	return lookup[n][m]
+}
+
+func NewCellText(text string) Cell {
+	return Cell{
+		text: text,
+	}
+}
+
+func NewCellInt(text string, value int64) Cell {
+	return Cell{
+		text:   text,
+		number: value,
+		typ:    1,
+	}
+}
+
+func NewCellFloat(text string, value float64) Cell {
+	return Cell{
+		text:  text,
+		float: value,
+		typ:   2,
+	}
 }

@@ -115,14 +115,14 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 }
 
-func restartsBuildRow(container v1.ContainerStatus, podName string, containerType string) []string {
+func restartsBuildRow(container v1.ContainerStatus, podName string, containerType string) []Cell {
 	// if container.RestartCount == 0
 	// restarts := fmt.Sprintf("%d", container.RestartCount)
 
-	return []string{
-		containerType,
-		podName,
-		container.Name,
-		fmt.Sprintf("%d", container.RestartCount),
+	return []Cell{
+		NewCellText(containerType),
+		NewCellText(podName),
+		NewCellText(container.Name),
+		NewCellInt(fmt.Sprintf("%d", container.RestartCount), int64(container.RestartCount)),
 	}
 }

@@ -112,12 +112,12 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 }
 
-func imageBuildRow(container v1.Container, podName string, containerType string) []string {
-	return []string{
-		containerType,
-		podName,
-		container.Name,
-		string(container.ImagePullPolicy),
-		container.Image,
+func imageBuildRow(container v1.Container, podName string, containerType string) []Cell {
+	return []Cell{
+		NewCellText(containerType),
+		NewCellText(podName),
+		NewCellText(container.Name),
+		NewCellText(string(container.ImagePullPolicy)),
+		NewCellText(container.Image),
 	}
 }

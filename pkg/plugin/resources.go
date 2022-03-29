@@ -145,13 +145,12 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	return nil
 }
 
-func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podName, containerType string, resource string, showRaw bool) []string {
+func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podName, containerType string, resource string, showRaw bool) []Cell {
+	var displayValue, request, limit, percentLimit, percentRequest string
+	var rawRequest, rawLimit int64
+	var rawPercentRequest, rawPercentLimit float64
+
 	floatfmt := "%f"
-	displayValue := ""
-	request := ""
-	limit := ""
-	percentLimit := ""
-	percentRequest := ""
 
 	if resource == "cpu" {
 		if metrics.Cpu() != nil {
@@ -163,21 +162,28 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podNa
 			}
 
 			limit = container.Resources.Limits.Cpu().String()
+			rawLimit = container.Resources.Limits.Cpu().Value()
 			request = container.Resources.Requests.Cpu().String()
+			rawRequest = container.Resources.Requests.Cpu().Value()
+
 			if cpuVal := metrics.Cpu().AsApproximateFloat64(); cpuVal > 0 {
 				// check cpu limits has a value
 				if container.Resources.Limits.Cpu().AsApproximateFloat64() == 0 {
 					percentLimit = "-"
+					rawPercentLimit = 0.0
 				} else {
 					val := validateFloat64(cpuVal / container.Resources.Limits.Cpu().AsApproximateFloat64() * 100)
 					percentLimit = fmt.Sprintf(floatfmt, val)
+					rawPercentLimit = val
 				}
 				// check cpu requests has a value
 				if container.Resources.Requests.Cpu().AsApproximateFloat64() == 0 {
 					percentRequest = "-"
+					rawPercentRequest = 0.0
 				} else {
 					val := validateFloat64(cpuVal / container.Resources.Requests.Cpu().AsApproximateFloat64() * 100)
 					percentRequest = fmt.Sprintf(floatfmt, val)
+					rawPercentRequest = val
 				}
 			}
 		}
@@ -199,30 +205,34 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podNa
 				// check memory limits has a value
 				if container.Resources.Limits.Memory().AsApproximateFloat64() == 0 {
 					percentLimit = "-"
+					rawPercentLimit = 0.0
 				} else {
 					val := validateFloat64(memVal / container.Resources.Limits.Memory().AsApproximateFloat64() * 100)
 					percentLimit = fmt.Sprintf(floatfmt, val)
+					rawPercentLimit = val
 				}
 				// check memory requests has a value
 				if container.Resources.Requests.Memory().AsApproximateFloat64() == 0 {
 					percentRequest = "-"
+					rawPercentRequest = 0.0
 				} else {
 					val := validateFloat64(memVal / container.Resources.Requests.Memory().AsApproximateFloat64() * 100)
 					percentRequest = fmt.Sprintf(floatfmt, val)
+					rawPercentRequest = val
 				}
 			}
 		}
 	}
 
-	return []string{
-		containerType,
-		podName,
-		container.Name,
-		displayValue,
-		request,
-		limit,
-		percentRequest,
-		percentLimit,
+	return []Cell{
+		NewCellText(containerType),
+		NewCellText(podName),
+		NewCellText(container.Name),
+		NewCellText(displayValue),
+		NewCellInt(request, rawRequest),
+		NewCellInt(limit, rawLimit),
+		NewCellFloat(percentRequest, rawPercentRequest),
+		NewCellFloat(percentLimit, rawPercentLimit),
 	}
 }
 
