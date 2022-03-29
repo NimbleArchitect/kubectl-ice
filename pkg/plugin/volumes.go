@@ -230,7 +230,7 @@ func decodeVolumeType(volType string, volume v1.VolumeSource) map[string]string 
 	return outMap
 }
 
-func volumesBuildRow(container v1.Container, podName string, podVolumes map[string]map[string]string, mount v1.VolumeMount) []string {
+func volumesBuildRow(container v1.Container, podName string, podVolumes map[string]map[string]string, mount v1.VolumeMount) []Cell {
 	var volumeType string
 	var size string
 	var backing string
@@ -243,15 +243,15 @@ func volumesBuildRow(container v1.Container, podName string, podVolumes map[stri
 		backing = volume["backing"]
 	}
 
-	return []string{
-		podName,
-		container.Name,
-		mount.Name,
-		volumeType,
-		backing,
-		size,
-		fmt.Sprintf("%t", mount.ReadOnly),
-		mount.MountPath,
+	return []Cell{
+		NewCellText(podName),
+		NewCellText(container.Name),
+		NewCellText(mount.Name),
+		NewCellText(volumeType),
+		NewCellText(backing),
+		NewCellText(size),
+		NewCellText(fmt.Sprintf("%t", mount.ReadOnly)),
+		NewCellText(mount.MountPath),
 	}
 
 }

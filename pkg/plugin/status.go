@@ -132,7 +132,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 }
 
-func statusBuildRow(container v1.ContainerStatus, podName string, containerType string, showPrevious bool) []string {
+func statusBuildRow(container v1.ContainerStatus, podName string, containerType string, showPrevious bool) []Cell {
 	var reason string
 	var exitCode string
 	var signal string
@@ -141,6 +141,7 @@ func statusBuildRow(container v1.ContainerStatus, podName string, containerType 
 	var started string
 	var strState string
 	var state v1.ContainerState
+	var rawExitCode, rawSignal, rawRestarts int64
 
 	// fmt.Println("F:statusBuildRow:Name=", container.Name)
 
@@ -159,7 +160,9 @@ func statusBuildRow(container v1.ContainerStatus, podName string, containerType 
 	if state.Terminated != nil {
 		strState = "Terminated"
 		exitCode = fmt.Sprintf("%d", state.Terminated.ExitCode)
+		rawExitCode = int64(state.Terminated.ExitCode)
 		signal = fmt.Sprintf("%d", state.Terminated.Signal)
+		rawSignal = int64(state.Terminated.Signal)
 		startedAt = state.Terminated.StartedAt.String()
 		reason = state.Terminated.Reason
 		message = state.Terminated.Message
@@ -175,33 +178,34 @@ func statusBuildRow(container v1.ContainerStatus, podName string, containerType 
 	}
 	ready := fmt.Sprintf("%t", container.Ready)
 	restarts := fmt.Sprintf("%d", container.RestartCount)
+	rawRestarts = int64(container.RestartCount)
 
 	if showPrevious {
-		return []string{
-			containerType,
-			podName,
-			container.Name,
-			strState,
-			reason,
-			exitCode,
-			signal,
-			startedAt,
-			message,
+		return []Cell{
+			NewCellText(containerType),
+			NewCellText(podName),
+			NewCellText(container.Name),
+			NewCellText(strState),
+			NewCellText(reason),
+			NewCellInt(exitCode, rawExitCode),
+			NewCellInt(signal, rawSignal),
+			NewCellText(startedAt),
+			NewCellText(message),
 		}
 	} else {
-		return []string{
-			containerType,
-			podName,
-			container.Name,
-			ready,
-			started,
-			restarts,
-			strState,
-			reason,
-			exitCode,
-			signal,
-			startedAt,
-			message,
+		return []Cell{
+			NewCellText(containerType),
+			NewCellText(podName),
+			NewCellText(container.Name),
+			NewCellText(ready),
+			NewCellText(started),
+			NewCellInt(restarts, rawRestarts),
+			NewCellText(strState),
+			NewCellText(reason),
+			NewCellInt(exitCode, rawExitCode),
+			NewCellInt(signal, rawSignal),
+			NewCellText(startedAt),
+			NewCellText(message),
 		}
 	}
 

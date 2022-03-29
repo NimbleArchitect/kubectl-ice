@@ -56,8 +56,8 @@ func IP(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []str
 	for _, pod := range podList {
 
 		table.AddRow(
-			pod.Name,
-			pod.Status.PodIP,
+			NewCellText(pod.Name),
+			NewCellText(pod.Status.PodIP),
 		)
 	}
 

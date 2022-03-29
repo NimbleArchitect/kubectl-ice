@@ -125,19 +125,19 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 }
 
-func probesBuildRow(container v1.Container, podName string, action probeAction) []string {
+func probesBuildRow(container v1.Container, podName string, action probeAction) []Cell {
 
-	return []string{
-		podName,
-		container.Name,
-		action.probeName,
-		fmt.Sprintf("%d", action.probe.InitialDelaySeconds),
-		fmt.Sprintf("%d", action.probe.PeriodSeconds),
-		fmt.Sprintf("%d", action.probe.TimeoutSeconds),
-		fmt.Sprintf("%d", action.probe.SuccessThreshold),
-		fmt.Sprintf("%d", action.probe.FailureThreshold),
-		action.actionName,
-		action.action,
+	return []Cell{
+		NewCellText(podName),
+		NewCellText(container.Name),
+		NewCellText(action.probeName),
+		NewCellInt(fmt.Sprintf("%d", action.probe.InitialDelaySeconds), int64(action.probe.InitialDelaySeconds)),
+		NewCellInt(fmt.Sprintf("%d", action.probe.PeriodSeconds), int64(action.probe.PeriodSeconds)),
+		NewCellInt(fmt.Sprintf("%d", action.probe.TimeoutSeconds), int64(action.probe.TimeoutSeconds)),
+		NewCellInt(fmt.Sprintf("%d", action.probe.SuccessThreshold), int64(action.probe.SuccessThreshold)),
+		NewCellInt(fmt.Sprintf("%d", action.probe.FailureThreshold), int64(action.probe.FailureThreshold)),
+		NewCellText(action.actionName),
+		NewCellText(action.action),
 	}
 }
 
