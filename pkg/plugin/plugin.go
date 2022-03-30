@@ -65,6 +65,26 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdCPU)
 	rootCmd.AddCommand(cmdCPU)
 
+	//environment
+	var cmdEnvironment = &cobra.Command{
+		Use:     "environment",
+		Short:   environmentShort,
+		Long:    fmt.Sprintf("%s\n\n%s", environmentShort, environmentDescription),
+		Example: fmt.Sprintf(environmentExample, rootCmd.CommandPath()),
+		Aliases: []string{"env", "vars"},
+		// SuggestFor: []string{""},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := environment(cmd, KubernetesConfigFlags, args); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	KubernetesConfigFlags.AddFlags(cmdEnvironment.Flags())
+	addCommonFlags(cmdEnvironment)
+	rootCmd.AddCommand(cmdEnvironment)
+
 	//ip
 	var cmdIP = &cobra.Command{
 		Use:     "ip",
@@ -255,8 +275,10 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 		f.allNamespaces = true
 	}
 
-	if cmd.Flag("oddities").Value.String() == "true" {
-		f.showOddities = true
+	if cmd.Flag("oddities") != nil {
+		if cmd.Flag("oddities").Value.String() == "true" {
+			f.showOddities = true
+		}
 	}
 
 	//fmt.Println(cmd.Flag("selector"))
