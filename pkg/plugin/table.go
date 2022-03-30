@@ -37,6 +37,7 @@ type Table struct {
 	rowOrder    []int
 	head        []headerRow
 	data        [][]Cell
+	hideRow     []bool
 }
 
 // sets the header row to the specified array of strings
@@ -74,6 +75,7 @@ func (t *Table) AddRow(row ...Cell) {
 
 	t.data = append(t.data, row)                  // add data to row
 	t.rowOrder = append(t.rowOrder, t.currentRow) // add row number to end of sort list
+	t.hideRow = append(t.hideRow, false)
 	t.currentRow += 1
 }
 
@@ -134,8 +136,12 @@ func (t *Table) Print() {
 	for r := 0; r < len(t.data); r++ {
 		line := ""
 		excludeRow := false
-
 		rowNum := t.rowOrder[r]
+
+		if t.hideRow[rowNum] {
+			continue
+		}
+
 		row := t.data[rowNum]
 		// now loop through each column the the currentl selected row
 		for col := 0; col < t.headCount; col++ {
@@ -197,36 +203,72 @@ func (t *Table) PrintJson() {
 
 }
 
-// Sort via the column numbe, uses the full column count including hidden
+// Sort via the column number, uses the full column count including hidden columns
 // sort function can be run multiple times and is cumalitive
-func (t *Table) sort(columnNumber int, ascending bool) {
+func (t *Table) sort(list []int, columnNumber int, ascending bool) {
 	// rather then reordering all rows we have an order array that we can loop through
 	// sort contains the actual row number to use next
 
-	// basic bubble sort is used, due to lazyness on my part it only sorts letters not numbers :(
+	// basic bubble sort is used
 	for i := 0; i < t.currentRow+1; i++ {
 		hasMoved := false
 		for j := 0; j < t.currentRow-1; j++ {
+			var wordLow, wordHigh string
+			var intLow, intHigh int64
+			var floatHigh, floatLow float64
+
 			switchOrder := false
-			jLow := t.rowOrder[j]
-			jHigh := t.rowOrder[j+1]
-			wordLow := t.data[jLow][columnNumber].text
-			wordHigh := t.data[jHigh][columnNumber].text
+			jLow := list[j]
+			jHigh := list[j+1]
+
+			switch t.data[jLow][columnNumber].typ {
+			case 0:
+				wordLow = t.data[jLow][columnNumber].text
+				wordHigh = t.data[jHigh][columnNumber].text
+			case 1:
+				intLow = t.data[jLow][columnNumber].number
+				intHigh = t.data[jHigh][columnNumber].number
+			case 2:
+				floatLow = t.data[jLow][columnNumber].float
+				floatHigh = t.data[jHigh][columnNumber].float
+			}
 
 			if ascending {
-				if wordLow > wordHigh {
-					switchOrder = true
+				switch t.data[jLow][columnNumber].typ {
+				case 0:
+					if wordLow > wordHigh {
+						switchOrder = true
+					}
+				case 1:
+					if intLow > intHigh {
+						switchOrder = true
+					}
+				case 2:
+					if floatLow > floatHigh {
+						switchOrder = true
+					}
 				}
 			} else {
-				if wordLow < wordHigh {
-					switchOrder = true
+				switch t.data[jLow][columnNumber].typ {
+				case 0:
+					if wordLow < wordHigh {
+						switchOrder = true
+					}
+				case 1:
+					if intLow < intHigh {
+						switchOrder = true
+					}
+				case 2:
+					if floatLow < floatHigh {
+						switchOrder = true
+					}
 				}
 			}
 
 			if switchOrder {
 				hasMoved = true
-				t.rowOrder[j] = jHigh
-				t.rowOrder[j+1] = jLow
+				list[j] = jHigh
+				list[j+1] = jLow
 			}
 		}
 		if !hasMoved {
@@ -283,7 +325,7 @@ func (t *Table) SortByNames(name ...string) error {
 			// sort function uses ascending true and descending false so we
 			// invert descending fLAG to create our ascending flag
 			ascend := !columnDescend[i]
-			t.sort(columnIds[i], ascend)
+			t.sort(t.rowOrder, columnIds[i], ascend)
 		}
 	}
 
@@ -495,12 +537,14 @@ func strMatch(str string, pattern string) bool {
 	return lookup[n][m]
 }
 
+// quick wrapper to return a cell object containing the given string
 func NewCellText(text string) Cell {
 	return Cell{
 		text: text,
 	}
 }
 
+// quick wrapper to return a cell object containing the given string and int
 func NewCellInt(text string, value int64) Cell {
 	return Cell{
 		text:   text,
@@ -509,10 +553,171 @@ func NewCellInt(text string, value int64) Cell {
 	}
 }
 
+// quick wrapper to return a cell object containing the given string float
 func NewCellFloat(text string, value float64) Cell {
 	return Cell{
 		text:  text,
 		float: value,
 		typ:   2,
+	}
+}
+
+// when given a list of rows and a columnID to work with it will calculate a range and
+// returns a list of rows with values outside that range
+func (t *Table) ListOutOfRange(columnID int, rows [][]Cell) ([]int, error) {
+	var upperFenceInt, lowerFenceInt int64
+	var upperFenceFloat, lowerFenceFloat float64
+
+	cellType := rows[0][columnID].typ
+
+	if cellType == 0 {
+		return []int{}, errors.New("error: unable to creaate a range with strings")
+	}
+
+	orderList := make([]int, len(rows))
+
+	visibleRows := 0
+	for i, v := range rows {
+		cell := v[columnID]
+		orderList[i] = i
+		if cellType != cell.typ {
+			return []int{}, errors.New("error: table cell types dont match")
+		}
+		if !t.hideRow[i] {
+			visibleRows += 1
+		}
+	}
+
+	if visibleRows <= 4 {
+		return []int{}, errors.New("error: not enough visible rows to calculate useful range")
+	}
+
+	t.sort(orderList, columnID, true)
+	if cellType == 1 {
+		upperFenceInt, lowerFenceInt = t.getFencesInt(orderList, columnID, rows)
+	} else {
+		upperFenceFloat, lowerFenceFloat = t.getFencesFloat(orderList, columnID, rows)
+	}
+
+	out := []int{}
+
+	for k, v := range rows {
+		keep := false
+		cell := v[columnID]
+		if cellType == 1 {
+			if upperFenceInt < cell.number {
+				keep = true
+			}
+			if lowerFenceInt > cell.number {
+				keep = true
+			}
+		} else {
+			if upperFenceFloat < cell.float {
+				keep = true
+			}
+			if lowerFenceFloat > cell.float {
+				keep = true
+			}
+		}
+		if !keep {
+			out = append(out, k)
+		}
+	}
+
+	return out, nil
+}
+
+// does what it says on the tin
+func (t *Table) GetRows() [][]Cell {
+	return t.data
+}
+
+// just sets the hide row flag, used by the print function to exclude the row from the output
+func (t *Table) HideRows(rowID []int) {
+	for _, v := range rowID {
+		t.hideRow[v] = true
+	}
+}
+
+// given the current order and a list of rows caluclate the upper and lower boundy exclusion limit for the selected columnID
+func (t *Table) getFencesInt(orderList []int, columnID int, rows [][]Cell) (int64, int64) {
+	upper, lower := t.getFencesBoundarys(orderList, columnID, rows, 1)
+	return upper.(int64), lower.(int64)
+}
+
+// given the current order and a list of rows caluclate the upper and lower boundy exclusion limit for the selected columnID
+func (t *Table) getFencesFloat(orderList []int, columnID int, rows [][]Cell) (float64, float64) {
+	upper, lower := t.getFencesBoundarys(orderList, columnID, rows, 2)
+	return upper.(float64), lower.(float64)
+}
+
+// the actual function to caluclate the upper and lower boundy exclusion limit
+func (t *Table) getFencesBoundarys(orderList []int, columnID int, rows [][]Cell, cellType int) (interface{}, interface{}) {
+	// find middle of the list
+	var q1Int, q3Int, iqrInt int64
+	var q1Float, q3Float, iqrFloat float64
+
+	// find the middle point in the list so we can split the list into 3
+	listLen := len(orderList) + 1
+	pos2 := listLen / 2
+	pos1 := (pos2 / 2) - 1
+	pos3 := pos2 + (pos2 / 2) - 1
+
+	if listLen&1 == 1 { //even list length
+		// the middle is held by 2 items, so we grab 2 points for the 1st third
+		// and 2 points for the 3rd third
+		rowPos1 := orderList[pos1]
+		rowPos2 := orderList[pos1+1]
+		rowPos3 := orderList[pos3]
+		rowPos4 := orderList[pos3+1]
+
+		// grab the values of all 4 points as we need to calulate, to get a single half
+		// way value for each third
+		t1Cell := rows[rowPos1][columnID]
+		t2Cell := rows[rowPos2][columnID]
+		t3Cell := rows[rowPos3][columnID]
+		t4Cell := rows[rowPos4][columnID]
+
+		// we support both floats and ints so need to calculate based on type
+		switch cellType {
+		case 1:
+			q1Int = (t1Cell.number + t2Cell.number) / 2
+			q3Int = (t3Cell.number + t4Cell.number) / 2
+		case 2:
+			q1Float = (t1Cell.float + t2Cell.float) / 2
+			q3Float = (t3Cell.float + t4Cell.float) / 2
+		}
+	} else { // odd list length
+		// odds are eaiser as we have a single middle point, but we still need to deal with floats and ints
+		rowPos1 := orderList[pos1]
+		rowPos3 := orderList[pos3]
+		t1Cell := rows[rowPos1][columnID]
+		t3Cell := rows[rowPos3][columnID]
+
+		switch cellType {
+		case 1:
+			q1Int = t1Cell.number
+			q3Int = t3Cell.number
+		case 2:
+			q1Float = t1Cell.float
+			q3Float = t3Cell.float
+		}
+	}
+
+	// now we can work out the distance between the 1st and 3rd third of the list
+	// we calculate 1.5% of that difference and use to create a lower and upper fence
+	// these can then be used to exclude everything in side of the 2 fences
+	if cellType == 1 {
+		iqrInt = q3Int - q1Int
+		pc := int64((15 * iqrInt) / 10)
+		upperFenceInt := q3Int + pc
+		lowerFenceInt := pc - q1Int
+		return upperFenceInt, lowerFenceInt
+	} else {
+		iqrFloat = q3Float - q1Float
+		pc := 1.5 * iqrFloat
+		upperFenceFloat := q3Float + pc
+		lowerFenceFloat := pc - q1Float
+		return upperFenceFloat, lowerFenceFloat
 	}
 }

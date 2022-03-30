@@ -100,7 +100,6 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	table.SetHeader(
 		"T", "PODNAME", "CONTAINER", "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
 	)
-	table.SetColumnTypeInt(3, 4, 5, 6, 7)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -141,19 +140,31 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		return err
 	}
 
+	// at this point we have data on all containers
+
+	// do we need to find the outliers, we have enough data to compute a range
+	if commonFlagList.showOddities {
+		row2Remove, err := table.ListOutOfRange(3, table.GetRows()) //3 = used column
+		if err != nil {
+			return err
+		}
+		table.HideRows(row2Remove)
+	}
+
 	outputTableAs(table, commonFlagList.outputAs)
 	return nil
 }
 
 func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podName, containerType string, resource string, showRaw bool) []Cell {
 	var displayValue, request, limit, percentLimit, percentRequest string
-	var rawRequest, rawLimit int64
+	var rawRequest, rawLimit, rawValue int64
 	var rawPercentRequest, rawPercentLimit float64
 
 	floatfmt := "%f"
 
 	if resource == "cpu" {
 		if metrics.Cpu() != nil {
+			rawValue = metrics.Cpu().Value()
 			if showRaw {
 				displayValue = metrics.Cpu().String()
 			} else {
@@ -192,15 +203,18 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podNa
 
 	if resource == "memory" {
 		if metrics.Memory() != nil {
+			rawValue = metrics.Memory().Value() / 1000
 			if showRaw {
 				displayValue = fmt.Sprintf("%d", metrics.Memory().Value())
 			} else {
 				displayValue = memoryHumanReadable(metrics.Memory().Value())
-				floatfmt = "%.2f"
+				floatfmt = ""
 			}
 
 			limit = container.Resources.Limits.Memory().String()
+			rawLimit = container.Resources.Limits.Memory().Value()
 			request = container.Resources.Requests.Memory().String()
+			rawRequest = container.Resources.Requests.Memory().Value()
 			if memVal := metrics.Memory().AsApproximateFloat64(); memVal > 0 {
 				// check memory limits has a value
 				if container.Resources.Limits.Memory().AsApproximateFloat64() == 0 {
@@ -228,7 +242,7 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podNa
 		NewCellText(containerType),
 		NewCellText(podName),
 		NewCellText(container.Name),
-		NewCellText(displayValue),
+		NewCellInt(displayValue, rawValue),
 		NewCellInt(request, rawRequest),
 		NewCellInt(limit, rawLimit),
 		NewCellFloat(percentRequest, rawPercentRequest),

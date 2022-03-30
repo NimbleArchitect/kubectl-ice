@@ -13,6 +13,13 @@ Flags:
   -n, --namespace string               If present, the namespace scope for this CLI request
   -l, --selector string                Selector (label query) to filter on
 ```
+select subcommands also support the following flags
+```
+Flags:
+  -p, --previous         show previous state
+  -r, --raw              show raw uncooked values
+      --oddities         show only the outlier rows that dont fall within the computed range (requires min 5 rows in output)
+```
 # Installation
 
 ## Install using krew
@@ -86,6 +93,7 @@ Usage:
 
 Flags:
   -r, --raw              show raw uncooked values
+      --oddities         show only the outlier rows that dont fall within the computed range
 ```
 also includes standard common kubectl flags
 
@@ -158,6 +166,7 @@ Aliases:
 
 Flags:
   -r, --raw              show raw uncooked values
+      --oddities         show only the outlier rows that dont fall within the computed range
 ```
 also includes standard common kubectl flags
 
@@ -221,6 +230,9 @@ Usage:
 
 Aliases:
   restarts, restart
+
+Flags:
+      --oddities         show only the outlier rows that dont fall within the computed range
 ```
 also includes standard common kubectl flags
 
@@ -245,6 +257,7 @@ Aliases:
   status, st
 
 Flags:
+      --oddities         show only the outlier rows that dont fall within the computed range
   -p, --previous         show previous state
 ```
 also includes standard common kubectl flags
