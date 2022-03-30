@@ -15,11 +15,13 @@ type commonFlags struct {
 	container     string   // name of the container to search for
 	filterList    []string // used to filter out rows form the table during Print function
 	labels        string   // k8s pod labels
+	showOddities  bool     // this isnt really common but it does sho up across 3+ commands and im lazy
 	outputAs      string   // how to output the table, currently only accepts json
 	sortList      []string //column names to sort on when table.Print() is called
 }
 
 func InitSubCommands(rootCmd *cobra.Command) {
+	var odditiesShort string = "show only the outlier rows that dont fall within the computed range"
 	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
 
 	//commands
@@ -59,6 +61,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	KubernetesConfigFlags.AddFlags(cmdCPU.Flags())
 	cmdCPU.Flags().BoolP("raw", "r", false, "show raw values")
+	cmdCPU.Flags().BoolP("oddities", "", false, odditiesShort)
 	addCommonFlags(cmdCPU)
 	rootCmd.AddCommand(cmdCPU)
 
@@ -120,6 +123,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	KubernetesConfigFlags.AddFlags(cmdMemory.Flags())
 	cmdMemory.Flags().BoolP("raw", "r", false, "show raw values")
+	cmdMemory.Flags().BoolP("oddities", "", false, odditiesShort)
 	addCommonFlags(cmdMemory)
 	rootCmd.AddCommand(cmdMemory)
 
@@ -181,6 +185,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdRestart.Flags())
+	cmdRestart.Flags().BoolP("oddities", "", false, odditiesShort)
 	addCommonFlags(cmdRestart)
 	rootCmd.AddCommand(cmdRestart)
 
@@ -205,6 +210,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	KubernetesConfigFlags.AddFlags(cmdStatus.Flags())
 	cmdStatus.Flags().BoolP("previous", "p", false, "show previous state")
+	cmdStatus.Flags().BoolP("oddities", "", false, odditiesShort)
 	addCommonFlags(cmdStatus)
 	rootCmd.AddCommand(cmdStatus)
 
@@ -247,6 +253,10 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 
 	if cmd.Flag("all-namespaces").Value.String() == "true" {
 		f.allNamespaces = true
+	}
+
+	if cmd.Flag("oddities").Value.String() == "true" {
+		f.showOddities = true
 	}
 
 	//fmt.Println(cmd.Flag("selector"))
