@@ -18,6 +18,7 @@ select subcommands also support the following flags
 Flags:
   -p, --previous         show previous state
   -r, --raw              show raw uncooked values
+      --sort string      Sort by column
       --oddities         show only the outlier rows that dont fall within the computed range (requires min 5 rows in output)
 ```
 # Installation
