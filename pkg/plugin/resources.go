@@ -164,7 +164,6 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podNa
 
 	if resource == "cpu" {
 		if metrics.Cpu() != nil {
-			//FIXME: millivalue isnt the correct raw value to use, not accurate enough!!
 			rawValue = metrics.Cpu().MilliValue()
 			if showRaw {
 				displayValue = metrics.Cpu().String()
