@@ -36,7 +36,7 @@ var probesExample = `  # List containers probe info from pods
 
   # List probe info for all containers called web-container searching all pods in current
   # namespace sorted by pod name in ascending order
-  %[1]s probes -c web-container --sort 'PODNAME"
+  %[1]s probes -c web-container --sort PODNAME
 
   # List container probe info from all pods where label app matches web
   %[1]s probes -l app=web

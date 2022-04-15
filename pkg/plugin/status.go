@@ -39,7 +39,7 @@ var statusExample = `  # List individual container status from pods
 
   # List status of containers called web-container searching all pods in current
   # namespace sorted by pod name in ascending order
-  %[1]s status -c web-container --sort 'PODNAME"
+  %[1]s status -c web-container --sort PODNAME
 
   # List container status from all pods where label app equals web
   %[1]s status -l app=web

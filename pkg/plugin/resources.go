@@ -46,7 +46,7 @@ func resourceExample(r string) string {
 
   # List %[2]s info for all containers called web-container searching all pods in current
   # namespace sorted by pod name in ascending order
-  %[1]s %[2]s -c web-container --sort 'PODNAME"
+  %[1]s %[2]s -c web-container --sort PODNAME
 
   # List container %[2]s info from all pods where label app matches web
   %[1]s %[2]s -l app=web
@@ -172,10 +172,12 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podNa
 				floatfmt = "%.2f"
 			}
 
-			limit = container.Resources.Limits.Cpu().String()
-			rawLimit = container.Resources.Limits.Cpu().Value()
-			request = container.Resources.Requests.Cpu().String()
-			rawRequest = container.Resources.Requests.Cpu().Value()
+			// limit = container.Resources.Limits.Cpu().String()
+			rawLimit = container.Resources.Limits.Cpu().Value() * 1000
+			limit = fmt.Sprintf("%d", rawLimit)
+			// request = container.Resources.Requests.Cpu().String()
+			rawRequest = container.Resources.Requests.Cpu().Value() * 1000
+			request = fmt.Sprintf("%d", rawRequest)
 
 			if cpuVal := metrics.Cpu().AsApproximateFloat64(); cpuVal > 0 {
 				// check cpu limits has a value

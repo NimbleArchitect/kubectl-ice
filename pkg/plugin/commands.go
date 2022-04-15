@@ -35,7 +35,7 @@ var commandsExample = `  # List containers command info from pods
 
   # List command info for all containers called web-container searching all pods in current
   # namespace sorted by pod name in ascending order
-  %[1]s command -c web-container --sort 'PODNAME"
+  %[1]s command -c web-container --sort PODNAME
 
   # List container command info from all pods where label app matches web
   %[1]s command -l app=web

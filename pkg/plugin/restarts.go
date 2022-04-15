@@ -34,7 +34,7 @@ var restartsExample = `  # List individual container restart count from pods
 
   # List restart count of containers called web-container searching all pods in current
   # namespace sorted by pod name in ascending order
-  %[1]s restarts -c web-container --sort 'PODNAME"
+  %[1]s restarts -c web-container --sort PODNAME
 
   # List container restart count from all pods where label app equals web
   %[1]s restarts -l app=web

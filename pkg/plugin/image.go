@@ -33,7 +33,7 @@ var imageExample = `  # List containers image info from pods
 
   # List image info for all containers called web-container searching all pods in current
   # namespace sorted by pod name in ascending order
-  %[1]s image -c web-container --sort 'PODNAME"
+  %[1]s image -c web-container --sort PODNAME
 
   # List container image info from all pods where label app matches web
   %[1]s image -l app=web

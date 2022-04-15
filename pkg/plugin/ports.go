@@ -35,7 +35,7 @@ var portsExample = `  # List containers port info from pods
 
   # List port info for all containers called web-container searching all pods in current
   # namespace sorted by pod name in ascending order
-  %[1]s ports -c web-container --sort 'PODNAME"
+  %[1]s ports -c web-container --sort PODNAME
 
   # List container port info from all pods where label app matches web
   %[1]s ports -l app=web

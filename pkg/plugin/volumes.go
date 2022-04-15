@@ -35,7 +35,7 @@ var volumesExample = `  # List volumes from containers inside pods from current 
 
   # List volumes from container web-container searching all pods in current
   # namespace sorted by volume name in ascending order
-  %[1]s volumes -c web-container --sort 'MOUNT-POINT"
+  %[1]s volumes -c web-container --sort MOUNT-POINT
 
   # List container volume info from all pods where label app equals web
   %[1]s volumes -l app=web
