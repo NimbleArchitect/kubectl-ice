@@ -1,26 +1,23 @@
 # kubectl-ice
-This plugin shows useful information about the containers inside a pod useful for trouble shooting container issues
+A kubectl plugin that lets you can see the running configuration of all containers
+ that are running inside pods, I created it so I could peer inside the pods and see
+ the details of sidecars running in a pod and then extended it so all sidecar
+  containers could be viewed at once.   
 
-With ice you can peer inside a pod and easily see volume, image, port and exec configurations, along with cpu and memory metrics all at the container level (requires metrics server)
+ice lists useful information about the sidecar containers present inside a
+ pod, useful for trouble shooting multi container issues you can view volume, 
+ image, port and executable configurations, along with current cpu and memory
+  metrics all at the container level (requires metrics server)
 
-supports all the standard kubectl flags in addition to:
-```
-Flags:
-  -A, --all-namespaces                 List containers form pods in all namespaces
-  -c, --container string               Container name. If set shows only the named containers containers in the pod
-      --context string                 The name of the kubeconfig context to use
-      --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
-  -n, --namespace string               If present, the namespace scope for this CLI request
-  -l, --selector string                Selector (label query) to filter on
-```
-select subcommands also support the following flags
-```
-Flags:
-  -p, --previous         show previous state
-  -r, --raw              show raw uncooked values
-      --sort string      Sort by column
-      --oddities         show only the outlier rows that dont fall within the computed range (requires min 5 rows in output)
-```
+## Features:
+* Only uses read permissions, no writes are used
+* List the containers of all pods in the current namespace and context
+* Selectors work just like they do with the standard kubectl command
+* Sort output columns 
+* List all containers from all pods across all namespaces
+* Exclude rows from output using the match flag, usefull to exclude containers with low memory or cpu usage
+* List only cpu and memory results that dont fall within range using the oddities flag
+
 # Installation
 
 ## Install using krew
@@ -63,6 +60,24 @@ kubectl ice status     # list status of each container in a pod
 kubectl ice volumes    # list all container volumes with mount points
 ```
 
+ice also supports all the standard kubectl flags in addition to:
+```
+Flags:
+  -A, --all-namespaces                 List containers form pods in all namespaces
+  -c, --container string               Container name. If set shows only the named containers containers in the pod
+      --context string                 The name of the kubeconfig context to use
+      --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -n, --namespace string               If present, the namespace scope for this CLI request
+  -l, --selector string                Selector (label query) to filter on
+```
+select subcommands also support the following flags
+```
+Flags:
+  -p, --previous         show previous state
+  -r, --raw              show raw uncooked values
+      --sort string      Sort by column
+      --oddities         show only the outlier rows that dont fall within the computed range (requires min 5 rows in output)
+```
 
 ### Command
 retrieves the command line and any arguments specified at the container level
