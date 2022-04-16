@@ -160,7 +160,7 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podNa
 	var rawRequest, rawLimit, rawValue int64
 	var rawPercentRequest, rawPercentLimit float64
 
-	floatfmt := "%f"
+	floatfmt := "%.6f"
 
 	if resource == "cpu" {
 		if metrics.Cpu() != nil {
@@ -210,13 +210,16 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podNa
 				displayValue = fmt.Sprintf("%d", metrics.Memory().Value())
 			} else {
 				displayValue = memoryHumanReadable(metrics.Memory().Value())
-				floatfmt = ""
+				floatfmt = "%.2f"
 			}
 
 			limit = container.Resources.Limits.Memory().String()
 			rawLimit = container.Resources.Limits.Memory().Value()
+			// limit = fmt.Sprintf("%d", rawLimit)
 			request = container.Resources.Requests.Memory().String()
 			rawRequest = container.Resources.Requests.Memory().Value()
+			// request = fmt.Sprintf("%d", rawRequest)
+
 			if memVal := metrics.Memory().AsApproximateFloat64(); memVal > 0 {
 				// check memory limits has a value
 				if container.Resources.Limits.Memory().AsApproximateFloat64() == 0 {
