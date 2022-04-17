@@ -208,7 +208,7 @@ func memoryHumanReadable(memorySize int64) string {
 
 			remain := int64(math.Round(size*power)) % int64(power)
 			if remain == 0 {
-				floatfmt = "%d%s"
+				floatfmt = "%.2f%s"
 			} else {
 				floatfmt = "%.2f%s"
 			}
