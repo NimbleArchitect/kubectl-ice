@@ -101,7 +101,7 @@ S  app-broken   0       1M       512M   -       -
 S  myapp        0.01Gi  1M       256M   550.09  2.15
 
 ```
-### using labels
+### Using labels
 using labels you can search all pods that are part of a deployment where the label app matches demoprobe and list selected information about the containers in each pod, this example shows the currently configured probe information and gives details of configured startup, readiness and liveness probes of each container
 ``` shell
 $ kubectl-ice probes -l app=demoprobe
