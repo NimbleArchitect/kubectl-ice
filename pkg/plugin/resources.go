@@ -168,16 +168,16 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podNa
 			if showRaw {
 				displayValue = metrics.Cpu().String()
 			} else {
-				displayValue = fmt.Sprintf("%d", metrics.Cpu().MilliValue())
+				displayValue = fmt.Sprintf("%dm", metrics.Cpu().MilliValue())
 				floatfmt = "%.2f"
 			}
 
-			limit = container.Resources.Limits.Cpu().String()
-			rawLimit = container.Resources.Limits.Cpu().Value() //* 1000
-			// limit = fmt.Sprintf("%d", rawLimit)
-			request = container.Resources.Requests.Cpu().String()
-			rawRequest = container.Resources.Requests.Cpu().Value() //* 1000
-			// request = fmt.Sprintf("%d", rawRequest)
+			// limit = container.Resources.Limits.Cpu().Value()
+			rawLimit = container.Resources.Limits.Cpu().MilliValue()
+			limit = fmt.Sprintf("%dm", rawLimit)
+			// request = container.Resources.Requests.Cpu().String()
+			rawRequest = container.Resources.Requests.Cpu().MilliValue()
+			request = fmt.Sprintf("%dm", rawRequest)
 
 			if cpuVal := metrics.Cpu().AsApproximateFloat64(); cpuVal > 0 {
 				// check cpu limits has a value
