@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
@@ -178,7 +179,6 @@ func statusBuildRow(container v1.ContainerStatus, podName string, containerType 
 		reason = state.Terminated.Reason
 		message = state.Terminated.Message
 	}
-
 	if state.Running != nil {
 		strState = "Running"
 		startedAt = state.Running.StartedAt.String()
@@ -190,6 +190,8 @@ func statusBuildRow(container v1.ContainerStatus, podName string, containerType 
 	ready := fmt.Sprintf("%t", container.Ready)
 	restarts := fmt.Sprintf("%d", container.RestartCount)
 	rawRestarts = int64(container.RestartCount)
+	// remove pod and container name from the message string
+	message = trimStatusMessage(message, podName, container.Name)
 
 	if showPrevious {
 		return []Cell{
@@ -220,4 +222,31 @@ func statusBuildRow(container v1.ContainerStatus, podName string, containerType 
 		}
 	}
 
+}
+
+// Removes the pod name and container name from the status message as its already in the output table
+func trimStatusMessage(message string, podName string, containerName string) string {
+
+	if len(message) <= 0 {
+		return ""
+	}
+	if len(podName) <= 0 {
+		return ""
+	}
+	if len(containerName) <= 0 {
+		return ""
+	}
+
+	newMessage := ""
+	strArray := strings.Split(message, " ")
+	for _, v := range strArray {
+		if "container="+containerName == v {
+			continue
+		}
+		if strings.HasPrefix(v, "pod="+podName+"_") {
+			continue
+		}
+		newMessage += " " + v
+	}
+	return strings.TrimSpace(newMessage)
 }

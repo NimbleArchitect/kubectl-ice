@@ -1,21 +1,21 @@
 # kubectl-ice
 A kubectl plugin that lets you can see the running configuration of all containers
  that are running inside pods, I created it so I could peer inside the pods and see
- the details of sidecars running in a pod and then extended it so all sidecar
-  containers could be viewed at once.   
+ the details of containers (sidecars) running in a pod and then extended it so all
+ containers could be viewed at once.
 
-ice lists useful information about the sidecar containers present inside a
- pod, useful for trouble shooting multi container issues you can view volume, 
+ice lists useful information about the (sidecar) containers present inside a
+ pod, useful for trouble-shooting multi container issues. You can view volume, 
  image, port and executable configurations, along with current cpu and memory
-  metrics all at the container level (requires metrics server)
+ metrics all at the container level (requires metrics server)
 
 ## Features:
-* Only uses read permissions, no writes are used
-* List the containers of all pods in the current namespace and context
+* Only uses read permissions, no writes are called
+* Lists the containers in all pods in the current namespace and context
 * Selectors work just like they do with the standard kubectl command
-* Sort output columns 
-* List all containers from all pods across all namespaces
-* Exclude rows from output using the match flag, usefull to exclude containers with low memory or cpu usage
+* Sortable output columns 
+* Can list all containers from all pods across all namespaces
+* Exclude rows from output using the match flag, useful to exclude containers with low memory or cpu usage
 * List only cpu and memory results that dont fall within range using the oddities flag
 
 # Installation
@@ -34,37 +34,44 @@ dont have krew? check it out here [https://github.com/GoogleContainerTools/krew]
 ## Install from binary
 - download the required binary from the release page
 - unzip and copy the kubectl-ice file to your path
-- run kubectl ice help to check its working
+- run ```kubectl-ice help``` to check its working
 
 ## Install from Source
 
+clone and build the source using the following commands
 ```shell
 git clone https://github.com/NimbleArchitect/kubectl-ice.git
+cd kubectl-ice
 make bin
 ```
+then copy ./bin/kubectl-ice to somewhere in your path and run ```kubectl-ice help``` to check its working
 
 ## Usage
+if kubectl-ice is in your path you can replace the command ```kubectl-ice``` with ```kubectl ice``` (remove the dash) to
+ make it feel more like a native kubectl command, this also works if you have kubectl set as an alias, for example
+ if k is aliased to kubectl you can type ```k ice subcommand``` instead of ```kubectl-ice subcommand```
 
-The following command are available for `kubectl ice`
+
+The following commands are available for `kubectl-ice`
 ```
-kubectl ice command    # retrieves the command line and any arguments specified at the container level
-kubectl ice cpu        # return cpu requests size, limits and usage of each container
-kubectl ice help       # Shows the help screen
-kubectl ice image      # list the image name and pull status for each container
-kubectl ice ip         # list ip addresses of all pods in the namespace listed
-kubectl ice memory     # return memory requests size, limits and usage of each container
-kubectl ice ports      # shows ports exposed by the containers in a pod
-kubectl ice probes     # shows details of configured startup, readiness and liveness probes of each container
-kubectl ice restarts   # show restart counts for each container in a named pod
-kubectl ice status     # list status of each container in a pod
-kubectl ice volumes    # list all container volumes with mount points
+kubectl-ice command    # retrieves the command line and any arguments specified at the container level
+kubectl-ice cpu        # return cpu requests size, limits and usage of each container
+kubectl-ice help       # Shows the help screen
+kubectl-ice image      # list the image name and pull status for each container
+kubectl-ice ip         # list ip addresses of all pods in the namespace listed
+kubectl-ice memory     # return memory requests size, limits and usage of each container
+kubectl-ice ports      # shows ports exposed by the containers in a pod
+kubectl-ice probes     # shows details of configured startup, readiness and liveness probes of each container
+kubectl-ice restarts   # show restart counts for each container in a named pod
+kubectl-ice status     # list status of each container in a pod
+kubectl-ice volumes    # list all container volumes with mount points
 ```
 
 ice also supports all the standard kubectl flags in addition to:
 ```
 Flags:
-  -A, --all-namespaces                 List containers form pods in all namespaces
-  -c, --container string               Container name. If set shows only the named containers containers in the pod
+  -A, --all-namespaces                 List containers from pods in all namespaces
+  -c, --container string               Container name. If set shows only the named containers
       --context string                 The name of the kubeconfig context to use
       --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
   -n, --namespace string               If present, the namespace scope for this CLI request
@@ -78,256 +85,92 @@ Flags:
       --sort string      Sort by column
       --oddities         show only the outlier rows that dont fall within the computed range (requires min 5 rows in output)
 ```
+all flags are optional, see usage instructions and examples for more info
 
-### Command
-retrieves the command line and any arguments specified at the container level
+## Examples
+Some examples are listed below but full [usage instructions](https://github.com/NimbleArchitect/kubectl-pod/blob/main/docs/usage.md) and [examples](https://github.com/NimbleArchitect/kubectl-pod/blob/main/docs/examples.md) can be found in the [docs directory](https://github.com/NimbleArchitect/kubectl-pod/blob/main/docs)
 
+### Single pod info
+Shows the currently used memory along with the configured memory requests and limits of all containers (side cars) in the pod named web-pod
 ``` shell
-Usage:
-  ice command [flags]
+$ kubectl-ice memory web-pod
+T  CONTAINER    USED    REQUEST  LIMIT  %REQ    %LIMIT
+I  app-init     0       0        0      -       -
+S  app-watcher  0       1M       512M   -       -
+S  app-broken   0       1M       512M   -       -
+S  myapp        0.01Gi  1M       256M   550.09  2.15
 
-Aliases:
-  command, cmd, exec, args
 ```
-also includes standard common kubectl flags
-
-#### Example
-```shell
-$ kubectl ice command mypod
-T  CONTAINER     COMMAND    ARGUMENTS
-S  app-watcher   -          -
-S  app-broken    /bin/bash  -s exit 1
-S  myapp         -          -
-I  app-init      init.sh    -
-```
-### CPU
-shows the configured CPU resource requests and limits of each container
-
+### using labels
+using labels you can search all pods that are part of a deployment where the label app matches demoprobe and list selected information about the containers in each pod, this example shows the currently configured probe information and gives details of configured startup, readiness and liveness probes of each container
 ``` shell
-Usage:
-  ice cpu [flags]
+$ kubectl-ice probes -l app=demoprobe
+PODNAME                      CONTAINER     PROBE     DELAY  PERIOD  TIMEOUT  SUCCESS  FAILURE  CHECK    ACTION
+demo-probe-76b66d5766-ckhmt  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
+demo-probe-76b66d5766-ckhmt  web-frontend  liveness  5      5       1        1        3        Exec     cat /tmp/health
+demo-probe-76b66d5766-ckhmt  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
+demo-probe-76b66d5766-zk8pp  web-frontend  liveness  5      5       1        1        3        Exec     cat /tmp/health
+demo-probe-76b66d5766-zk8pp  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
+demo-probe-76b66d5766-zk8pp  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
 
-Flags:
-  -r, --raw              show raw uncooked values
-      --oddities         show only the outlier rows that dont fall within the computed range
 ```
-also includes standard common kubectl flags
-
-#### Example
-```shell
-$ kubectl ice cpu mypod
-T  CONTAINER    USED  REQUEST  LIMIT   %REQ  %LIMIT
-S  app-watcher  0     20m      50m     0     0
-S  app-broken   0     20m      50m     0     0
-S  myapp        1     500m     1       200   100
-I  app-init     0        0     0       0     0
-```
-
-You can also show cpu for specific containers in a deployment with the -c flag, the example below shows only the keycloak containers from the pods with the label app=keycloak 
-```shell
-$ kubectl ice cpu -l app=keycloak -c keycloak
-PODNAME                    T  CONTAINER USED  REQUEST  LIMIT  %REQ  %LIMIT
-keycloak-7c5c7f4d7b-96mbc  S  keycloak  6     0        0      -     -
-keycloak-7c5c7f4d7b-cjjdf  S  keycloak  5     0        0      -     -
-keycloak-7c5c7f4d7b-lfq2z  S  keycloak  17    0        0      -     -
-```
-
-### Image
-list the image name and pull status for each container
-
+### Container status
+most commands work the same way including the status command which also lets you see which container(s) are causing the restarts and by using the optional --previous flag you can view the containers previous exit code
 ``` shell
-Usage:
-  ice image [flags]
+$ kubectl-ice status -l app=myapp --previous
+T  PODNAME  CONTAINER    STATE       REASON  EXIT-CODE  SIGNAL  TIMESTAMP                      MESSAGE
+S  web-pod  app-broken   Terminated  Error   1          0       2022-04-19 16:03:03 +0100 BST  -
+S  web-pod  app-watcher  Terminated  Error   2          0       2022-04-19 15:59:18 +0100 BST  -
+S  web-pod  myapp        -           -       -          -       -                              -
+I  web-pod  app-init     -           -       -          -       -                              -
 
-Aliases:
-  image, im
 ```
-also includes standard common kubectl flags
-
-#### Example
-```shell
-$ kubectl ice image mypod
-T  CONTAINER   PULL          IMAGE
-S  app-watcher Always        amouat/network-utils
-S  app-broken  IfNotPresent  busybox:1.28
-S  myapp       Always        amouat/network-utils
-I  app-init    Always        amouat/network-utils
-```
-
-### IP
-list ip addresses of all pods in the namespace listed
-
+### Advanced labels
+return memory requests size and limits of each container where the pods have an app label that matches useoddcpu and the container name is equal to nginx
 ``` shell
-Usage:
-  ice ip [flags]
+$ kubectl-ice cpu -l "app in (useoddcpu)" -c web-frontend
+T  PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
+S  demo-odd-cpu-5f947f9db4-4g2gk  web-frontend  2     1        1000   141.36    0.14
+S  demo-odd-cpu-5f947f9db4-8pkpq  web-frontend  2     1        1000   132.28    0.13
+S  demo-odd-cpu-5f947f9db4-9rdh4  web-frontend  2     1        1000   147.10    0.15
+S  demo-odd-cpu-5f947f9db4-b227c  web-frontend  2     1        1000   157.30    0.16
+S  demo-odd-cpu-5f947f9db4-dldv5  web-frontend  90    1        1000   8947.00   8.95
+S  demo-odd-cpu-5f947f9db4-fg9wj  web-frontend  107   1        1000   10640.05  10.64
+S  demo-odd-cpu-5f947f9db4-jnfck  web-frontend  2     1        1000   147.75    0.15
+S  demo-odd-cpu-5f947f9db4-kktmw  web-frontend  2     1        1000   149.83    0.15
+S  demo-odd-cpu-5f947f9db4-mgbpv  web-frontend  2     1        1000   138.21    0.14
+S  demo-odd-cpu-5f947f9db4-p9mxv  web-frontend  2     1        1000   147.88    0.15
+S  demo-odd-cpu-5f947f9db4-r5rk4  web-frontend  2     1        1000   140.73    0.14
+S  demo-odd-cpu-5f947f9db4-rhktb  web-frontend  2     1        1000   145.02    0.15
+S  demo-odd-cpu-5f947f9db4-tthwv  web-frontend  105   1        1000   10426.41  10.43
+S  demo-odd-cpu-5f947f9db4-vqnm9  web-frontend  2     1        1000   131.28    0.13
+S  demo-odd-cpu-5f947f9db4-w8w2z  web-frontend  2     1        1000   134.02    0.13
+S  demo-odd-cpu-5f947f9db4-x65bq  web-frontend  2     1        1000   146.20    0.15
+
 ```
-also includes standard common kubectl flags
-
-#### Example
-```shell
-$ kubectl ice ip mypod   
-NAME  IP
-myapp 172.17.0.2
-```
-
-### Memory
-return memory requests size and limits of each container
-
+### Odditites and sorting
+given the listed output above the optional --oddities flag picks out the containers that have a high cpu usage when compared to the other containers listed we also sort the list in descending order by the %REQ column
 ``` shell
-Usage:
-  ice memory [flags]
-
-Aliases:
-  memory, mem
-
-Flags:
-  -r, --raw              show raw uncooked values
-      --oddities         show only the outlier rows that dont fall within the computed range
-```
-also includes standard common kubectl flags
-
-#### Example
-```shell
-$ kubectl ice memory mypod
-T  CONTAINER    USED  REQUEST  LIMIT   %REQ  %LIMIT
-S  app-watcher  0     500Mi    800Mi   0     0
-S  app-broken   0     500Mi    800Mi   0     0
-S  myapp        1     500Mi    800Mi   0.12  0
-I  app-init     0        0     -       -     -
-```
-
-### Ports
-shows ports exposed by the containers in a pod
-
-``` shell
-Usage:
-  ice ports [flags]
-
-Aliases:
-  ports, port, po
-```
-also includes standard common kubectl flags
-
-#### Example
-```shell
-$ kubectl ice ports mypod
-T  CONTAINER    PORTNAME  PORT  PROTO  HOSTPORT 
-S  app-broken   -         8000  TCP    
-S  app-watcher  -         8080  TCP    
-S  myapp        http      8080  TCP    
-S  keycloak     https     8443  TCP
-```
-
-### Probes
-shows details of configured startup, readiness and liveness probes of each container
-```
-Usage:
-  ice probes [flags]
-
-Aliases:
-  probes, probe
-```
-also includes standard common kubectl flags
-
-#### Example
-```shell
-$ kubectl ice probes mypod
-CONTAINER     PROBE     DELAY  PERIOD  TIMEOUT  SUCCESS  FAILURE  CHECK    ACTION
-myapp         liveness  0      10      1        1        3        HTTPGet  http://:http/health
-app-broken    liveness  0      10      1        1        3        HTTPGet  http://:http/health
-```
-
-### Restarts
-show restart counts for each container in a named pod
-
-``` shell
-Usage:
-  ice restarts [flags]
-
-Aliases:
-  restarts, restart
-
-Flags:
-      --oddities         show only the outlier rows that dont fall within the computed range
-```
-also includes standard common kubectl flags
-
-#### Example
-```shell
-$ kubectl ice restarts mypod
-T  CONTAINER   RESTARTS
-S  app-broken  0
-S  app-watcher 0
-S  myapp       0
-I  app-init    0
-```
-
-### Status
-list current running status of each container in a pod
-
-``` shell
-Usage:
-  ice status [flags]
-
-Aliases:
-  status, st
-
-Flags:
-      --oddities         show only the outlier rows that dont fall within the computed range
-  -p, --previous         show previous state
-```
-also includes standard common kubectl flags
-
-#### Example
-```shell
-$ kubectl ice status mypod
-T  CONTAINER    READY STARTED  RESTARTS  STATE       REASON     EXIT-CODE  SIGNAL  TIMESTAMP                      MESSAGE  
-S  app-broken   true  true     0         Running                                   2022-02-28 11:04:24 +0000 GMT           
-S  app-watcher  true  true     0         Running                                   2022-02-28 11:04:24 +0000 GMT           
-S  myapp        true  true     0         Running                                   2022-02-28 11:04:26 +0000 GMT           
-I  app-init     true           0         Terminated  Completed  0          0       2022-02-28 11:04:17 +0000 GMT           
+$ kubectl-ice cpu -l "app in (useoddcpu)" -c web-frontend --oddities --sort '!%REQ'
+T  PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
+S  demo-odd-cpu-5f947f9db4-fg9wj  web-frontend  107   1        1000   10640.05  10.64
+S  demo-odd-cpu-5f947f9db4-tthwv  web-frontend  105   1        1000   10426.41  10.43
+S  demo-odd-cpu-5f947f9db4-dldv5  web-frontend  90    1        1000   8947.00   8.95
 
 ```
-
-You can also show the status of specific containers in a deployment with the -c flag, the example below shows only the nginx container from the pods with the label myapp 
-```shell
-$ kubectl ice status -l app=myapp -c nginx
-PODNAME                 T  CONTAINER READY STARTED  RESTARTS  STATE    REASON  EXIT-CODE  SIGNAL  TIMESTAMP                      MESSAGE
-mypod-6c5d4947bd-rqh7f  S  nginx     true  true     2         Running  -       -          -       2022-03-07 16:15:25 +0000 GMT  -
-mypod-6c5d4947bd-xj3cd  S  nginx     true  true     0         Running  -       -          -       2022-03-08 19:31:18 +0000 GMT  -
-mypod-6c5d4947bd-je7lq  S  nginx     true  true     0         Running  -       -          -       2022-03-08 19:31:18 +0000 GMT  -
-```
-
-
-### Volumes
+### Pod volumes
 list all container volumes with mount points
-
 ``` shell
-Usage:
-  ice volumes [flags]
+$ kubectl-ice volumes web-pod
+CONTAINER    VOLUME                 TYPE       BACKING           SIZE  RO    MOUNT-POINT
+app-init     kube-api-access-8z4tk  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-watcher  kube-api-access-8z4tk  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-broken   kube-api-access-8z4tk  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+myapp        app                    ConfigMap  app.py            -     false /myapp/
+myapp        kube-api-access-8z4tk  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
 
-Aliases:
-  volumes, volume, vol
 ```
-also includes standard common kubectl flags
 
-
-#### Example
-```shell
-$ kubectl ice volumes mypod
-CONTAINER    VOLUME                 TYPE      BACKING SIZE  RO     MOUNT-POINT                                    
-app-init     kube-api-access-k7hvs  Projected               true   /var/run/secrets/kubernetes.io/serviceaccount  
-app-watcher  appsafe                EmptyDir  Memory        false  /mnt/appsafe                                   
-app-watcher  work                   EmptyDir  Memory        false  /mnt/work                                      
-app-watcher  shareme                EmptyDir  Memory        false  /etc/shareme                                   
-app-watcher  kube-api-access-k7hvs  Projected               true   /var/run/secrets/kubernetes.io/serviceaccount  
-app-broken   work                   EmptyDir  Memory        false  /mnt/work                                      
-app-broken   appsafe                EmptyDir  Memory        true   /mnt/appsafe                                   
-app-broken   kube-api-access-k7hvs  Projected               true   /var/run/secrets/kubernetes.io/serviceaccount  
-myapp        appsafe                EmptyDir  Memory        true   /mnt/appsafe                                   
-myapp        work                   EmptyDir  Memory        true   /mnt/work                                      
-myapp        kube-api-access-k7hvs  Projected               true   /var/run/secrets/kubernetes.io/serviceaccount  
-```
 
 ## Contributing
 
