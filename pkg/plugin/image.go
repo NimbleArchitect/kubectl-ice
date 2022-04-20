@@ -45,8 +45,8 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	var podname []string
 	var showPodName bool = true
 
-	clientset, err := loadConfig(kubeFlags)
-	if err != nil {
+	connect := Connector{}
+	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
 	}
 
@@ -57,12 +57,13 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 			showPodName = false
 		}
 	}
-
 	commonFlagList, err := processCommonFlags(cmd)
 	if err != nil {
 		return err
 	}
-	podList, err := getPods(clientset, kubeFlags, podname, commonFlagList)
+	connect.Flags = commonFlagList
+
+	podList, err := connect.GetPods(podname)
 	if err != nil {
 		return err
 	}

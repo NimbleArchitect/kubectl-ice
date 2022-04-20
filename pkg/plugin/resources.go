@@ -60,8 +60,8 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	var showPodName bool = true
 	var showRaw bool
 
-	clientset, err := loadConfig(kubeFlags)
-	if err != nil {
+	connect := Connector{}
+	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
 	}
 
@@ -72,22 +72,21 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			showPodName = false
 		}
 	}
-
 	commonFlagList, err := processCommonFlags(cmd)
 	if err != nil {
 		return err
 	}
+	connect.Flags = commonFlagList
 
-	podList, err := getPods(clientset, kubeFlags, podname, commonFlagList)
+	podList, err := connect.GetPods(podname)
 	if err != nil {
 		return err
 	}
 
-	metricset, err := loadMetricConfig(kubeFlags)
-	if err != nil {
+	if err := connect.LoadMetricConfig(kubeFlags); err != nil {
 		return err
 	}
-	podStateList, err := getMetricPods(metricset, kubeFlags, podname, commonFlagList)
+	podStateList, err := connect.GetMetricPods(podname)
 	if err != nil {
 		return err
 	}

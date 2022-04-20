@@ -82,6 +82,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdEnvironment.Flags())
+	cmdEnvironment.Flags().BoolP("translate", "t", false, "read the configmap show its values")
 	addCommonFlags(cmdEnvironment)
 	rootCmd.AddCommand(cmdEnvironment)
 

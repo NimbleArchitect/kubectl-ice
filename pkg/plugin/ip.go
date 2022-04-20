@@ -28,8 +28,8 @@ var ipExample = `  # List IP address of pods
 func IP(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
 
-	clientset, err := loadConfig(kubeFlags)
-	if err != nil {
+	connect := Connector{}
+	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
 	}
 
@@ -37,17 +37,16 @@ func IP(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []str
 	if len(args) >= 1 {
 		podname = args
 	}
-
 	commonFlagList, err := processCommonFlags(cmd)
 	if err != nil {
 		return err
 	}
+	connect.Flags = commonFlagList
 
-	podList, err := getPods(clientset, kubeFlags, podname, commonFlagList)
+	podList, err := connect.GetPods(podname)
 	if err != nil {
 		return err
 	}
-
 	table := Table{}
 	table.SetHeader(
 		"NAME", "IP",

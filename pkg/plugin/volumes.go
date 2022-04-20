@@ -47,8 +47,8 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	var podname []string
 	var showPodName bool = true
 
-	clientset, err := loadConfig(kubeFlags)
-	if err != nil {
+	connect := Connector{}
+	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
 	}
 
@@ -64,8 +64,9 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	if err != nil {
 		return err
 	}
+	connect.Flags = commonFlagList
 
-	podList, err := getPods(clientset, kubeFlags, podname, commonFlagList)
+	podList, err := connect.GetPods(podname)
 	if err != nil {
 		return err
 	}

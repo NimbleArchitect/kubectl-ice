@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -44,9 +46,10 @@ var environmentExample = `  # List containers env info from pods
 func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
 	var showPodName bool = true
+	var translateConfigMap bool
 
-	clientset, err := loadConfig(kubeFlags)
-	if err != nil {
+	connect := Connector{}
+	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
 	}
 
@@ -61,9 +64,15 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	if err != nil {
 		return err
 	}
-	podList, err := getPods(clientset, kubeFlags, podname, commonFlagList)
+	connect.Flags = commonFlagList
+
+	podList, err := connect.GetPods(podname)
 	if err != nil {
 		return err
+	}
+
+	if cmd.Flag("translate").Value.String() == "true" {
+		translateConfigMap = true
 	}
 
 	table := Table{}
@@ -84,6 +93,7 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	}
 
 	for _, pod := range podList {
+		connect.SetNamespace(pod.Namespace)
 		for _, container := range pod.Spec.Containers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
@@ -91,7 +101,7 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 			}
 			allRows := buildEnvFromContainer(container)
 			for _, envRow := range allRows {
-				tblOut := envBuildRow(container, pod.Name, "S", envRow)
+				tblOut := envBuildRow(container, pod.Name, "S", envRow, connect, translateConfigMap)
 				table.AddRow(tblOut...)
 			}
 		}
@@ -102,7 +112,7 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 			}
 			allRows := buildEnvFromContainer(container)
 			for _, envRow := range allRows {
-				tblOut := envBuildRow(container, pod.Name, "I", envRow)
+				tblOut := envBuildRow(container, pod.Name, "I", envRow, connect, translateConfigMap)
 				table.AddRow(tblOut...)
 			}
 		}
@@ -117,14 +127,42 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 
 }
 
-func envBuildRow(container v1.Container, podName string, containerType string, env v1.EnvVar) []Cell {
+func envBuildRow(container v1.Container, podName string, containerType string, env v1.EnvVar, connect Connector, translate bool) []Cell {
+	var envKey, envValue string
+	var configMap string
+	var key string
+
+	envKey = env.Name
+	if len(env.Value) == 0 {
+		if env.ValueFrom.ConfigMapKeyRef != nil {
+			configMap = env.ValueFrom.ConfigMapKeyRef.LocalObjectReference.Name
+			key = env.ValueFrom.ConfigMapKeyRef.Key
+			fmt.Println("^", configMap, key)
+			envValue = "CONFIGMAP:" + configMap + " KEY:" + key
+		}
+
+		if env.ValueFrom.SecretKeyRef != nil {
+			configMap = env.ValueFrom.SecretKeyRef.LocalObjectReference.Name
+			key = env.ValueFrom.SecretKeyRef.Key
+			fmt.Println("$", configMap, key)
+			envValue = "SECRETMAP:" + configMap + " KEY:" + key
+			translate = false //never translate secrets
+		}
+
+		if translate {
+			envValue = connect.GetConfigMapValue(configMap, key)
+		}
+
+	} else {
+		envValue = env.Value
+	}
 
 	return []Cell{
 		NewCellText(containerType),
 		NewCellText(podName),
 		NewCellText(container.Name),
-		NewCellText(env.Name),
-		NewCellText(env.Value),
+		NewCellText(envKey),
+		NewCellText(envValue),
 	}
 }
 
