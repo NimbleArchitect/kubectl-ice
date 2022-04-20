@@ -1,8 +1,6 @@
 package plugin
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -137,14 +135,12 @@ func envBuildRow(container v1.Container, podName string, containerType string, e
 		if env.ValueFrom.ConfigMapKeyRef != nil {
 			configMap = env.ValueFrom.ConfigMapKeyRef.LocalObjectReference.Name
 			key = env.ValueFrom.ConfigMapKeyRef.Key
-			fmt.Println("^", configMap, key)
 			envValue = "CONFIGMAP:" + configMap + " KEY:" + key
 		}
 
 		if env.ValueFrom.SecretKeyRef != nil {
 			configMap = env.ValueFrom.SecretKeyRef.LocalObjectReference.Name
 			key = env.ValueFrom.SecretKeyRef.Key
-			fmt.Println("$", configMap, key)
 			envValue = "SECRETMAP:" + configMap + " KEY:" + key
 			translate = false //never translate secrets
 		}
