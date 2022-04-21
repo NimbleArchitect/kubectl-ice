@@ -184,6 +184,9 @@ Usage:
 Aliases:
   environment, env, vars
 
+Flags:
+  -t, --translate                      read the configmap show its values
+
 ```
 also includes standard common kubectl flags
 
