@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-odd-cpu
+  namespace: ice
+spec:
+  replicas: 16
+  selector:
+    matchLabels:
+      app: useoddcpu
+  template:
+    metadata:
+      labels:
+        app: useoddcpu
+    spec:
+      initContainers:
+      - name: init-myservice
+        image: busybox:1.28
+        command: ['sh', '-c', "sleep 2; exit 0"]
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100M
+
+      containers:
+      - name: web-frontend
+        image: python:latest
+        command: ['python', '/myapp/oddcpuapp.py']
+        # image: busybox:1.28
+        # command: ['sh', '-c', "sleep 2000; exit 0"]
+        ports:
+          - containerPort: 8080
+        resources:
+          requests:
+            cpu: "1m"
+            memory: "1M"
+          limits:
+            cpu: "1"
+            memory: 256M
+        volumeMounts:
+          - name: app
+            mountPath: /myapp/
+        
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "1m"
+            memory: "1M"
+          limits:
+            cpu: "1"
+            memory: 256M
+
+          
+      volumes:
+      - name: app
+        configMap:
+          name: app.py
+          defaultMode: 0777
+          items:
+          # - key: mainapp
+          - key: oddcpu
+            path: oddcpuapp.py
+      

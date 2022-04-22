@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-pod
+  labels:
+    app: myapp
+spec:
+  initContainers:
+  - name: app-init
+    image: busybox:1.28
+    command: ['sh', '-c', "sleep 2; exit 0"]
+
+  containers:
+  - name: app-watcher
+    image: python:latest
+    command: ['python', '/myapp/mainapp.py']
+    ports:
+      - containerPort: 80
+    resources:
+      requests:
+        cpu: "1m"
+        memory: "1M"
+      limits:
+        cpu: 1m
+        memory: 512M
+
+  - name: app-broken
+    image: nginx:1.7.9
+    command: ['sh', '-c', "sleep 2; exit 1"]
+    ports:
+    - containerPort: 80
+    resources:
+      requests:
+        cpu: "1m"
+        memory: "1M"
+      limits:
+        cpu: 1m
+        memory: 512M
+        
+  - name: myapp
+    image: python:latest
+    command: ['python', '/myapp/mainapp.py']
+    volumeMounts:
+      - name: app
+        mountPath: /myapp/
+    ports:
+    - containerPort: 80
+    resources:
+      requests:
+        cpu: "1m"
+        memory: "1M"
+      limits:
+        cpu: 1m
+        memory: 256M
+
+  volumes:
+  - name: app
+    configMap:
+      name: app.py
+      defaultMode: 0777
+      items:
+      # - key: mainapp
+      - key: singlepod
+        path: mainapp.py
+      

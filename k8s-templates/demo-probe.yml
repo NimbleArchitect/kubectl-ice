@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-probe
+  namespace: ice
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demoprobe
+  template:
+    metadata:
+      labels:
+        app: demoprobe
+    spec:
+      containers:
+      - name: web-frontend
+        image: busybox:1.28
+        command: ['sh', '-c', "touch /tmp/health; sleep 2000; exit 0"]
+        ports:
+          - containerPort: 8080
+        resources:
+          requests:
+            cpu: "125m"
+            memory: "1M"
+          limits:
+            cpu: "1"
+            memory: 256M
+        volumeMounts:
+          - name: app
+            mountPath: /myapp/
+        livenessProbe:
+          exec:
+            command:
+            - exit
+            - "0"
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - cat
+            - /tmp/health
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "1m"
+            memory: "1M"
+          limits:
+            cpu: "1"
+            memory: 256M
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 60
+          failureThreshold: 8
+          periodSeconds: 60
+          
+      volumes:
+      - name: app
+        configMap:
+          name: app.py
+          defaultMode: 0777
+          items:
+          # - key: mainapp
+          - key: randomcpu
+            path: randomcpuapp.py
+      
