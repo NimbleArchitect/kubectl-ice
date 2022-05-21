@@ -114,14 +114,19 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	podState := podMetrics2Hashtable(podStateList)
 	for _, pod := range podList {
-		// process init containers
-		for _, container := range pod.Spec.InitContainers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
+		if commonFlagList.showInitContainers {
+			// process init containers
+			for _, container := range pod.Spec.InitContainers {
+				// should the container be processed
+				if skipContainerName(commonFlagList, container.Name) {
+					continue
+				}
+				tblOut := statsProcessTableRow(container, podState[pod.Name][container.Name], pod.Name, "I", resourceType, showRaw)
+				table.AddRow(tblOut...)
 			}
-			tblOut := statsProcessTableRow(container, podState[pod.Name][container.Name], pod.Name, "I", resourceType, showRaw)
-			table.AddRow(tblOut...)
+		} else {
+			// hide the container type column as its only needed when the init containers are being shown
+			table.HideColumn(0)
 		}
 
 		// process standard containers

@@ -133,6 +133,7 @@ Usage:
   kubectl-ice cpu [flags]
 
 Flags:
+  -i, --include-init                   include init container(s) in the output, by default init containers are hidden
       --oddities                       show only the outlier rows that dont fall within the computed range
   -r, --raw                            show raw values
 
@@ -315,6 +316,7 @@ Aliases:
   memory, mem
 
 Flags:
+  -i, --include-init                   include init container(s) in the output, by default init containers are hidden
       --oddities                       show only the outlier rows that dont fall within the computed range
   -r, --raw                            show raw values
 
