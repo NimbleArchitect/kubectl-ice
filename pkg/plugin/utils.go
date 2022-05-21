@@ -45,27 +45,30 @@ func memoryHumanReadable(memorySize int64) string {
 
 	byteList := memoryGetUnitLst()
 
-	for k, v := range byteList {
-		if len(k) == 2 {
-			size := float64(memorySize) / float64(v)
-			val := math.Round(size*power) / power
+	k := "M"
+	v := byteList[k]
 
-			remain := int64(math.Round(size*power)) % int64(power)
-			if remain == 0 {
-				floatfmt = "%.2f%s"
-			} else {
-				floatfmt = "%.2f%s"
-			}
+	// for k, v := range byteList {
+	// 	if len(k) == 2 {
+	size := float64(memorySize) / float64(v)
+	val := math.Round(size*power) / power
 
-			// TODO: it works but its clunky and a bit crap, needs work :(
-			if val > 0.0 && val <= 900 {
-				outVal = fmt.Sprintf(floatfmt, val, k)
-			}
-			if val > 0.9 && val <= 900 {
-				outVal = fmt.Sprintf(floatfmt, val, k)
-			}
-		}
+	remain := int64(math.Round(size*power)) % int64(power)
+	if remain == 0 {
+		floatfmt = "%.2f%s"
+	} else {
+		floatfmt = "%.2f%s"
 	}
+
+	// 		// TODO: it works but its clunky and a bit crap, needs work :(
+	// 		if val > 0.0 && val <= 900 {
+	outVal = fmt.Sprintf(floatfmt, val, k)
+	// 		}
+	// 		if val > 0.9 && val <= 900 {
+	// 			outVal = fmt.Sprintf(floatfmt, val, k)
+	// 		}
+	// 	}
+	// }
 	return outVal
 }
 
