@@ -217,6 +217,10 @@ func (c *Connector) GetNamespace(allNamespaces bool) string {
 		ctx = clientCfg.CurrentContext
 	}
 
+	if clientCfg.Contexts[ctx] == nil {
+		return "default"
+	}
+
 	namespace = clientCfg.Contexts[ctx].Namespace
 	if len(namespace) > 0 {
 		return namespace
