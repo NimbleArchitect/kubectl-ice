@@ -148,7 +148,7 @@ func buildProbeList(container v1.Container) map[string][]probeAction {
 		probes["liveness"] = buildProbeAction("liveness", container.LivenessProbe)
 	}
 	if container.ReadinessProbe != nil {
-		probes["readiness"] = buildProbeAction("liveness", container.ReadinessProbe)
+		probes["readiness"] = buildProbeAction("readiness", container.ReadinessProbe)
 	}
 	if container.StartupProbe != nil {
 		probes["startup"] = buildProbeAction("liveness", container.StartupProbe)
