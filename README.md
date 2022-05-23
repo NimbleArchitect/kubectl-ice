@@ -9,6 +9,11 @@ ice lists useful information about the (sidecar) containers present inside a
  image, port and executable configurations, along with current cpu and memory
  metrics all at the container level (requires metrics server)
 
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/nimblearchitect/kubectl-ice)
+![GitHub](https://img.shields.io/github/license/NimbleArchitect/kubectl-ice)
+![Github All Releases](https://img.shields.io/github/downloads/NimbleArchitect/kubectl-ice/total.svg?color=blue)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/NimbleArchitect/kubectl-ice/release)
+
 ## Features:
 * Only uses read permissions, no writes are called
 * Lists the containers in all pods in the current namespace and context
@@ -94,10 +99,10 @@ Some examples are listed below but full [usage instructions](https://github.com/
 Shows the currently used memory along with the configured memory requests and limits of all containers (side cars) in the pod named web-pod
 ``` shell
 $ kubectl-ice memory web-pod
-CONTAINER    USED    REQUEST  LIMIT  %REQ    %LIMIT
-app-watcher  0       1M       512M   -       -
-app-broken   0       1M       512M   -       -
-myapp        0.01Gi  1M       256M   815.10  3.18
+CONTAINER    USED  REQUEST  LIMIT  %REQ    %LIMIT
+app-watcher  0.29M 1M       512M   29.08   0.06
+app-broken   0     1M       512M   -       -
+myapp        7.61M 1M       256M   760.63  2.97
 
 ```
 ### Using labels
@@ -118,9 +123,9 @@ most commands work the same way including the status command which also lets you
 ``` shell
 $ kubectl-ice status -l app=myapp --previous
 T  PODNAME  CONTAINER    STATE       REASON  EXIT-CODE  SIGNAL  TIMESTAMP                      MESSAGE
-S  web-pod  app-broken   Terminated  Error   1          0       2022-05-20 10:08:40 +0100 BST  -
-S  web-pod  app-watcher  Terminated  Error   2          0       2022-05-20 10:04:54 +0100 BST  -
-S  web-pod  myapp        -           -       -          -       -                              -
+S  web-pod  app-broken   Terminated  Error   1          0       2022-05-23 10:59:49 +0100 BST  -
+S  web-pod  app-watcher  Terminated  Error   2          0       2022-05-23 10:56:58 +0100 BST  -
+S  web-pod  myapp        Terminated  Error   137        0       2022-05-21 18:51:29 +0100 BST  -
 I  web-pod  app-init     -           -       -          -       -                              -
 
 ```
@@ -129,22 +134,22 @@ return memory requests size and limits of each container where the pods have an 
 ``` shell
 $ kubectl-ice cpu -l "app in (useoddcpu)" -c web-frontend
 PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
-demo-odd-cpu-5f947f9db4-459t8  web-frontend  2m    1m       1000m  168.67    0.17
-demo-odd-cpu-5f947f9db4-6mlk9  web-frontend  110m  1m       1000m  10944.21  10.94
-demo-odd-cpu-5f947f9db4-7xcqw  web-frontend  110m  1m       1000m  10991.84  10.99
-demo-odd-cpu-5f947f9db4-8fc4c  web-frontend  2m    1m       1000m  161.52    0.16
-demo-odd-cpu-5f947f9db4-9x5mb  web-frontend  2m    1m       1000m  163.67    0.16
-demo-odd-cpu-5f947f9db4-bxchg  web-frontend  3m    1m       1000m  239.96    0.24
-demo-odd-cpu-5f947f9db4-fsccd  web-frontend  115m  1m       1000m  11412.70  11.41
-demo-odd-cpu-5f947f9db4-gtlcl  web-frontend  2m    1m       1000m  164.95    0.16
-demo-odd-cpu-5f947f9db4-j882g  web-frontend  123m  1m       1000m  12257.90  12.26
-demo-odd-cpu-5f947f9db4-mqwnd  web-frontend  3m    1m       1000m  258.07    0.26
-demo-odd-cpu-5f947f9db4-qh7gk  web-frontend  2m    1m       1000m  176.79    0.18
-demo-odd-cpu-5f947f9db4-rcxjq  web-frontend  3m    1m       1000m  273.59    0.27
-demo-odd-cpu-5f947f9db4-rrj7c  web-frontend  121m  1m       1000m  12090.36  12.09
-demo-odd-cpu-5f947f9db4-rtxlm  web-frontend  130m  1m       1000m  12917.46  12.92
-demo-odd-cpu-5f947f9db4-xs2gs  web-frontend  2m    1m       1000m  164.32    0.16
-demo-odd-cpu-5f947f9db4-zx5c8  web-frontend  2m    1m       1000m  175.37    0.18
+demo-odd-cpu-5f947f9db4-459t8  web-frontend  2m    1m       1000m  155.10    0.16
+demo-odd-cpu-5f947f9db4-6mlk9  web-frontend  2m    1m       1000m  149.30    0.15
+demo-odd-cpu-5f947f9db4-7xcqw  web-frontend  2m    1m       1000m  134.58    0.13
+demo-odd-cpu-5f947f9db4-8fc4c  web-frontend  2m    1m       1000m  145.22    0.15
+demo-odd-cpu-5f947f9db4-9x5mb  web-frontend  2m    1m       1000m  142.69    0.14
+demo-odd-cpu-5f947f9db4-bxchg  web-frontend  96m   1m       1000m  9567.21   9.57
+demo-odd-cpu-5f947f9db4-fsccd  web-frontend  2m    1m       1000m  146.66    0.15
+demo-odd-cpu-5f947f9db4-gtlcl  web-frontend  2m    1m       1000m  139.99    0.14
+demo-odd-cpu-5f947f9db4-j882g  web-frontend  2m    1m       1000m  152.87    0.15
+demo-odd-cpu-5f947f9db4-mqwnd  web-frontend  2m    1m       1000m  137.31    0.14
+demo-odd-cpu-5f947f9db4-qh7gk  web-frontend  2m    1m       1000m  180.17    0.18
+demo-odd-cpu-5f947f9db4-rcxjq  web-frontend  2m    1m       1000m  149.45    0.15
+demo-odd-cpu-5f947f9db4-rrj7c  web-frontend  2m    1m       1000m  154.26    0.15
+demo-odd-cpu-5f947f9db4-rtxlm  web-frontend  105m  1m       1000m  10461.33  10.46
+demo-odd-cpu-5f947f9db4-xs2gs  web-frontend  2m    1m       1000m  155.57    0.16
+demo-odd-cpu-5f947f9db4-zx5c8  web-frontend  2m    1m       1000m  140.37    0.14
 
 ```
 ### Odditites and sorting
@@ -152,22 +157,8 @@ given the listed output above the optional --oddities flag picks out the contain
 ``` shell
 $ kubectl-ice cpu -l "app in (useoddcpu)" -c web-frontend --oddities --sort '!%REQ'
 PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
-demo-odd-cpu-5f947f9db4-rtxlm  web-frontend  130m  1m       1000m  12917.46  12.92
-demo-odd-cpu-5f947f9db4-j882g  web-frontend  123m  1m       1000m  12257.90  12.26
-demo-odd-cpu-5f947f9db4-rrj7c  web-frontend  121m  1m       1000m  12090.36  12.09
-demo-odd-cpu-5f947f9db4-fsccd  web-frontend  115m  1m       1000m  11412.70  11.41
-demo-odd-cpu-5f947f9db4-7xcqw  web-frontend  110m  1m       1000m  10991.84  10.99
-demo-odd-cpu-5f947f9db4-6mlk9  web-frontend  110m  1m       1000m  10944.21  10.94
-demo-odd-cpu-5f947f9db4-rcxjq  web-frontend  3m    1m       1000m  273.59    0.27
-demo-odd-cpu-5f947f9db4-mqwnd  web-frontend  3m    1m       1000m  258.07    0.26
-demo-odd-cpu-5f947f9db4-bxchg  web-frontend  3m    1m       1000m  239.96    0.24
-demo-odd-cpu-5f947f9db4-qh7gk  web-frontend  2m    1m       1000m  176.79    0.18
-demo-odd-cpu-5f947f9db4-zx5c8  web-frontend  2m    1m       1000m  175.37    0.18
-demo-odd-cpu-5f947f9db4-459t8  web-frontend  2m    1m       1000m  168.67    0.17
-demo-odd-cpu-5f947f9db4-gtlcl  web-frontend  2m    1m       1000m  164.95    0.16
-demo-odd-cpu-5f947f9db4-xs2gs  web-frontend  2m    1m       1000m  164.32    0.16
-demo-odd-cpu-5f947f9db4-9x5mb  web-frontend  2m    1m       1000m  163.67    0.16
-demo-odd-cpu-5f947f9db4-8fc4c  web-frontend  2m    1m       1000m  161.52    0.16
+demo-odd-cpu-5f947f9db4-rtxlm  web-frontend  105m  1m       1000m  10461.33  10.46
+demo-odd-cpu-5f947f9db4-bxchg  web-frontend  96m   1m       1000m  9567.21   9.57
 
 ```
 ### Pod volumes
