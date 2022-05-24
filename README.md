@@ -13,6 +13,9 @@ ice lists useful information about the (sidecar) containers present inside a
 ![GitHub](https://img.shields.io/github/license/NimbleArchitect/kubectl-ice)
 ![Github All Releases](https://img.shields.io/github/downloads/NimbleArchitect/kubectl-ice/total.svg?color=blue)
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/NimbleArchitect/kubectl-ice/release)
+![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/NimbleArchitect/kubectl-ice)
+[![CodeQL](https://github.com/NimbleArchitect/kubectl-ice/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/NimbleArchitect/kubectl-ice/actions/workflows/codeql-analysis.yml)
+
 
 ## Features:
 * Only uses read permissions, no writes are called
