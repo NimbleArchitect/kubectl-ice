@@ -3,6 +3,7 @@ package plugin
 import (
 	"fmt"
 	"math"
+	"strings"
 )
 
 // always returns false if the flagList.container is empty as we expect to show all containers
@@ -20,22 +21,35 @@ func skipContainerName(flagList commonFlags, containerName string) bool {
 
 }
 
-//returns a list of memory sizes with their multipacation amount
-func memoryGetUnitLst() map[string]int64 {
+//returns a memory multiplier that matches the byteType string
+func memoryGetUnitLst(byteType string) (int64, string) {
 	// Ki | Mi | Gi | Ti | Pi | Ei = 1024 = 1Ki
 	// m "" k | M | G | T | P | E = 1000 = 1k
 	var d int64 = 1000 // decimal
 	var b int64 = 1024 // binary
 
-	return map[string]int64{
+	memSizes := map[string]int64{
 		"Ki": b, "Mi": b * b, "Gi": b * b * b, "Ti": b * b * b * b, "Pi": b * b * b * b * b, "Ei": b * b * b * b * b * b,
 		"k": d, "M": d * d, "G": d * d * d, "T": d * d * d * d, "P": d * d * d * d * d, "E": d * d * d * d * d * d,
 	}
+
+	if len(byteType) > 0 && len(byteType) <= 2 {
+		for k, v := range memSizes {
+			a := strings.ToLower(k)
+			b := strings.ToLower(byteType)
+			if a == b {
+				return v, k
+			}
+		}
+	}
+
+	return memSizes["M"], "M"
 }
 
 // takes a float and converts to a nearest size with unit discriptor as a string
-func memoryHumanReadable(memorySize int64) string {
+func memoryHumanReadable(memorySize int64, displayAs string) string {
 	var floatfmt string
+
 	power := 100.0
 	outVal := ""
 
@@ -43,14 +57,20 @@ func memoryHumanReadable(memorySize int64) string {
 		return "0"
 	}
 
-	byteList := memoryGetUnitLst()
+	multiplier, identifier := memoryGetUnitLst(displayAs)
 
-	k := "M"
-	v := byteList[k]
+	// convertTo = "M"
+	// if len(displayAs) <= 2 {
+	// 	convertTo = displayAs
+	// }
 
-	// for k, v := range byteList {
-	// 	if len(k) == 2 {
-	size := float64(memorySize) / float64(v)
+	// if val, ok := byteList[convertTo]; ok {
+	// 	multiplier = val
+	// } else {
+	// 	multiplier = byteList["M"]
+	// }
+
+	size := float64(memorySize) / float64(multiplier)
 	val := math.Round(size*power) / power
 
 	remain := int64(math.Round(size*power)) % int64(power)
@@ -60,15 +80,8 @@ func memoryHumanReadable(memorySize int64) string {
 		floatfmt = "%.2f%s"
 	}
 
-	// 		// TODO: it works but its clunky and a bit crap, needs work :(
-	// 		if val > 0.0 && val <= 900 {
-	outVal = fmt.Sprintf(floatfmt, val, k)
-	// 		}
-	// 		if val > 0.9 && val <= 900 {
-	// 			outVal = fmt.Sprintf(floatfmt, val, k)
-	// 		}
-	// 	}
-	// }
+	outVal = fmt.Sprintf(floatfmt, val, identifier)
+
 	return outVal
 }
 

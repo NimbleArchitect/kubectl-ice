@@ -17,13 +17,16 @@ type commonFlags struct {
 	labels             string   // k8s pod labels
 	showInitContainers bool     //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
 	showOddities       bool     // this isnt really common but it does sho up across 3+ commands and im lazy
+	byteSize           string   // sets the bytes conversion for the output size
 	outputAs           string   // how to output the table, currently only accepts json
 	sortList           []string //column names to sort on when table.Print() is called
+
 }
 
 func InitSubCommands(rootCmd *cobra.Command) {
 	var includeInitShort string = "include init container(s) in the output, by default init containers are hidden"
 	var odditiesShort string = "show only the outlier rows that dont fall within the computed range"
+	var sizeShort string = ""
 	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
 
 	//commands
@@ -146,6 +149,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdMemory.Flags())
+	cmdMemory.Flags().String("size", "Mi", sizeShort)
 	cmdMemory.Flags().BoolP("raw", "r", false, "show raw values")
 	cmdMemory.Flags().BoolP("oddities", "", false, odditiesShort)
 	cmdMemory.Flags().BoolP("include-init", "i", false, includeInitShort)
@@ -316,6 +320,12 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 			default:
 				return commonFlags{}, errors.New("unknown output format only json is supported")
 			}
+		}
+	}
+
+	if cmd.Flag("size") != nil {
+		if len(cmd.Flag("size").Value.String()) > 0 {
+			f.byteSize = cmd.Flag("size").Value.String()
 		}
 	}
 

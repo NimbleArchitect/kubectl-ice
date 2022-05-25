@@ -121,7 +121,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 				if skipContainerName(commonFlagList, container.Name) {
 					continue
 				}
-				tblOut := statsProcessTableRow(container, podState[pod.Name][container.Name], pod.Name, "I", resourceType, showRaw)
+				tblOut := statsProcessTableRow(container, podState[pod.Name][container.Name], pod.Name, "I", resourceType, showRaw, commonFlagList.byteSize)
 				table.AddRow(tblOut...)
 			}
 		} else {
@@ -135,7 +135,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := statsProcessTableRow(container, podState[pod.Name][container.Name], pod.Name, "S", resourceType, showRaw)
+			tblOut := statsProcessTableRow(container, podState[pod.Name][container.Name], pod.Name, "S", resourceType, showRaw, commonFlagList.byteSize)
 			table.AddRow(tblOut...)
 		}
 	}
@@ -159,7 +159,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	return nil
 }
 
-func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podName, containerType string, resource string, showRaw bool) []Cell {
+func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podName, containerType string, resource string, showRaw bool, bytesAs string) []Cell {
 	var displayValue, request, limit, percentLimit, percentRequest string
 	var rawRequest, rawLimit, rawValue int64
 	var rawPercentRequest, rawPercentLimit float64
@@ -213,7 +213,7 @@ func statsProcessTableRow(container v1.Container, metrics v1.ResourceList, podNa
 			if showRaw {
 				displayValue = fmt.Sprintf("%d", metrics.Memory().Value())
 			} else {
-				displayValue = memoryHumanReadable(metrics.Memory().Value())
+				displayValue = memoryHumanReadable(metrics.Memory().Value(), bytesAs)
 				floatfmt = "%.2f"
 			}
 
