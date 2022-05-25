@@ -26,7 +26,7 @@ type commonFlags struct {
 func InitSubCommands(rootCmd *cobra.Command) {
 	var includeInitShort string = "include init container(s) in the output, by default init containers are hidden"
 	var odditiesShort string = "show only the outlier rows that dont fall within the computed range"
-	var sizeShort string = ""
+	var sizeShort string = "allows conversion to the selected size rather then the default megabyte output"
 	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
 
 	//commands
