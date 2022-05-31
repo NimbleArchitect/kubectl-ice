@@ -16,7 +16,7 @@ type commonFlags struct {
 	filterList         []string // used to filter out rows form the table during Print function
 	labels             string   // k8s pod labels
 	showInitContainers bool     //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
-	showOddities       bool     // this isnt really common but it does sho up across 3+ commands and im lazy
+	showOddities       bool     // this isnt really common but it does show up across 3+ commands and im lazy
 	byteSize           string   // sets the bytes conversion for the output size
 	outputAs           string   // how to output the table, currently only accepts json
 	sortList           []string //column names to sort on when table.Print() is called
