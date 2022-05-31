@@ -319,6 +319,7 @@ Flags:
   -i, --include-init                   include init container(s) in the output, by default init containers are hidden
       --oddities                       show only the outlier rows that dont fall within the computed range
   -r, --raw                            show raw values
+      --size string                    allows conversion to the selected size rather then the default megabyte output (default "Mi")
 
 ```
 also includes standard common kubectl flags

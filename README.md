@@ -16,7 +16,6 @@ ice lists useful information about the (sidecar) containers present inside a
 ![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/NimbleArchitect/kubectl-ice)
 [![CodeQL](https://github.com/NimbleArchitect/kubectl-ice/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/NimbleArchitect/kubectl-ice/actions/workflows/codeql-analysis.yml)
 
-
 ## Features:
 * Only uses read permissions, no writes are called
 * Lists the containers in all pods in the current namespace and context
@@ -113,65 +112,59 @@ using labels you can search all pods that are part of a deployment where the lab
 ``` shell
 $ kubectl-ice probes -l app=demoprobe
 PODNAME                      CONTAINER     PROBE     DELAY  PERIOD  TIMEOUT  SUCCESS  FAILURE  CHECK    ACTION
-demo-probe-76b66d5766-j9wnm  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
-demo-probe-76b66d5766-j9wnm  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
-demo-probe-76b66d5766-j9wnm  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
-demo-probe-76b66d5766-ksn5t  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
-demo-probe-76b66d5766-ksn5t  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
-demo-probe-76b66d5766-ksn5t  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
+demo-probe-76b66d5766-bft56  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
+demo-probe-76b66d5766-bft56  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
+demo-probe-76b66d5766-bft56  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
+demo-probe-76b66d5766-qx5f2  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
+demo-probe-76b66d5766-qx5f2  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
+demo-probe-76b66d5766-qx5f2  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
 
 ```
 ### Container status
 most commands work the same way including the status command which also lets you see which container(s) are causing the restarts and by using the optional --previous flag you can view the containers previous exit code
 ``` shell
 $ kubectl-ice status -l app=myapp --previous
-T  PODNAME  CONTAINER    STATE  REASON  EXIT-CODE  SIGNAL  TIMESTAMP  MESSAGE
-S  web-pod  app-broken   -      -       -          -       -          -
-S  web-pod  app-watcher  -      -       -          -       -          -
-S  web-pod  myapp        -      -       -          -       -          -
-I  web-pod  app-init     -      -       -          -       -          -
+T  PODNAME  CONTAINER    STATE       REASON              EXIT-CODE  SIGNAL  TIMESTAMP                      MESSAGE
+S  web-pod  app-broken   Terminated  Error               1          0       2022-05-31 19:08:58 +0100 BST  -
+S  web-pod  app-watcher  Terminated  Error               2          0       2022-05-31 19:10:04 +0100 BST  -
+S  web-pod  myapp        Terminated  ContainerCannotRun  127        0       2022-05-31 19:08:59 +0100 BST  OCI runtime create failed: container_linux.go:380: starting container process caused: exec: "python /myapp/mainapp.py\nwith\nmultiline\nargument\n": stat python /myapp/mainapp.py
+with
+multiline
+argument
+: no such file or directory: unknown
+I  web-pod  app-init     -           -                   -          -       -                              -
 
 ```
 ### Advanced labels
 return memory requests size and limits of each container where the pods have an app label that matches useoddcpu and the container name is equal to nginx
 ``` shell
 $ kubectl-ice cpu -l "app in (useoddcpu)" -c web-frontend
-PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ    %LIMIT
-demo-odd-cpu-5f947f9db4-459t8  web-frontend  4m    1m       1000m  380.64  0.38
-demo-odd-cpu-5f947f9db4-6mlk9  web-frontend  4m    1m       1000m  340.38  0.34
-demo-odd-cpu-5f947f9db4-7xcqw  web-frontend  2m    1m       1000m  146.90  0.15
-demo-odd-cpu-5f947f9db4-8fc4c  web-frontend  2m    1m       1000m  179.91  0.18
-demo-odd-cpu-5f947f9db4-9x5mb  web-frontend  0m    1m       1000m  -       -
-demo-odd-cpu-5f947f9db4-bxchg  web-frontend  0m    1m       1000m  -       -
-demo-odd-cpu-5f947f9db4-fsccd  web-frontend  0m    1m       1000m  -       -
-demo-odd-cpu-5f947f9db4-gtlcl  web-frontend  2m    1m       1000m  128.17  0.13
-demo-odd-cpu-5f947f9db4-j882g  web-frontend  0m    1m       1000m  -       -
-demo-odd-cpu-5f947f9db4-mqwnd  web-frontend  4m    1m       1000m  337.23  0.34
-demo-odd-cpu-5f947f9db4-qh7gk  web-frontend  2m    1m       1000m  144.12  0.14
-demo-odd-cpu-5f947f9db4-rcxjq  web-frontend  4m    1m       1000m  353.50  0.35
-demo-odd-cpu-5f947f9db4-rrj7c  web-frontend  0m    1m       1000m  -       -
-demo-odd-cpu-5f947f9db4-rtxlm  web-frontend  2m    1m       1000m  140.08  0.14
-demo-odd-cpu-5f947f9db4-xs2gs  web-frontend  0m    1m       1000m  -       -
-demo-odd-cpu-5f947f9db4-zx5c8  web-frontend  0m    1m       1000m  -       -
+PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
+demo-odd-cpu-5f947f9db4-72f89  web-frontend  2m    1m       1000m  153.80    0.15
+demo-odd-cpu-5f947f9db4-78vks  web-frontend  3m    1m       1000m  200.42    0.20
+demo-odd-cpu-5f947f9db4-85zq2  web-frontend  2m    1m       1000m  162.59    0.16
+demo-odd-cpu-5f947f9db4-872gg  web-frontend  106m  1m       1000m  10534.03  10.53
+demo-odd-cpu-5f947f9db4-dwmjd  web-frontend  2m    1m       1000m  153.30    0.15
+demo-odd-cpu-5f947f9db4-g8468  web-frontend  2m    1m       1000m  155.68    0.16
+demo-odd-cpu-5f947f9db4-gjcc2  web-frontend  2m    1m       1000m  151.98    0.15
+demo-odd-cpu-5f947f9db4-hg9s9  web-frontend  3m    1m       1000m  232.32    0.23
+demo-odd-cpu-5f947f9db4-kjx4r  web-frontend  2m    1m       1000m  148.07    0.15
+demo-odd-cpu-5f947f9db4-klsp4  web-frontend  94m   1m       1000m  9382.23   9.38
+demo-odd-cpu-5f947f9db4-n2gv7  web-frontend  2m    1m       1000m  156.18    0.16
+demo-odd-cpu-5f947f9db4-phnjp  web-frontend  2m    1m       1000m  148.46    0.15
+demo-odd-cpu-5f947f9db4-qt4sg  web-frontend  3m    1m       1000m  209.04    0.21
+demo-odd-cpu-5f947f9db4-tds8q  web-frontend  3m    1m       1000m  235.68    0.24
+demo-odd-cpu-5f947f9db4-trff6  web-frontend  2m    1m       1000m  150.69    0.15
+demo-odd-cpu-5f947f9db4-x5cm5  web-frontend  2m    1m       1000m  155.55    0.16
 
 ```
 ### Odditites and sorting
 given the listed output above the optional --oddities flag picks out the containers that have a high cpu usage when compared to the other containers listed we also sort the list in descending order by the %REQ column
 ``` shell
 $ kubectl-ice cpu -l "app in (useoddcpu)" -c web-frontend --oddities --sort '!%REQ'
-PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ    %LIMIT
-demo-odd-cpu-5f947f9db4-8fc4c  web-frontend  2m    1m       1000m  179.91  0.18
-demo-odd-cpu-5f947f9db4-7xcqw  web-frontend  2m    1m       1000m  146.90  0.15
-demo-odd-cpu-5f947f9db4-qh7gk  web-frontend  2m    1m       1000m  144.12  0.14
-demo-odd-cpu-5f947f9db4-rtxlm  web-frontend  2m    1m       1000m  140.08  0.14
-demo-odd-cpu-5f947f9db4-gtlcl  web-frontend  2m    1m       1000m  128.17  0.13
-demo-odd-cpu-5f947f9db4-9x5mb  web-frontend  0m    1m       1000m  -       -
-demo-odd-cpu-5f947f9db4-bxchg  web-frontend  0m    1m       1000m  -       -
-demo-odd-cpu-5f947f9db4-fsccd  web-frontend  0m    1m       1000m  -       -
-demo-odd-cpu-5f947f9db4-j882g  web-frontend  0m    1m       1000m  -       -
-demo-odd-cpu-5f947f9db4-rrj7c  web-frontend  0m    1m       1000m  -       -
-demo-odd-cpu-5f947f9db4-xs2gs  web-frontend  0m    1m       1000m  -       -
-demo-odd-cpu-5f947f9db4-zx5c8  web-frontend  0m    1m       1000m  -       -
+PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
+demo-odd-cpu-5f947f9db4-872gg  web-frontend  106m  1m       1000m  10534.03  10.53
+demo-odd-cpu-5f947f9db4-klsp4  web-frontend  94m   1m       1000m  9382.23   9.38
 
 ```
 ### Pod volumes
@@ -179,11 +172,11 @@ list all container volumes with mount points
 ``` shell
 $ kubectl-ice volumes web-pod
 CONTAINER    VOLUME                 TYPE       BACKING           SIZE  RO    MOUNT-POINT
-app-init     kube-api-access-4h6h2  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
-app-watcher  kube-api-access-4h6h2  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
-app-broken   kube-api-access-4h6h2  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-init     kube-api-access-jg4mh  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-watcher  kube-api-access-jg4mh  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-broken   kube-api-access-jg4mh  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
 myapp        app                    ConfigMap  app.py            -     false /myapp/
-myapp        kube-api-access-4h6h2  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+myapp        kube-api-access-jg4mh  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
 
 ```
 
