@@ -40,7 +40,12 @@ spec:
         
   - name: myapp
     image: python:latest
-    command: ['python', '/myapp/mainapp.py']
+    command: 
+      - |
+        python /myapp/mainapp.py
+        with
+        multiline
+        argument
     volumeMounts:
       - name: app
         mountPath: /myapp/

@@ -116,12 +116,28 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 }
 
 func commandsBuildRow(container v1.Container, podName string, containerType string) []Cell {
+	cmdLine := ""
+	for _, line := range container.Command {
+		sublines := strings.Split(line, "\n")
+		for _, sline := range sublines {
+			cmdLine += strings.TrimSpace(sline) + " "
+		}
+
+	}
+
+	cmdArgs := ""
+	for _, line := range container.Args {
+		sublines := strings.Split(line, "\n")
+		for _, sline := range sublines {
+			cmdArgs += strings.TrimSpace(sline) + " "
+		}
+	}
 
 	return []Cell{
 		NewCellText(containerType),
 		NewCellText(podName),
 		NewCellText(container.Name),
-		NewCellText(strings.Join(container.Command, " ")),
-		NewCellText(strings.Join(container.Args, " ")),
+		NewCellText(cmdLine),
+		NewCellText(cmdArgs),
 	}
 }
