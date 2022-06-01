@@ -84,22 +84,22 @@ func (c *Connector) GetPods(podNameList []string) ([]v1.Pod, error) {
 		}
 
 		return podList, nil
-	} else {
-		// multi pods
-		if len(c.Flags.labels) > 0 {
-			selector.LabelSelector = c.Flags.labels
-		}
+	}
 
-		podList, err := c.clientSet.CoreV1().Pods(namespace).List(context.TODO(), selector)
-		if err == nil {
-			if len(podList.Items) == 0 {
-				return []v1.Pod{}, errors.New("no pods found in default namespace")
-			} else {
-				return podList.Items, nil
-			}
+	// multi pods
+	if len(c.Flags.labels) > 0 {
+		selector.LabelSelector = c.Flags.labels
+	}
+
+	pods, err := c.clientSet.CoreV1().Pods(namespace).List(context.TODO(), selector)
+	if err == nil {
+		if len(pods.Items) == 0 {
+			return []v1.Pod{}, errors.New("no pods found in default namespace")
 		} else {
-			return []v1.Pod{}, fmt.Errorf("failed to retrieve pod list from server: %w", err)
+			return pods.Items, nil
 		}
+	} else {
+		return []v1.Pod{}, fmt.Errorf("failed to retrieve pod list from server: %w", err)
 	}
 
 }
