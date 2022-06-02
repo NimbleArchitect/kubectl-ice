@@ -11,16 +11,21 @@ import (
 )
 
 type commonFlags struct {
-	allNamespaces      bool     // should we search all namespaces
-	container          string   // name of the container to search for
-	filterList         []string // used to filter out rows form the table during Print function
-	labels             string   // k8s pod labels
-	showInitContainers bool     //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
-	showOddities       bool     // this isnt really common but it does show up across 3+ commands and im lazy
-	byteSize           string   // sets the bytes conversion for the output size
-	outputAs           string   // how to output the table, currently only accepts json
-	sortList           []string //column names to sort on when table.Print() is called
+	allNamespaces      bool                  // should we search all namespaces
+	container          string                // name of the container to search for
+	filterList         []string              // used to filter out rows form the table during Print function
+	labels             string                // k8s pod labels
+	showInitContainers bool                  //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
+	showOddities       bool                  // this isnt really common but it does show up across 3+ commands and im lazy
+	byteSize           string                // sets the bytes conversion for the output size
+	outputAs           string                // how to output the table, currently only accepts json
+	sortList           []string              //column names to sort on when table.Print() is called
+	matchSpecList      map[string]matchValue //filter pods based on matches to the v1.Pods.Spec fields
+}
 
+type matchValue struct {
+	operator string
+	value    string
 }
 
 func InitSubCommands(rootCmd *cobra.Command) {
@@ -273,6 +278,7 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("sort", "", "", `Sort by column`)
 	cmdObj.Flags().StringP("output", "o", "", `Output format, only json is supported`)
 	cmdObj.Flags().StringP("match", "", "", `Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != `)
+	cmdObj.Flags().StringP("select", "", "", `Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != `)
 }
 
 func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
@@ -351,6 +357,16 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 		}
 	}
 
+	if cmd.Flag("select") != nil {
+		if len(cmd.Flag("select").Value.String()) > 0 {
+			rawFilterString := cmd.Flag("select").Value.String()
+			f.matchSpecList, err = splitAndFilterMatchList(rawFilterString, "ABCDEFGHIJKLMNOPQRSTUVWXYZ!%-0123456789<>=*?", []string{"!=", "==", "="})
+			if err != nil {
+				return commonFlags{}, err
+			}
+		}
+	}
+
 	return f, nil
 }
 
@@ -381,6 +397,59 @@ func splitAndFilterList(rawSortString string, filterString string) ([]string, er
 			return []string{}, errors.New("invalid characters in column name")
 		}
 		sortList = append(sortList, safeStr)
+	}
+
+	return sortList, nil
+}
+
+func splitAndFilterMatchList(rawSortString string, filterString string, operatorList []string) (map[string]matchValue, error) {
+	// based on a whitelist approach sort just removes invalid chars,
+	// we cant check header names as we dont know them at this point
+	var rawCase string
+	sortList := make(map[string]matchValue)
+
+	rawSortList := strings.Split(rawSortString, ",")
+	for i := 0; i < len(rawSortList); i++ {
+		safeStr := ""
+		rawItem := strings.TrimSpace(rawSortList[i])
+		if len(rawItem) <= 0 {
+			continue
+		}
+
+		for _, v := range strings.Split(rawItem, "") {
+			rawCase = strings.ToUpper(v)
+			if strings.Contains(filterString, rawCase) {
+				safeStr += v
+			}
+		}
+
+		if len(safeStr) != len(rawItem) {
+			return map[string]matchValue{}, errors.New("invalid characters in suppiled string")
+		}
+
+		// find and split based on operatorList
+		found := false
+		fieldName := ""
+		operator := ""
+		value := ""
+
+		for i := 0; i < len(operatorList); i++ {
+			operator = operatorList[i]
+			// check idx is 1 or more as we need at least a single charactor before the operator
+			if idx := strings.Index(safeStr, operator); idx > 0 {
+				fieldName = strings.ToUpper(strings.TrimSpace(safeStr[:idx]))
+				value = strings.TrimSpace(safeStr[idx+len(operator):])
+				found = true
+				break
+			}
+		}
+
+		if found {
+			sortList[fieldName] = matchValue{
+				operator: operator,
+				value:    value,
+			}
+		}
 	}
 
 	return sortList, nil

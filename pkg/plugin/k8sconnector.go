@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -96,12 +98,78 @@ func (c *Connector) GetPods(podNameList []string) ([]v1.Pod, error) {
 		if len(pods.Items) == 0 {
 			return []v1.Pod{}, errors.New("no pods found in default namespace")
 		} else {
-			return pods.Items, nil
+			if len(c.Flags.matchSpecList) > 0 {
+				return c.SelectMatchinghPodSpec(pods.Items)
+			} else {
+				return pods.Items, nil
+			}
 		}
 	} else {
 		return []v1.Pod{}, fmt.Errorf("failed to retrieve pod list from server: %w", err)
 	}
 
+}
+
+// SelectMatchingPodSpec select pods to inclue or eclude based on the field in v1.Pods.Spec an operator (!=, ==, =) and a string value to match with
+func (c *Connector) SelectMatchinghPodSpec(pods []v1.Pod) ([]v1.Pod, error) {
+	var newPodList []v1.Pod
+
+	//grab and compare the field name to the user suppilied string as the user may have typed all in caps
+	includeList := make(map[string]matchValue)
+
+	fields := reflect.VisibleFields(reflect.TypeOf(v1.Pod{}.Spec))
+	for _, field := range fields {
+		isValid := false
+
+		name := strings.ToUpper(field.Name)
+		//restrict to basic types (string, int, bool)
+		switch field.Type.String() {
+		case "string", "*string":
+			fallthrough
+		case "int", "*int":
+			fallthrough
+		case "int32", "*int32":
+			fallthrough
+		case "int64", "*int64":
+			fallthrough
+		case "bool", "*bool":
+			isValid = true
+		}
+
+		if !isValid {
+			continue
+		}
+
+		if value, ok := c.Flags.matchSpecList[name]; ok {
+			includeList[field.Name] = value
+		}
+	}
+
+	// now we can loop through doing a name lookup with should be faster than searching each name to find a match
+	for _, i := range pods {
+		fields := reflect.ValueOf(i.Spec)
+		for k, v := range includeList {
+			field := fields.FieldByName(k)
+			fieldString := convertToString(field, field.Interface())
+			switch v.operator {
+			case "=":
+				fallthrough
+			case "==":
+				if fieldString == v.value {
+					newPodList = append(newPodList, i)
+				}
+			case "!=":
+				if fieldString != v.value {
+					newPodList = append(newPodList, i)
+				}
+			default:
+				return []v1.Pod{}, errors.New("invalid operator found")
+			}
+		}
+
+	}
+
+	return newPodList, nil
 }
 
 //get an array of pod metrics
@@ -169,7 +237,7 @@ func (c *Connector) GetConfigMapValue(configMap string, key string) string {
 	}
 
 	if _, ok := c.configMapArray[configMap]; !ok {
-		fmt.Println("Loadme", configMap)
+		//fmt.Println("Loadme", configMap)
 		cm, err := c.GetConfigMaps(configMap)
 		if err != nil {
 			c.configMapArray[configMap] = make(map[string]string)
@@ -186,7 +254,7 @@ func (c *Connector) GetConfigMapValue(configMap string, key string) string {
 
 	}
 
-	fmt.Println("===", configMap, " + ", key, " - ", c.configMapArray[configMap][key], "===")
+	//fmt.Println("===", configMap, " + ", key, " - ", c.configMapArray[configMap][key], "===")
 	return c.configMapArray[configMap][key]
 }
 
@@ -233,4 +301,28 @@ func (c *Connector) SetNamespace(namespace string) {
 	if len(namespace) >= 1 {
 		c.setNameSpace = namespace
 	}
+}
+
+// convertToString expects a reflect value and the raw interface value and returns the value
+// as a string, it also handles pointers correctly
+func convertToString(field reflect.Value, value interface{}) string {
+
+	switch value.(type) {
+	case *bool:
+		if !field.IsNil() {
+			return fmt.Sprint(reflect.Indirect(field).Bool())
+		}
+
+	case *string:
+		if !field.IsNil() {
+			return fmt.Sprint(reflect.Indirect(field).String())
+		}
+
+	case *int, *int32, *int64:
+		if !field.IsNil() {
+			return fmt.Sprint(reflect.Indirect(field).Int())
+		}
+	}
+
+	return fmt.Sprint(value)
 }
