@@ -127,11 +127,7 @@ $ kubectl-ice status -l app=myapp --previous
 T  PODNAME  CONTAINER    STATE       REASON              EXIT-CODE  SIGNAL  TIMESTAMP                      MESSAGE
 S  web-pod  app-broken   Terminated  Error               1          0       2022-05-31 19:08:58 +0100 BST  -
 S  web-pod  app-watcher  Terminated  Error               2          0       2022-05-31 19:10:04 +0100 BST  -
-S  web-pod  myapp        Terminated  ContainerCannotRun  127        0       2022-05-31 19:08:59 +0100 BST  OCI runtime create failed: container_linux.go:380: starting container process caused: exec: "python /myapp/mainapp.py\nwith\nmultiline\nargument\n": stat python /myapp/mainapp.py
-with
-multiline
-argument
-: no such file or directory: unknown
+S  web-pod  myapp        Terminated  ContainerCannotRun  127        0       2022-05-31 19:08:59 +0100 BST  OCI runtime create failed: container_linux.go:380: starting container process caused: exec: "python /myapp/mainapp.py\nwith\nmultiline\nargument\n": stat python /myapp/mainapp.py with multiline argument
 I  web-pod  app-init     -           -                   -          -       -                              -
 
 ```
