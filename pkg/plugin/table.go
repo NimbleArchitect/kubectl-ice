@@ -539,8 +539,14 @@ func strMatch(str string, pattern string) bool {
 
 // quick wrapper to return a cell object containing the given string
 func NewCellText(text string) Cell {
+
+	temp := strings.Replace(text, "\r", "\\r", -1)
+	temp = strings.Replace(temp, "\f", "\\f", -1)
+	temp = strings.Replace(temp, "\n", "\\n", -1)
+	temp = strings.Replace(temp, "\t", "\\t", -1)
+
 	return Cell{
-		text: text,
+		text: temp,
 	}
 }
 
