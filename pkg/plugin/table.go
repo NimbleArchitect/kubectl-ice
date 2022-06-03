@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+//sets the maximum number of spaces allowed in a column, spaces are clipped to this number
+const maxLineLength = 80
+
 type matchFilter struct {
 	value      string
 	comparison int  // 1:>, 2:<, 3:!
@@ -69,7 +72,11 @@ func (t *Table) AddRow(row ...Cell) {
 
 	for i := 0; i < t.headCount; i++ {
 		if len(row[i].text) >= t.head[i].columnLength {
-			t.head[i].columnLength = len(row[i].text) + 2
+			if (len(row[i].text) + 2) > maxLineLength {
+				t.head[i].columnLength = maxLineLength
+			} else {
+				t.head[i].columnLength = len(row[i].text) + 2
+			}
 		}
 	}
 
@@ -160,7 +167,11 @@ func (t *Table) Print() {
 				excludeRow = t.exclusionFilter(cell, idx)
 			}
 
-			pad := strings.Repeat(" ", t.head[idx].columnLength-len(cell))
+			spaceCount := t.head[idx].columnLength - len(cell)
+			if spaceCount <= 0 {
+				spaceCount = maxLineLength
+			}
+			pad := strings.Repeat(" ", spaceCount)
 			line += fmt.Sprint(cell, pad)
 		}
 		if !excludeRow {
