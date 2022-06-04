@@ -223,6 +223,28 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdRestart)
 	rootCmd.AddCommand(cmdRestart)
 
+	//////////////////////////
+	//security
+	var cmdSecurity = &cobra.Command{
+		Use:     "security",
+		Short:   securityShort,
+		Long:    fmt.Sprintf("%s\n\n%s", securityShort, securityDescription),
+		Example: fmt.Sprintf(securityExample, rootCmd.CommandPath()),
+		Aliases: []string{"probe"},
+		// SuggestFor: []string{""},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := Security(cmd, KubernetesConfigFlags, args); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	KubernetesConfigFlags.AddFlags(cmdSecurity.Flags())
+	addCommonFlags(cmdSecurity)
+	rootCmd.AddCommand(cmdSecurity)
+	//////////////////////////
+
 	//status
 	var cmdStatus = &cobra.Command{
 		Use:     "status",
