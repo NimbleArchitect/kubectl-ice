@@ -106,12 +106,18 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	}
 
 	for _, pod := range podList {
+		info := containerInfomation{
+			podName: pod.Name,
+		}
+
 		for _, container := range pod.Status.ContainerStatuses {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := statusBuildRow(container, pod.Name, "S", showPrevious)
+			info.containerName = container.Name
+			info.containerType = "S"
+			tblOut := statusBuildRow(container, info, showPrevious)
 			table.AddRow(tblOut...)
 		}
 		for _, container := range pod.Status.InitContainerStatuses {
@@ -119,7 +125,9 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := statusBuildRow(container, pod.Name, "I", showPrevious)
+			info.containerName = container.Name
+			info.containerType = "I"
+			tblOut := statusBuildRow(container, info, showPrevious)
 			table.AddRow(tblOut...)
 		}
 		for _, container := range pod.Status.EphemeralContainerStatuses {
@@ -127,7 +135,9 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := statusBuildRow(container, pod.Name, "I", showPrevious)
+			info.containerName = container.Name
+			info.containerType = "E"
+			tblOut := statusBuildRow(container, info, showPrevious)
 			table.AddRow(tblOut...)
 		}
 	}
@@ -152,7 +162,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 }
 
-func statusBuildRow(container v1.ContainerStatus, podName string, containerType string, showPrevious bool) []Cell {
+func statusBuildRow(container v1.ContainerStatus, info containerInfomation, showPrevious bool) []Cell {
 	var reason string
 	var exitCode string
 	var signal string
@@ -199,12 +209,12 @@ func statusBuildRow(container v1.ContainerStatus, podName string, containerType 
 	restarts := fmt.Sprintf("%d", container.RestartCount)
 	rawRestarts = int64(container.RestartCount)
 	// remove pod and container name from the message string
-	message = trimStatusMessage(message, podName, container.Name)
+	message = trimStatusMessage(message, info.podName, info.containerName)
 
 	if showPrevious {
 		return []Cell{
-			NewCellText(containerType),
-			NewCellText(podName),
+			NewCellText(info.containerType),
+			NewCellText(info.podName),
 			NewCellText(container.Name),
 			NewCellText(strState),
 			NewCellText(reason),
@@ -215,8 +225,8 @@ func statusBuildRow(container v1.ContainerStatus, podName string, containerType 
 		}
 	} else {
 		return []Cell{
-			NewCellText(containerType),
-			NewCellText(podName),
+			NewCellText(info.containerType),
+			NewCellText(info.podName),
 			NewCellText(container.Name),
 			NewCellText(ready),
 			NewCellText(started),

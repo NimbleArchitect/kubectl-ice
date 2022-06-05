@@ -28,6 +28,12 @@ type matchValue struct {
 	value    string
 }
 
+type containerInfomation struct {
+	podName       string
+	containerName string
+	containerType string
+}
+
 func InitSubCommands(rootCmd *cobra.Command) {
 	var includeInitShort string = "include init container(s) in the output, by default init containers are hidden"
 	var odditiesShort string = "show only the outlier rows that dont fall within the computed range"
