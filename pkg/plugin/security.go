@@ -10,10 +10,9 @@ import (
 
 var securityShort = "Shows details of configured startup, readiness and liveness security of each container"
 
-var securityDescription = ` Prints details of the currently configured startup, liveness and rediness security for each 
-container. Details like the delay timeout and action are printed along with the configured security
-type. If no name is specified the container security details of all pods in the current namespace
-are shown.`
+var securityDescription = ` Shows security configuration that has been applied to the container. Some 
+fields are present in both SecurityContext and PodSecurityContext. When both are set, the values in SecurityContext take precedence.
+`
 
 var securityExample = `  # List containers security info from pods
   %[1]s security
@@ -75,8 +74,6 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 		"T", "PODNAME", "CONTAINER", "ALLOW_PRIVILEGE_ESCALATION", "PRIVILEGED", "RO_ROOT_FS", "RUN_AS_NON_ROOT", "RUN_AS_USER", "RUN_AS_GROUP",
 	)
 
-	// table.SetColumnTypeInt(3, 4, 5)
-
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
 		if err != nil {
@@ -118,23 +115,6 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 }
 
 func securityBuildRow(container v1.Container, podName string, containerType string, psc *v1.PodSecurityContext) []Cell {
-
-	// &SecurityContext{
-	// 	Capabilities:&Capabilities{
-	// 		Add:[NET_BIND_SERVICE],
-	// 		Drop:[all],
-	// 	},
-	// 	Privileged:*true,
-	// 	SELinuxOptions:nil,
-	// 	RunAsUser:*1000,
-	// 	RunAsNonRoot:*true,
-	// 	ReadOnlyRootFilesystem:*true,
-	// 	AllowPrivilegeEscalation:*false,
-	// 	RunAsGroup:nil,
-	// 	ProcMount:nil,
-	// 	WindowsOptions:nil,
-	// 	SeccompProfile:nil,}
-	// 	}
 
 	ape := Cell{}
 	p := Cell{}
