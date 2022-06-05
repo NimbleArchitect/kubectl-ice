@@ -8,13 +8,13 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var securityShort = "Shows details of configured startup, readiness and liveness security of each container"
+var securityShort = "Shows details of configured container security settings"
 
-var securityDescription = ` Shows security configuration that has been applied to the container. Some 
-fields are present in both SecurityContext and PodSecurityContext. When both are set, the values in SecurityContext take precedence.
+var securityDescription = ` View SecurityContext configuration that has been applied to the containers. Shows 
+runAsUser and runAsGroup fields among others.
 `
 
-var securityExample = `  # List containers security info from pods
+var securityExample = `  # List container security info from pods
   %[1]s security
 
   # List container security info from pods output in JSON format
