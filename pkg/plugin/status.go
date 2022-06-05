@@ -110,33 +110,35 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			podName: pod.Name,
 		}
 
+		info.containerType = "S"
 		for _, container := range pod.Status.ContainerStatuses {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
 			info.containerName = container.Name
-			info.containerType = "S"
 			tblOut := statusBuildRow(container, info, showPrevious)
 			table.AddRow(tblOut...)
 		}
+
+		info.containerType = "I"
 		for _, container := range pod.Status.InitContainerStatuses {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
 			info.containerName = container.Name
-			info.containerType = "I"
 			tblOut := statusBuildRow(container, info, showPrevious)
 			table.AddRow(tblOut...)
 		}
+
+		info.containerType = "E"
 		for _, container := range pod.Status.EphemeralContainerStatuses {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
 			info.containerName = container.Name
-			info.containerType = "E"
 			tblOut := statusBuildRow(container, info, showPrevious)
 			table.AddRow(tblOut...)
 		}

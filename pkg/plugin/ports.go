@@ -88,23 +88,45 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	}
 
 	for _, pod := range podList {
+		info := containerInfomation{
+			podName: pod.Name,
+		}
+
+		info.containerType = "S"
 		for _, container := range pod.Spec.Containers {
 			for _, port := range container.Ports {
 				// should the container be processed
 				if skipContainerName(commonFlagList, container.Name) {
 					continue
 				}
-				tblOut := portsBuildRow(container, pod.Name, port, "S")
+				info.containerName = container.Name
+				tblOut := portsBuildRow(info, port)
 				table.AddRow(tblOut...)
 			}
 		}
+
+		info.containerType = "I"
 		for _, container := range pod.Spec.InitContainers {
 			for _, port := range container.Ports {
 				// should the container be processed
 				if skipContainerName(commonFlagList, container.Name) {
 					continue
 				}
-				tblOut := portsBuildRow(container, pod.Name, port, "I")
+				info.containerName = container.Name
+				tblOut := portsBuildRow(info, port)
+				table.AddRow(tblOut...)
+			}
+		}
+
+		info.containerType = "E"
+		for _, container := range pod.Spec.EphemeralContainers {
+			for _, port := range container.Ports {
+				// should the container be processed
+				if skipContainerName(commonFlagList, container.Name) {
+					continue
+				}
+				info.containerName = container.Name
+				tblOut := portsBuildRow(info, port)
 				table.AddRow(tblOut...)
 			}
 		}
@@ -119,16 +141,16 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 }
 
-func portsBuildRow(container v1.Container, podName string, port v1.ContainerPort, containerType string) []Cell {
+func portsBuildRow(info containerInfomation, port v1.ContainerPort) []Cell {
 	hostPort := ""
 
 	if port.HostPort > 0 {
 		hostPort = fmt.Sprintf("%d", port.HostPort)
 	}
 	return []Cell{
-		NewCellText(containerType),
-		NewCellText(podName),
-		NewCellText(container.Name),
+		NewCellText(info.containerType),
+		NewCellText(info.podName),
+		NewCellText(info.containerName),
 		NewCellText(port.Name),
 		NewCellText(fmt.Sprintf("%d", port.ContainerPort)),
 		NewCellText(string(port.Protocol)),

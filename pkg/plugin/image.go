@@ -2,7 +2,6 @@ package plugin
 
 import (
 	"github.com/spf13/cobra"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
@@ -86,20 +85,40 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	}
 
 	for _, pod := range podList {
+		info := containerInfomation{
+			podName: pod.Name,
+		}
+
+		info.containerType = "S"
 		for _, container := range pod.Spec.Containers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := imageBuildRow(container, pod.Name, "S")
+			info.containerName = container.Name
+			tblOut := imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
 			table.AddRow(tblOut...)
 		}
+
+		info.containerType = "I"
 		for _, container := range pod.Spec.InitContainers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := imageBuildRow(container, pod.Name, "I")
+			info.containerName = container.Name
+			tblOut := imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
+			table.AddRow(tblOut...)
+		}
+
+		info.containerType = "E"
+		for _, container := range pod.Spec.EphemeralContainers {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
+			info.containerName = container.Name
+			tblOut := imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
 			table.AddRow(tblOut...)
 		}
 	}
@@ -113,12 +132,12 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 }
 
-func imageBuildRow(container v1.Container, podName string, containerType string) []Cell {
+func imageBuildRow(info containerInfomation, imageName string, pullPolicy string) []Cell {
 	return []Cell{
-		NewCellText(containerType),
-		NewCellText(podName),
-		NewCellText(container.Name),
-		NewCellText(string(container.ImagePullPolicy)),
-		NewCellText(container.Image),
+		NewCellText(info.containerType),
+		NewCellText(info.podName),
+		NewCellText(info.containerName),
+		NewCellText(pullPolicy),
+		NewCellText(imageName),
 	}
 }

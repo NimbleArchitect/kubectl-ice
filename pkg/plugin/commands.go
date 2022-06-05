@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
@@ -42,6 +41,11 @@ var commandsExample = `  # List containers command info from pods
 
   # List container command info from all pods where the pod label app is either web or mail
   %[1]s command -l "app in (web,mail)"`
+
+type commandLine struct {
+	cmd  []string
+	args []string
+}
 
 func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
@@ -88,20 +92,52 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	}
 
 	for _, pod := range podList {
+		info := containerInfomation{
+			podName: pod.Name,
+		}
+
+		info.containerType = "S"
 		for _, container := range pod.Spec.Containers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := commandsBuildRow(container, pod.Name, "S")
+			info.containerName = container.Name
+			cmdLine := commandLine{
+				cmd:  container.Command,
+				args: container.Args,
+			}
+			tblOut := commandsBuildRow(cmdLine, info)
 			table.AddRow(tblOut...)
 		}
+
+		info.containerType = "I"
 		for _, container := range pod.Spec.InitContainers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := commandsBuildRow(container, pod.Name, "I")
+			info.containerName = container.Name
+			cmdLine := commandLine{
+				cmd:  container.Command,
+				args: container.Args,
+			}
+			tblOut := commandsBuildRow(cmdLine, info)
+			table.AddRow(tblOut...)
+		}
+
+		info.containerType = "E"
+		for _, container := range pod.Spec.EphemeralContainers {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
+			info.containerName = container.Name
+			cmdLine := commandLine{
+				cmd:  container.Command,
+				args: container.Args,
+			}
+			tblOut := commandsBuildRow(cmdLine, info)
 			table.AddRow(tblOut...)
 		}
 	}
@@ -115,12 +151,12 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 }
 
-func commandsBuildRow(container v1.Container, podName string, containerType string) []Cell {
+func commandsBuildRow(cmdLine commandLine, info containerInfomation) []Cell {
 	return []Cell{
-		NewCellText(containerType),
-		NewCellText(podName),
-		NewCellText(container.Name),
-		NewCellText(strings.Join(container.Command, " ")),
-		NewCellText(strings.Join(container.Args, " ")),
+		NewCellText(info.containerType),
+		NewCellText(info.podName),
+		NewCellText(info.containerName),
+		NewCellText(strings.Join(cmdLine.cmd, " ")),
+		NewCellText(strings.Join(cmdLine.args, " ")),
 	}
 }

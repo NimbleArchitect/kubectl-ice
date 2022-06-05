@@ -114,14 +114,20 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	podState := podMetrics2Hashtable(podStateList)
 	for _, pod := range podList {
+		info := containerInfomation{
+			podName: pod.Name,
+		}
+
 		if commonFlagList.showInitContainers {
 			// process init containers
+			info.containerType = "I"
 			for _, container := range pod.Spec.InitContainers {
 				// should the container be processed
 				if skipContainerName(commonFlagList, container.Name) {
 					continue
 				}
-				tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], container.Name, pod.Name, "I", resourceType, showRaw, commonFlagList.byteSize)
+				info.containerName = container.Name
+				tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], info, resourceType, showRaw, commonFlagList.byteSize)
 				table.AddRow(tblOut...)
 			}
 		} else {
@@ -130,21 +136,25 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		}
 
 		// process standard containers
+		info.containerType = "S"
 		for _, container := range pod.Spec.Containers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], container.Name, pod.Name, "S", resourceType, showRaw, commonFlagList.byteSize)
+			info.containerName = container.Name
+			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], info, resourceType, showRaw, commonFlagList.byteSize)
 			table.AddRow(tblOut...)
 		}
 
+		info.containerType = "E"
 		for _, container := range pod.Spec.EphemeralContainers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], container.Name, pod.Name, "E", resourceType, showRaw, commonFlagList.byteSize)
+			info.containerName = container.Name
+			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], info, resourceType, showRaw, commonFlagList.byteSize)
 			table.AddRow(tblOut...)
 		}
 	}
@@ -168,7 +178,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	return nil
 }
 
-func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, containerName string, podName, containerType string, resource string, showRaw bool, bytesAs string) []Cell {
+func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, info containerInfomation, resource string, showRaw bool, bytesAs string) []Cell {
 	var displayValue, request, limit, percentLimit, percentRequest string
 	var rawRequest, rawLimit, rawValue int64
 	var rawPercentRequest, rawPercentLimit float64
@@ -257,9 +267,9 @@ func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, 
 	}
 
 	return []Cell{
-		NewCellText(containerType),
-		NewCellText(podName),
-		NewCellText(containerName),
+		NewCellText(info.containerType),
+		NewCellText(info.podName),
+		NewCellText(info.containerName),
 		NewCellInt(displayValue, rawValue),
 		NewCellInt(request, rawRequest),
 		NewCellInt(limit, rawLimit),

@@ -86,20 +86,40 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 	}
 
 	for _, pod := range podList {
+		info := containerInfomation{
+			podName: pod.Name,
+		}
+
+		info.containerType = "S"
 		for _, container := range pod.Spec.Containers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := capabilitiesBuildRow(container, pod.Name, "S")
+			info.containerName = container.Name
+			tblOut := capabilitiesBuildRow(container.SecurityContext, info)
 			table.AddRow(tblOut...)
 		}
+
+		info.containerType = "I"
 		for _, container := range pod.Spec.InitContainers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := capabilitiesBuildRow(container, pod.Name, "I")
+			info.containerName = container.Name
+			tblOut := capabilitiesBuildRow(container.SecurityContext, info)
+			table.AddRow(tblOut...)
+		}
+
+		info.containerType = "E"
+		for _, container := range pod.Spec.EphemeralContainers {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
+			info.containerName = container.Name
+			tblOut := capabilitiesBuildRow(container.SecurityContext, info)
 			table.AddRow(tblOut...)
 		}
 	}
@@ -113,13 +133,13 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 
 }
 
-func capabilitiesBuildRow(container v1.Container, podName string, containerType string) []Cell {
+func capabilitiesBuildRow(securityContext *v1.SecurityContext, info containerInfomation) []Cell {
 	capAdd := ""
 	capDrop := ""
 
-	if container.SecurityContext != nil {
-		if container.SecurityContext.Capabilities != nil {
-			for i, v := range container.SecurityContext.Capabilities.Add {
+	if securityContext != nil {
+		if securityContext.Capabilities != nil {
+			for i, v := range securityContext.Capabilities.Add {
 				sep := ","
 				if i == 0 {
 					sep = ""
@@ -127,7 +147,7 @@ func capabilitiesBuildRow(container v1.Container, podName string, containerType 
 				capAdd += sep + fmt.Sprint(v)
 			}
 
-			for i, v := range container.SecurityContext.Capabilities.Drop {
+			for i, v := range securityContext.Capabilities.Drop {
 				sep := ","
 				if i == 0 {
 					sep = ""
@@ -140,9 +160,9 @@ func capabilitiesBuildRow(container v1.Container, podName string, containerType 
 	// capDrop := container.SecurityContext.Capabilities.Drop
 
 	return []Cell{
-		NewCellText(containerType),
-		NewCellText(podName),
-		NewCellText(container.Name),
+		NewCellText(info.containerType),
+		NewCellText(info.podName),
+		NewCellText(info.containerName),
 		NewCellText(capAdd),
 		NewCellText(capDrop),
 	}

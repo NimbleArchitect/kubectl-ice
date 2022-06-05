@@ -98,8 +98,13 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	}
 
 	for _, pod := range podList {
-		for _, container := range pod.Spec.Containers {
+		info := containerInfomation{
+			podName: pod.Name,
+		}
 
+		info.containerType = "S"
+		for _, container := range pod.Spec.Containers {
+			info.containerName = container.Name
 			// add the probes to our map (if defined) so we can loop through each
 			probeList := buildProbeList(container)
 			// loop over all probes build the output table and add the podname if multipule pods will be output
@@ -109,7 +114,7 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 					if skipContainerName(commonFlagList, container.Name) {
 						continue
 					}
-					tblOut := probesBuildRow(container, pod.Name, action)
+					tblOut := probesBuildRow(info, action)
 					table.AddRow(tblOut...)
 				}
 			}
@@ -125,11 +130,11 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 }
 
-func probesBuildRow(container v1.Container, podName string, action probeAction) []Cell {
+func probesBuildRow(info containerInfomation, action probeAction) []Cell {
 
 	return []Cell{
-		NewCellText(podName),
-		NewCellText(container.Name),
+		NewCellText(info.podName),
+		NewCellText(info.containerName),
 		NewCellText(action.probeName),
 		NewCellInt(fmt.Sprintf("%d", action.probe.InitialDelaySeconds), int64(action.probe.InitialDelaySeconds)),
 		NewCellInt(fmt.Sprintf("%d", action.probe.PeriodSeconds), int64(action.probe.PeriodSeconds)),

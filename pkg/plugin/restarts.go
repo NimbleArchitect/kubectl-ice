@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
@@ -88,20 +87,40 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	}
 
 	for _, pod := range podList {
+		info := containerInfomation{
+			podName: pod.Name,
+		}
+
+		info.containerType = "S"
 		for _, container := range pod.Status.ContainerStatuses {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := restartsBuildRow(container, pod.Name, "S")
+			info.containerName = container.Name
+			tblOut := restartsBuildRow(info, container.RestartCount)
 			table.AddRow(tblOut...)
 		}
+
+		info.containerType = "I"
 		for _, container := range pod.Status.InitContainerStatuses {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := restartsBuildRow(container, pod.Name, "I")
+			info.containerName = container.Name
+			tblOut := restartsBuildRow(info, container.RestartCount)
+			table.AddRow(tblOut...)
+		}
+
+		info.containerType = "E"
+		for _, container := range pod.Status.EphemeralContainerStatuses {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
+			info.containerName = container.Name
+			tblOut := restartsBuildRow(info, container.RestartCount)
 			table.AddRow(tblOut...)
 		}
 	}
@@ -124,14 +143,14 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 }
 
-func restartsBuildRow(container v1.ContainerStatus, podName string, containerType string) []Cell {
+func restartsBuildRow(info containerInfomation, restartCount int32) []Cell {
 	// if container.RestartCount == 0
 	// restarts := fmt.Sprintf("%d", container.RestartCount)
 
 	return []Cell{
-		NewCellText(containerType),
-		NewCellText(podName),
-		NewCellText(container.Name),
-		NewCellInt(fmt.Sprintf("%d", container.RestartCount), int64(container.RestartCount)),
+		NewCellText(info.containerType),
+		NewCellText(info.podName),
+		NewCellText(info.containerName),
+		NewCellInt(fmt.Sprintf("%d", restartCount), int64(restartCount)),
 	}
 }

@@ -91,26 +91,49 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	}
 
 	for _, pod := range podList {
+		info := containerInfomation{
+			podName: pod.Name,
+		}
+
 		connect.SetNamespace(pod.Namespace)
+		info.containerType = "S"
 		for _, container := range pod.Spec.Containers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
+			info.containerName = container.Name
 			allRows := buildEnvFromContainer(container)
 			for _, envRow := range allRows {
-				tblOut := envBuildRow(container, pod.Name, "S", envRow, connect, translateConfigMap)
+				tblOut := envBuildRow(info, envRow, connect, translateConfigMap)
 				table.AddRow(tblOut...)
 			}
 		}
+
+		info.containerType = "I"
 		for _, container := range pod.Spec.InitContainers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
+			info.containerName = container.Name
 			allRows := buildEnvFromContainer(container)
 			for _, envRow := range allRows {
-				tblOut := envBuildRow(container, pod.Name, "I", envRow, connect, translateConfigMap)
+				tblOut := envBuildRow(info, envRow, connect, translateConfigMap)
+				table.AddRow(tblOut...)
+			}
+		}
+
+		info.containerType = "E"
+		for _, container := range pod.Spec.EphemeralContainers {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
+			info.containerName = container.Name
+			allRows := buildEnvFromEphemeral(container)
+			for _, envRow := range allRows {
+				tblOut := envBuildRow(info, envRow, connect, translateConfigMap)
 				table.AddRow(tblOut...)
 			}
 		}
@@ -125,7 +148,7 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 
 }
 
-func envBuildRow(container v1.Container, podName string, containerType string, env v1.EnvVar, connect Connector, translate bool) []Cell {
+func envBuildRow(info containerInfomation, env v1.EnvVar, connect Connector, translate bool) []Cell {
 	var envKey, envValue string
 	var configMap string
 	var key string
@@ -154,15 +177,22 @@ func envBuildRow(container v1.Container, podName string, containerType string, e
 	}
 
 	return []Cell{
-		NewCellText(containerType),
-		NewCellText(podName),
-		NewCellText(container.Name),
+		NewCellText(info.containerType),
+		NewCellText(info.podName),
+		NewCellText(info.containerName),
 		NewCellText(envKey),
 		NewCellText(envValue),
 	}
 }
 
 func buildEnvFromContainer(container v1.Container) []v1.EnvVar {
+	if len(container.Env) == 0 {
+		return []v1.EnvVar{}
+	}
+	return container.Env
+}
+
+func buildEnvFromEphemeral(container v1.EphemeralContainer) []v1.EnvVar {
 	if len(container.Env) == 0 {
 		return []v1.EnvVar{}
 	}
