@@ -34,6 +34,26 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	var sizeShort string = "allows conversion to the selected size rather then the default megabyte output"
 	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
 
+	//capabilities
+	var cmdCapabilities = &cobra.Command{
+		Use:     "capabilities",
+		Short:   capabilitiesShort,
+		Long:    fmt.Sprintf("%s\n\n%s", capabilitiesShort, capabilitiesDescription),
+		Example: fmt.Sprintf(capabilitiesExample, rootCmd.CommandPath()),
+		Aliases: []string{"cap"},
+		// SuggestFor: []string{""},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := Capabilities(cmd, KubernetesConfigFlags, args); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	KubernetesConfigFlags.AddFlags(cmdCapabilities.Flags())
+	addCommonFlags(cmdCapabilities)
+	rootCmd.AddCommand(cmdCapabilities)
+
 	//commands
 	var cmdCommands = &cobra.Command{
 		Use:     "command",
@@ -223,14 +243,13 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdRestart)
 	rootCmd.AddCommand(cmdRestart)
 
-	//////////////////////////
 	//security
 	var cmdSecurity = &cobra.Command{
 		Use:     "security",
 		Short:   securityShort,
 		Long:    fmt.Sprintf("%s\n\n%s", securityShort, securityDescription),
 		Example: fmt.Sprintf(securityExample, rootCmd.CommandPath()),
-		Aliases: []string{"probe"},
+		Aliases: []string{"sec"},
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := Security(cmd, KubernetesConfigFlags, args); err != nil {
@@ -243,7 +262,6 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	KubernetesConfigFlags.AddFlags(cmdSecurity.Flags())
 	addCommonFlags(cmdSecurity)
 	rootCmd.AddCommand(cmdSecurity)
-	//////////////////////////
 
 	//status
 	var cmdStatus = &cobra.Command{
