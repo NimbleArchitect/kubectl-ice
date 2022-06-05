@@ -122,6 +122,14 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			tblOut := statusBuildRow(container, pod.Name, "I", showPrevious)
 			table.AddRow(tblOut...)
 		}
+		for _, container := range pod.Status.EphemeralContainerStatuses {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
+			tblOut := statusBuildRow(container, pod.Name, "I", showPrevious)
+			table.AddRow(tblOut...)
+		}
 	}
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
