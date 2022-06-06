@@ -114,8 +114,8 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 
 }
 
-func createVolumeMap(volumes []v1.Volume) map[string]map[string]string {
-	podMap := make(map[string]map[string]string)
+func createVolumeMap(volumes []v1.Volume) map[string]map[string]Cell {
+	podMap := make(map[string]map[string]Cell)
 	// podVolumes := map[string]map[string]string{}
 	for _, vol := range volumes {
 		v := reflect.ValueOf(vol.VolumeSource)
@@ -133,68 +133,68 @@ func createVolumeMap(volumes []v1.Volume) map[string]map[string]string {
 	return podMap
 }
 
-func decodeVolumeType(volType string, volume v1.VolumeSource) map[string]string {
-	outMap := make(map[string]string)
+func decodeVolumeType(volType string, volume v1.VolumeSource) map[string]Cell {
+	outMap := make(map[string]Cell)
 
 	if volType == "" {
 		return nil
 	}
 
-	outMap["type"] = volType
-	outMap["size"] = ""
-	outMap["backing"] = ""
+	outMap["type"] = NewCellText(volType)
+	outMap["size"] = Cell{}
+	outMap["backing"] = Cell{}
 
 	switch volType {
 	case "AWSElasticBlockStore":
-		outMap["backing"] = volume.AWSElasticBlockStore.VolumeID
+		outMap["backing"] = NewCellText(volume.AWSElasticBlockStore.VolumeID)
 
 	case "AzureDisk":
-		outMap["backing"] = volume.AzureDisk.DataDiskURI
+		outMap["backing"] = NewCellText(volume.AzureDisk.DataDiskURI)
 
 	case "AzureFile":
-		outMap["backing"] = volume.AzureFile.ShareName
+		outMap["backing"] = NewCellText(volume.AzureFile.ShareName)
 
 	case "Cinder":
-		outMap["backing"] = volume.Cinder.VolumeID
+		outMap["backing"] = NewCellText(volume.Cinder.VolumeID)
 
 	case "ConfigMap":
-		outMap["backing"] = volume.ConfigMap.Name
+		outMap["backing"] = NewCellText(volume.ConfigMap.Name)
 
 	case "EmptyDir":
 		if volume.EmptyDir.SizeLimit != nil {
-			outMap["size"] = volume.EmptyDir.SizeLimit.String()
+			outMap["size"] = NewCellInt(volume.EmptyDir.SizeLimit.String(), volume.EmptyDir.SizeLimit.Value())
 		}
-		outMap["backing"] = string(volume.EmptyDir.Medium)
+		outMap["backing"] = NewCellText(string(volume.EmptyDir.Medium))
 
 	case "Ephemeral":
-		outMap["backing"] = volume.Ephemeral.VolumeClaimTemplate.Name
+		outMap["backing"] = NewCellText(volume.Ephemeral.VolumeClaimTemplate.Name)
 
 	case "FC":
-		outMap["backing"] = volume.FC.TargetWWNs[0]
+		outMap["backing"] = NewCellText(volume.FC.TargetWWNs[0])
 
 	case "Flocker":
-		outMap["backing"] = volume.Flocker.DatasetUUID
+		outMap["backing"] = NewCellText(volume.Flocker.DatasetUUID)
 
 	case "GCEPersistentDisk":
-		outMap["backing"] = volume.GCEPersistentDisk.PDName
+		outMap["backing"] = NewCellText(volume.GCEPersistentDisk.PDName)
 
 	case "HostPath":
-		outMap["backing"] = volume.HostPath.Path
+		outMap["backing"] = NewCellText(volume.HostPath.Path)
 
 	case "ISCSI":
-		outMap["backing"] = volume.ISCSI.IQN
+		outMap["backing"] = NewCellText(volume.ISCSI.IQN)
 
 	case "NFS":
-		outMap["backing"] = volume.NFS.Server + "/" + volume.NFS.Path
+		outMap["backing"] = NewCellText(volume.NFS.Server + "/" + volume.NFS.Path)
 
 	case "PersistentVolumeClaim":
-		outMap["backing"] = volume.PersistentVolumeClaim.ClaimName
+		outMap["backing"] = NewCellText(volume.PersistentVolumeClaim.ClaimName)
 
 	case "PhotonPersistentDisk":
-		outMap["backing"] = volume.PhotonPersistentDisk.PdID
+		outMap["backing"] = NewCellText(volume.PhotonPersistentDisk.PdID)
 
 	case "PortworxVolume":
-		outMap["backing"] = volume.PortworxVolume.VolumeID
+		outMap["backing"] = NewCellText(volume.PortworxVolume.VolumeID)
 
 	case "Projected":
 		tmp := ""
@@ -207,22 +207,22 @@ func decodeVolumeType(volType string, volume v1.VolumeSource) map[string]string 
 		if len(tmp) > 0 {
 			tmp = tmp[:len(tmp)-1]
 		}
-		outMap["backing"] = tmp
+		outMap["backing"] = NewCellText(tmp)
 
 	case "Quobyte":
-		outMap["backing"] = volume.Quobyte.Tenant
+		outMap["backing"] = NewCellText(volume.Quobyte.Tenant)
 
 	case "RBD":
-		outMap["backing"] = volume.RBD.RBDImage
+		outMap["backing"] = NewCellText(volume.RBD.RBDImage)
 
 	case "Secret":
-		outMap["backing"] = volume.Secret.SecretName
+		outMap["backing"] = NewCellText(volume.Secret.SecretName)
 
 	case "StorageOS":
-		outMap["backing"] = volume.StorageOS.VolumeNamespace + "/" + volume.StorageOS.VolumeName
+		outMap["backing"] = NewCellText(volume.StorageOS.VolumeNamespace + "/" + volume.StorageOS.VolumeName)
 
 	case "VsphereVolume":
-		outMap["backing"] = volume.VsphereVolume.VolumePath
+		outMap["backing"] = NewCellText(volume.VsphereVolume.VolumePath)
 
 	default:
 		fmt.Println("ERROR: unknown volume type", volType)
@@ -231,10 +231,10 @@ func decodeVolumeType(volType string, volume v1.VolumeSource) map[string]string 
 	return outMap
 }
 
-func volumesBuildRow(container v1.Container, podName string, podVolumes map[string]map[string]string, mount v1.VolumeMount) []Cell {
-	var volumeType string
-	var size string
-	var backing string
+func volumesBuildRow(container v1.Container, podName string, podVolumes map[string]map[string]Cell, mount v1.VolumeMount) []Cell {
+	var volumeType Cell
+	var size Cell
+	var backing Cell
 
 	// fmt.Println(volume["name"])
 	if podVolumes[mount.Name] != nil {
@@ -248,9 +248,9 @@ func volumesBuildRow(container v1.Container, podName string, podVolumes map[stri
 		NewCellText(podName),
 		NewCellText(container.Name),
 		NewCellText(mount.Name),
-		NewCellText(volumeType),
-		NewCellText(backing),
-		NewCellText(size),
+		volumeType,
+		backing,
+		size,
 		NewCellText(fmt.Sprintf("%t", mount.ReadOnly)),
 		NewCellText(mount.MountPath),
 	}

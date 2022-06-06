@@ -142,18 +142,21 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 }
 
 func portsBuildRow(info containerInfomation, port v1.ContainerPort) []Cell {
-	hostPort := ""
+	hostPort := Cell{}
 
 	if port.HostPort > 0 {
-		hostPort = fmt.Sprintf("%d", port.HostPort)
+		hostPort = NewCellInt(fmt.Sprintf("%d", port.HostPort), int64(port.HostPort))
+	} else {
+		hostPort = NewCellText("")
 	}
+
 	return []Cell{
 		NewCellText(info.containerType),
 		NewCellText(info.podName),
 		NewCellText(info.containerName),
 		NewCellText(port.Name),
-		NewCellText(fmt.Sprintf("%d", port.ContainerPort)),
+		NewCellInt(fmt.Sprintf("%d", port.ContainerPort), int64(port.ContainerPort)),
 		NewCellText(string(port.Protocol)),
-		NewCellText(hostPort),
+		hostPort,
 	}
 }
