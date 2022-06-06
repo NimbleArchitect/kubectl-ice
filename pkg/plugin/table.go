@@ -17,6 +17,11 @@ type matchFilter struct {
 	set        bool
 }
 
+type matchValue struct {
+	operator string
+	value    string
+}
+
 type headerRow struct {
 	filter       matchFilter
 	columnLength int
@@ -78,12 +83,19 @@ func (t *Table) AddRow(row ...Cell) {
 				t.head[i].columnLength = len(row[i].text) + 2
 			}
 		}
+
+		if row[i].typ == 2 {
+			t.head[i].columnType = 2
+		} else if row[i].typ == 1 {
+			t.head[i].columnType = 1
+		}
 	}
 
 	t.data = append(t.data, row)                  // add data to row
 	t.rowOrder = append(t.rowOrder, t.currentRow) // add row number to end of sort list
 	t.hideRow = append(t.hideRow, false)
 	t.currentRow += 1
+
 }
 
 //  changes the order of columns displayed in the table, specifying a subset of the column
@@ -156,9 +168,9 @@ func (t *Table) Print() {
 			if t.head[idx].hidden {
 				continue
 			}
-			cell := row[idx].text
-			if len(cell) == 0 {
-				cell = "-"
+			cell := row[idx]
+			if len(cell.text) == 0 {
+				cell.text = "-"
 			}
 
 			// due to looping over every column in the row we only set excludeRow if it is still false
@@ -167,12 +179,12 @@ func (t *Table) Print() {
 				excludeRow = t.exclusionFilter(cell, idx)
 			}
 
-			spaceCount := t.head[idx].columnLength - len(cell)
+			spaceCount := t.head[idx].columnLength - len(cell.text)
 			if spaceCount <= 0 {
 				spaceCount = maxLineLength
 			}
 			pad := strings.Repeat(" ", spaceCount)
-			line += fmt.Sprint(cell, pad)
+			line += fmt.Sprint(cell.text, pad)
 		}
 		if !excludeRow {
 			fmt.Println(strings.TrimRight(line, " "))
@@ -343,17 +355,11 @@ func (t *Table) SortByNames(name ...string) error {
 	return nil
 }
 
-func (t *Table) SetColumnTypeInt(columnID ...int) {
-	for _, v := range columnID {
-		t.head[v].columnType = 1
-	}
-}
-
 // check if matchWord should be excluded using the given filter idx
 // return true if matchWord should be excluded and false all other times
-func (t *Table) exclusionFilter(matchCell string, idx int) bool {
-	var mValue float64
+func (t *Table) exclusionFilter(matchCell Cell, idx int) bool {
 	var fValue float64
+	var iValue int64
 
 	exclude := true
 	filter := t.head[idx].filter
@@ -363,73 +369,127 @@ func (t *Table) exclusionFilter(matchCell string, idx int) bool {
 		return false
 	}
 
-	cell := strings.ToUpper(matchCell)
-	// equals
+	if t.head[idx].columnType == 0 {
+		exclude = canExcludeMatchString(filter, matchCell.text, filter.value)
+	}
+
+	if t.head[idx].columnType == 1 {
+		//convert filter.value to number
+		iValue, _ = strconv.ParseInt(filter.value, 10, 64)
+
+		exclude = canExcludeMatchInt(filter, matchCell.number, iValue)
+	}
+
+	if t.head[idx].columnType == 2 {
+		//convert filter.value to float
+		fValue, _ = strconv.ParseFloat(filter.value, 64)
+
+		exclude = canExcludeMatchFloat(filter, matchCell.float, fValue)
+	}
+	return exclude
+}
+
+func canExcludeMatchString(filter matchFilter, val1 string, val2 string) bool {
+	//equals
 	if filter.compareEql {
-		if strMatch(cell, filter.value) {
-			exclude = false
+		if strMatch(val1, val2) {
+			return false
 		}
 	}
 
 	// not
 	if filter.comparison == 3 {
-		if !strMatch(cell, filter.value) {
-			exclude = false
+		if !strMatch(val1, val2) {
+			return false
 		}
-	}
-
-	intval := ""
-	//column is a number so we allow only numbers
-	if t.head[idx].columnType == 1 {
-		for _, v := range strings.Split(cell, "") {
-			if strings.Contains("0123456789.", v) {
-				intval += v
-			}
-		}
-
-		//convert string number to actual number
-		mValue, _ = strconv.ParseFloat(intval, 64)
-
-		//convert filter.value to number
-		fValue, _ = strconv.ParseFloat(filter.value, 64)
-
 	}
 
 	// bigger
 	if filter.comparison == 1 {
-		if t.head[idx].columnType == 1 {
-			if mValue > fValue {
-				exclude = false
-			}
-		} else {
-			if cell > filter.value {
-				exclude = false
-			}
+		if val1 > val2 {
+			return false
 		}
 	}
 
 	// smaller
 	if filter.comparison == 2 {
-		if t.head[idx].columnType == 1 {
-			if mValue < fValue {
-				exclude = false
-			}
-		} else {
-			if cell < filter.value {
-				exclude = false
-			}
+		if val1 < val2 {
+			return false
 		}
 	}
 
-	return exclude
+	return true
+}
+
+func canExcludeMatchInt(filter matchFilter, val1 int64, val2 int64) bool {
+	//equals
+	if filter.compareEql {
+		if val1 == val2 {
+			return false
+		}
+	}
+
+	//not equals
+	if filter.comparison == 3 {
+		if val1 != val2 {
+			return false
+		}
+	}
+
+	// bigger
+	if filter.comparison == 1 {
+		if val1 > val2 {
+			return false
+		}
+	}
+
+	// smaller
+	if filter.comparison == 2 {
+		if val1 < val2 {
+			return false
+		}
+	}
+
+	return true
+}
+
+func canExcludeMatchFloat(filter matchFilter, val1 float64, val2 float64) bool {
+	//equals
+	if filter.compareEql {
+		if val1 == val2 {
+			return false
+		}
+	}
+
+	//not equals
+	if filter.comparison == 3 {
+		if val1 != val2 {
+			return false
+		}
+	}
+
+	// bigger
+	if filter.comparison == 1 {
+		if val1 > val2 {
+			return false
+		}
+	}
+
+	// smaller
+	if filter.comparison == 2 {
+		if val1 < val2 {
+			return false
+		}
+	}
+
+	return true
 }
 
 // takes a filter as a string to exclude matching rows from the Print function
 // fulter is in the form COLUMN_NAME OPERATOR VALUE, where operator can be one of <,>,<=,>=,!=,=,==
-func (t *Table) SetFilter(filter []string) error {
-	operatorList := []string{"<=", ">=", "!=", "==", "=", "<", ">"}
+func (t *Table) SetFilter(filter map[string]matchValue) error {
 
-	for _, words := range filter {
+	for words, match := range filter {
 		// the smallest header name is T making a valid string "T=0"
 		if len(words) < 3 {
 			continue
@@ -440,15 +500,11 @@ func (t *Table) SetFilter(filter []string) error {
 		operator := ""
 		value := ""
 
-		for i := 0; i < len(operatorList); i++ {
-			operator = operatorList[i]
-			// check idx is 1 or more as we need at least a single charactor before the operator
-			if idx := strings.Index(words, operator); idx > 0 {
-				columnName = strings.TrimSpace(words[:idx])
-				value = strings.TrimSpace(words[idx+len(operator):])
-				found = true
-				break
-			}
+		if len(match.operator) > 0 && len(words) > 0 {
+			columnName = words
+			operator = match.operator
+			value = match.value
+			found = true
 		}
 
 		if found {
@@ -487,7 +543,7 @@ func (t *Table) SetFilter(filter []string) error {
 
 			case "!=":
 				t.head[idx].filter.comparison = 3
-				t.head[idx].filter.compareEql = true
+				t.head[idx].filter.compareEql = false
 
 			default:
 				return errors.New("invalid operator found")

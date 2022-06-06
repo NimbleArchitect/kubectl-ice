@@ -83,7 +83,6 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	table.SetHeader(
 		"PODNAME", "CONTAINER", "PROBE", "DELAY", "PERIOD", "TIMEOUT", "SUCCESS", "FAILURE", "CHECK", "ACTION",
 	)
-	table.SetColumnTypeInt(3, 4, 5)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)

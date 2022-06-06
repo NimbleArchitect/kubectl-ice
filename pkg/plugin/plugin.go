@@ -13,7 +13,7 @@ import (
 type commonFlags struct {
 	allNamespaces      bool                  // should we search all namespaces
 	container          string                // name of the container to search for
-	filterList         []string              // used to filter out rows form the table during Print function
+	filterList         map[string]matchValue // used to filter out rows form the table during Print function
 	labels             string                // k8s pod labels
 	showInitContainers bool                  //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
 	showOddities       bool                  // this isnt really common but it does show up across 3+ commands and im lazy
@@ -21,11 +21,6 @@ type commonFlags struct {
 	outputAs           string                // how to output the table, currently only accepts json
 	sortList           []string              //column names to sort on when table.Print() is called
 	matchSpecList      map[string]matchValue //filter pods based on matches to the v1.Pods.Spec fields
-}
-
-type matchValue struct {
-	operator string
-	value    string
 }
 
 type containerInfomation struct {
@@ -396,7 +391,7 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 	if cmd.Flag("match") != nil {
 		if len(cmd.Flag("match").Value.String()) > 0 {
 			rawMatchString := cmd.Flag("match").Value.String()
-			f.filterList, err = splitAndFilterList(rawMatchString, "ABCDEFGHIJKLMNOPQRSTUVWXYZ!%-0123456789<>=*?")
+			f.filterList, err = splitAndFilterMatchList(rawMatchString, "ABCDEFGHIJKLMNOPQRSTUVWXYZ!%-.0123456789<>=*?", []string{"<=", ">=", "!=", "==", "=", "<", ">"})
 			if err != nil {
 				return commonFlags{}, err
 			}
@@ -448,6 +443,8 @@ func splitAndFilterList(rawSortString string, filterString string) ([]string, er
 	return sortList, nil
 }
 
+// splitAndFilterMatchList removes any chars not in filterList and splits the line based on values in []operator, returns a map[string]matchValue type.
+//the order of operatorList is important as the match is done on a first come first served basis
 func splitAndFilterMatchList(rawSortString string, filterString string, operatorList []string) (map[string]matchValue, error) {
 	// based on a whitelist approach sort just removes invalid chars,
 	// we cant check header names as we dont know them at this point

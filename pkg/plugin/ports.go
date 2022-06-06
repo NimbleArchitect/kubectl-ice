@@ -74,7 +74,6 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	table.SetHeader(
 		"T", "PODNAME", "CONTAINER", "PORTNAME", "PORT", "PROTO", "HOSTPORT",
 	)
-	table.SetColumnTypeInt(4, 6)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
