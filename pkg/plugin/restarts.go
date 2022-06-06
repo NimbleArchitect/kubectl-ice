@@ -12,7 +12,7 @@ var restartsShort = "Show restart counts for each container in a named pod"
 var restartsDescription = ` Prints container name and restart count for individual containers. If no name is specified the
 container restart counts of all pods in the current namespace are shown.
 
-The T column in the table output denotes S for Standard and I for init containers`
+The T column in the table output denotes S for Standard, I for init and E for Ephemerial containers`
 
 var restartsExample = `  # List individual container restart count from pods
   %[1]s restarts

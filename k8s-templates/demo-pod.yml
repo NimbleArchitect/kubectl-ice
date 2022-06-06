@@ -43,9 +43,6 @@ spec:
     command: 
       - |
         python /myapp/mainapp.py
-        with
-        multiline
-        argument
     volumeMounts:
       - name: app
         mountPath: /myapp/

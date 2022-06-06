@@ -24,6 +24,10 @@ ice lists useful information about the (sidecar) containers present inside a
 * Can list all containers from all pods across all namespaces
 * Exclude rows from output using the match flag, useful to exclude containers with low memory or cpu usage
 * List only cpu and memory results that dont fall within range using the oddities flag
+* Displays information on init and ephemerial containers
+* Pods can be filtered using their priority and priorityClassName
+* Most sub commands utilize aliases meaning less typing (eg command and cmd are the same)
+
 
 # Installation
 
@@ -61,17 +65,20 @@ if kubectl-ice is in your path you can replace the command ```kubectl-ice``` wit
 
 The following commands are available for `kubectl-ice`
 ```
-kubectl-ice command    # retrieves the command line and any arguments specified at the container level
-kubectl-ice cpu        # return cpu requests size, limits and usage of each container
-kubectl-ice help       # Shows the help screen
-kubectl-ice image      # list the image name and pull status for each container
-kubectl-ice ip         # list ip addresses of all pods in the namespace listed
-kubectl-ice memory     # return memory requests size, limits and usage of each container
-kubectl-ice ports      # shows ports exposed by the containers in a pod
-kubectl-ice probes     # shows details of configured startup, readiness and liveness probes of each container
-kubectl-ice restarts   # show restart counts for each container in a named pod
-kubectl-ice status     # list status of each container in a pod
-kubectl-ice volumes    # list all container volumes with mount points
+kubectl-ice capabilities  # Shows details of configured container capabilities
+kubectl-ice command       # Retrieves the command line and any arguments specified at the container level
+kubectl-ice cpu           # Show configured cpu size, limit and % usage of each container
+kubectl-ice environment   # List the env name and value for each container
+kubectl-ice help          # Help about any command
+kubectl-ice image         # List the image name and pull status for each container
+kubectl-ice ip            # List ip addresses of all pods in the namespace listed
+kubectl-ice memory        # Show configured memory size, limit and % usage of each container
+kubectl-ice ports         # Shows ports exposed by the containers in a pod
+kubectl-ice probes        # Shows details of configured startup, readiness and liveness probes of each container
+kubectl-ice restarts      # Show restart counts for each container in a named pod
+kubectl-ice security      # Shows details of configured container security settings
+kubectl-ice status        # List status of each container in a pod
+kubectl-ice volumes       # Display container volumes and mount points
 ```
 
 ice also supports all the standard kubectl flags in addition to:
@@ -82,15 +89,16 @@ Flags:
       --context string                 The name of the kubeconfig context to use
       --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
   -n, --namespace string               If present, the namespace scope for this CLI request
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
   -l, --selector string                Selector (label query) to filter on
 ```
 select subcommands also support the following flags
 ```
 Flags:
-  -p, --previous         show previous state
-  -r, --raw              show raw uncooked values
+  -p, --previous         Show previous state
+  -r, --raw              Show raw uncooked values
       --sort string      Sort by column
-      --oddities         show only the outlier rows that dont fall within the computed range (requires min 5 rows in output)
+      --oddities         Show only the outlier rows that dont fall within the computed range (requires min 5 rows in output)
 ```
 all flags are optional, see usage instructions and examples for more info
 
@@ -112,12 +120,12 @@ using labels you can search all pods that are part of a deployment where the lab
 ``` shell
 $ kubectl-ice probes -l app=demoprobe
 PODNAME                      CONTAINER     PROBE     DELAY  PERIOD  TIMEOUT  SUCCESS  FAILURE  CHECK    ACTION
-demo-probe-76b66d5766-bft56  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
-demo-probe-76b66d5766-bft56  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
-demo-probe-76b66d5766-bft56  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
-demo-probe-76b66d5766-qx5f2  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
-demo-probe-76b66d5766-qx5f2  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
-demo-probe-76b66d5766-qx5f2  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
+demo-probe-76b66d5766-jlnnd  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
+demo-probe-76b66d5766-jlnnd  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
+demo-probe-76b66d5766-jlnnd  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
+demo-probe-76b66d5766-jmqpf  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
+demo-probe-76b66d5766-jmqpf  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
+demo-probe-76b66d5766-jmqpf  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
 
 ```
 ### Container status
@@ -125,9 +133,9 @@ most commands work the same way including the status command which also lets you
 ``` shell
 $ kubectl-ice status -l app=myapp --previous
 T  PODNAME  CONTAINER    STATE       REASON              EXIT-CODE  SIGNAL  TIMESTAMP                      MESSAGE
-S  web-pod  app-broken   Terminated  Error               1          0       2022-05-31 19:08:58 +0100 BST  -
-S  web-pod  app-watcher  Terminated  Error               2          0       2022-05-31 19:10:04 +0100 BST  -
-S  web-pod  myapp        Terminated  ContainerCannotRun  127        0       2022-05-31 19:08:59 +0100 BST  OCI runtime create failed: container_linux.go:380: starting container process caused: exec: "python /myapp/mainapp.py\nwith\nmultiline\nargument\n": stat python /myapp/mainapp.py with multiline argument
+S  web-pod  app-broken   Terminated  Error               1          0       2022-06-06 10:08:54 +0100 BST  -
+S  web-pod  app-watcher  Terminated  Error               2          0       2022-06-06 10:09:55 +0100 BST  -
+S  web-pod  myapp        Terminated  ContainerCannotRun  127        0       2022-06-06 10:08:26 +0100 BST  OCI runtime create failed: container_linux.go:380: starting container process caused: exec: "python /myapp/mainapp.py\n": stat python /myapp/mainapp.py\n: no such file or directory: unknown
 I  web-pod  app-init     -           -                   -          -       -                              -
 
 ```
@@ -136,22 +144,22 @@ return memory requests size and limits of each container where the pods have an 
 ``` shell
 $ kubectl-ice cpu -l "app in (useoddcpu)" -c web-frontend
 PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
-demo-odd-cpu-5f947f9db4-72f89  web-frontend  2m    1m       1000m  153.80    0.15
-demo-odd-cpu-5f947f9db4-78vks  web-frontend  3m    1m       1000m  200.42    0.20
-demo-odd-cpu-5f947f9db4-85zq2  web-frontend  2m    1m       1000m  162.59    0.16
-demo-odd-cpu-5f947f9db4-872gg  web-frontend  106m  1m       1000m  10534.03  10.53
-demo-odd-cpu-5f947f9db4-dwmjd  web-frontend  2m    1m       1000m  153.30    0.15
-demo-odd-cpu-5f947f9db4-g8468  web-frontend  2m    1m       1000m  155.68    0.16
-demo-odd-cpu-5f947f9db4-gjcc2  web-frontend  2m    1m       1000m  151.98    0.15
-demo-odd-cpu-5f947f9db4-hg9s9  web-frontend  3m    1m       1000m  232.32    0.23
-demo-odd-cpu-5f947f9db4-kjx4r  web-frontend  2m    1m       1000m  148.07    0.15
-demo-odd-cpu-5f947f9db4-klsp4  web-frontend  94m   1m       1000m  9382.23   9.38
-demo-odd-cpu-5f947f9db4-n2gv7  web-frontend  2m    1m       1000m  156.18    0.16
-demo-odd-cpu-5f947f9db4-phnjp  web-frontend  2m    1m       1000m  148.46    0.15
-demo-odd-cpu-5f947f9db4-qt4sg  web-frontend  3m    1m       1000m  209.04    0.21
-demo-odd-cpu-5f947f9db4-tds8q  web-frontend  3m    1m       1000m  235.68    0.24
-demo-odd-cpu-5f947f9db4-trff6  web-frontend  2m    1m       1000m  150.69    0.15
-demo-odd-cpu-5f947f9db4-x5cm5  web-frontend  2m    1m       1000m  155.55    0.16
+demo-odd-cpu-5f947f9db4-5w88x  web-frontend  103m  1m       1000m  10285.12  10.29
+demo-odd-cpu-5f947f9db4-6k2wf  web-frontend  3m    1m       1000m  216.82    0.22
+demo-odd-cpu-5f947f9db4-86d7q  web-frontend  2m    1m       1000m  182.98    0.18
+demo-odd-cpu-5f947f9db4-9gmhq  web-frontend  3m    1m       1000m  271.87    0.27
+demo-odd-cpu-5f947f9db4-bsfzf  web-frontend  3m    1m       1000m  228.82    0.23
+demo-odd-cpu-5f947f9db4-cf787  web-frontend  3m    1m       1000m  211.69    0.21
+demo-odd-cpu-5f947f9db4-g5k7q  web-frontend  2m    1m       1000m  180.05    0.18
+demo-odd-cpu-5f947f9db4-h5tql  web-frontend  3m    1m       1000m  218.84    0.22
+demo-odd-cpu-5f947f9db4-h9zpr  web-frontend  2m    1m       1000m  177.78    0.18
+demo-odd-cpu-5f947f9db4-kddvb  web-frontend  2m    1m       1000m  188.46    0.19
+demo-odd-cpu-5f947f9db4-n5slb  web-frontend  114m  1m       1000m  11377.78  11.38
+demo-odd-cpu-5f947f9db4-nmxrj  web-frontend  2m    1m       1000m  176.04    0.18
+demo-odd-cpu-5f947f9db4-qkvzq  web-frontend  2m    1m       1000m  168.35    0.17
+demo-odd-cpu-5f947f9db4-tvqbs  web-frontend  2m    1m       1000m  183.71    0.18
+demo-odd-cpu-5f947f9db4-x24r2  web-frontend  3m    1m       1000m  228.32    0.23
+demo-odd-cpu-5f947f9db4-xv67t  web-frontend  2m    1m       1000m  168.46    0.17
 
 ```
 ### Odditites and sorting
@@ -159,8 +167,8 @@ given the listed output above the optional --oddities flag picks out the contain
 ``` shell
 $ kubectl-ice cpu -l "app in (useoddcpu)" -c web-frontend --oddities --sort '!%REQ'
 PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
-demo-odd-cpu-5f947f9db4-872gg  web-frontend  106m  1m       1000m  10534.03  10.53
-demo-odd-cpu-5f947f9db4-klsp4  web-frontend  94m   1m       1000m  9382.23   9.38
+demo-odd-cpu-5f947f9db4-n5slb  web-frontend  114m  1m       1000m  11377.78  11.38
+demo-odd-cpu-5f947f9db4-5w88x  web-frontend  103m  1m       1000m  10285.12  10.29
 
 ```
 ### Pod volumes
@@ -168,11 +176,11 @@ list all container volumes with mount points
 ``` shell
 $ kubectl-ice volumes web-pod
 CONTAINER    VOLUME                 TYPE       BACKING           SIZE  RO    MOUNT-POINT
-app-init     kube-api-access-jg4mh  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
-app-watcher  kube-api-access-jg4mh  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
-app-broken   kube-api-access-jg4mh  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-init     kube-api-access-tzk9t  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-watcher  kube-api-access-tzk9t  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-broken   kube-api-access-tzk9t  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
 myapp        app                    ConfigMap  app.py            -     false /myapp/
-myapp        kube-api-access-jg4mh  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+myapp        kube-api-access-tzk9t  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
 
 ```
 

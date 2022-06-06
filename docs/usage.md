@@ -2,28 +2,32 @@
 * [Introduction](#introduction)
 * [Usage](#usage)
 * [Flags](#flags)
-* [Command](#command)
+* [Capabilities](#capabilities)
   * [Examples](#example)
-* [CPU](#cpu)
+* [Command](#command)
   * [Examples](#example-1)
-* [Environment](#environment)
+* [CPU](#cpu)
   * [Examples](#example-2)
-* [Image](#image)
+* [Environment](#environment)
   * [Examples](#example-3)
-* [IP](#ip)
+* [Image](#image)
   * [Examples](#example-4)
-* [Memory](#memory)
+* [IP](#ip)
   * [Examples](#example-5)
-* [Ports](#ports)
+* [Memory](#memory)
   * [Examples](#example-6)
-* [Probes](#probes)
+* [Ports](#ports)
   * [Examples](#example-7)
-* [Restarts](#restarts)
+* [Probes](#probes)
   * [Examples](#example-8)
-* [Status](#status)
+* [Restarts](#restarts)
   * [Examples](#example-9)
-* [Volumes](#volumes)
+* [Security](#security)
   * [Examples](#example-10)
+* [Status](#status)
+  * [Examples](#example-11)
+* [Volumes](#volumes)
+  * [Examples](#example-12)
 
 ## Introduction
 A kubectl plugin that lets you can see the running configuration of all containers
@@ -39,17 +43,20 @@ ice lists useful information about the sidecar containers present inside a
 ## Usage
 ice usage is split in to sub commands with each following commands are available for `kubectl ice`
 ```
-kubectl ice command    # retrieves the command line and any arguments specified at the container level
-kubectl ice cpu        # return cpu requests size, limits and usage of each container
-kubectl ice help       # Shows the help screen
-kubectl ice image      # list the image name and pull status for each container
-kubectl ice ip         # list ip addresses of all pods in the namespace listed
-kubectl ice memory     # return memory requests size, limits and usage of each container
-kubectl ice ports      # shows ports exposed by the containers in a pod
-kubectl ice probes     # shows details of configured startup, readiness and liveness probes of each container
-kubectl ice restarts   # show restart counts for each container in a named pod
-kubectl ice status     # list status of each container in a pod
-kubectl ice volumes    # list all container volumes with mount points
+kubectl-ice capabilities  # Shows details of configured container capabilities
+kubectl-ice command       # Retrieves the command line and any arguments specified at the container level
+kubectl-ice cpu           # Show configured cpu size, limit and % usage of each container
+kubectl-ice environment   # List the env name and value for each container
+kubectl-ice help          # Help about any command
+kubectl-ice image         # List the image name and pull status for each container
+kubectl-ice ip            # List ip addresses of all pods in the namespace listed
+kubectl-ice memory        # Show configured memory size, limit and % usage of each container
+kubectl-ice ports         # Shows ports exposed by the containers in a pod
+kubectl-ice probes        # Shows details of configured startup, readiness and liveness probes of each container
+kubectl-ice restarts      # Show restart counts for each container in a named pod
+kubectl-ice security      # Shows details of configured container security settings
+kubectl-ice status        # List status of each container in a pod
+kubectl-ice volumes       # Display container volumes and mount points
 ```
 
 ## Flags
@@ -60,6 +67,7 @@ All standard kubectl flags are supported including the beow, see the examples se
       --context string                 The name of the kubeconfig context to use
       --match string                   excludes results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
   -n, --namespace string               If present, the namespace scope for this CLI request
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
   -l, --selector string                Selector (label query) to filter on
 ```
 selected subcommands also support the following flags
@@ -70,6 +78,53 @@ selected subcommands also support the following flags
       --oddities         show only the outlier rows that dont fall within the computed range (requires min 5 rows in output)
 ```
 
+## Capabilities
+Shows details of configured container capabilities
+
+View POSIX Capabilities that have been applied to the running containers.
+
+``` shell
+Usage:
+  kubectl-ice capabilities [flags]
+
+Aliases:
+  capabilities, cap
+
+Flags:
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+
+```
+also includes standard common kubectl flags
+
+### Examples
+``` shell
+# List container capabilities from pods
+kubectl-ice capabilities
+
+# List container capabilities info from pods output in JSON format
+kubectl-ice capabilities -o json
+
+# List container capabilities info from a single pod
+kubectl-ice capabilities my-pod-4jh36
+
+# List capabilities info for all containers named web-container searching all
+# pods in the current namespace
+kubectl-ice capabilities -c web-container
+
+# List capabilities info for all containers called web-container searching all pods in current
+# namespace sorted by container name in descending order (notice the ! charator)
+kubectl-ice capabilities -c web-container --sort '!CONTAINER'
+
+# List capabilities info for all containers called web-container searching all pods in current
+# namespace sorted by pod name in ascending order
+kubectl-ice capabilities -c web-container --sort PODNAME
+
+# List container capabilities info from all pods where label app matches web
+kubectl-ice capabilities -l app=web
+
+# List container capabilities info from all pods where the pod label app is either web or mail
+kubectl-ice capabilities -l "app in (web,mail)"
+```
 ## Command
 Retrieves the command line and any arguments specified at the container level
 
@@ -85,6 +140,9 @@ Usage:
 
 Aliases:
   command, cmd, exec, args
+
+Flags:
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
 
 ```
 also includes standard common kubectl flags
@@ -136,6 +194,7 @@ Flags:
   -i, --include-init                   include init container(s) in the output, by default init containers are hidden
       --oddities                       show only the outlier rows that dont fall within the computed range
   -r, --raw                            show raw values
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
 
 ```
 also includes standard common kubectl flags
@@ -186,6 +245,7 @@ Aliases:
   environment, env, vars
 
 Flags:
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
   -t, --translate                      read the configmap show its values
 
 ```
@@ -236,6 +296,9 @@ Usage:
 Aliases:
   image, im
 
+Flags:
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+
 ```
 also includes standard common kubectl flags
 
@@ -278,6 +341,9 @@ all pods in the current namespace are shown.
 Usage:
   kubectl-ice ip [flags]
 
+Flags:
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+
 ```
 also includes standard common kubectl flags
 
@@ -319,6 +385,7 @@ Flags:
   -i, --include-init                   include init container(s) in the output, by default init containers are hidden
       --oddities                       show only the outlier rows that dont fall within the computed range
   -r, --raw                            show raw values
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --size string                    allows conversion to the selected size rather then the default megabyte output (default "Mi")
 
 ```
@@ -369,6 +436,9 @@ Usage:
 Aliases:
   ports, port, po
 
+Flags:
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+
 ```
 also includes standard common kubectl flags
 
@@ -416,6 +486,9 @@ Usage:
 Aliases:
   probes, probe
 
+Flags:
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+
 ```
 also includes standard common kubectl flags
 
@@ -454,7 +527,7 @@ Show restart counts for each container in a named pod
 Prints container name and restart count for individual containers. If no name is specified the
 container restart counts of all pods in the current namespace are shown.
 
-The T column in the table output denotes S for Standard and I for init containers
+The T column in the table output denotes S for Standard, I for init and E for Ephemerial containers
 
 ``` shell
 Usage:
@@ -465,6 +538,7 @@ Aliases:
 
 Flags:
       --oddities                       show only the outlier rows that dont fall within the computed range
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
 
 ```
 also includes standard common kubectl flags
@@ -498,6 +572,54 @@ kubectl-ice restarts -l app=web
 # List restart count from all containers where the pod label app is either web or mail
 kubectl-ice restarts -l "app in (web,mail)"
 ```
+## Security
+Shows details of configured container security settings
+
+View SecurityContext configuration that has been applied to the containers. Shows
+runAsUser and runAsGroup fields among others.
+
+``` shell
+Usage:
+  kubectl-ice security [flags]
+
+Aliases:
+  security, sec
+
+Flags:
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+
+```
+also includes standard common kubectl flags
+
+### Examples
+``` shell
+# List container security info from pods
+kubectl-ice security
+
+# List container security info from pods output in JSON format
+kubectl-ice security -o json
+
+# List container security info from a single pod
+kubectl-ice security my-pod-4jh36
+
+# List security info for all containers named web-container searching all
+# pods in the current namespace
+kubectl-ice security -c web-container
+
+# List security info for all containers called web-container searching all pods in current
+# namespace sorted by container name in descending order (notice the ! charator)
+kubectl-ice security -c web-container --sort '!CONTAINER'
+
+# List security info for all containers called web-container searching all pods in current
+# namespace sorted by pod name in ascending order
+kubectl-ice security -c web-container --sort PODNAME
+
+# List container security info from all pods where label app matches web
+kubectl-ice security -l app=web
+
+# List container security info from all pods where the pod label app is either web or mail
+kubectl-ice security -l "app in (web,mail)"
+```
 ## Status
 List status of each container in a pod
 
@@ -518,6 +640,7 @@ Aliases:
 Flags:
       --oddities                       show only the outlier rows that dont fall within the computed range
   -p, --previous                       show previous state
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
 
 ```
 also includes standard common kubectl flags
@@ -568,6 +691,9 @@ Usage:
 
 Aliases:
   volumes, volume, vol
+
+Flags:
+      --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
 
 ```
 also includes standard common kubectl flags
