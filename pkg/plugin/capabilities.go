@@ -8,7 +8,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-var capabilitiesShort = "Shows details of configured container capabilities"
+var capabilitiesShort = "Shows details of configured containers POSIX capabilities"
 
 var capabilitiesDescription = ` View POSIX Capabilities that have been applied to the running containers.
 `

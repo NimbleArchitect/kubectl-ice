@@ -1,8 +1,8 @@
 # kubectl-ice
-A kubectl plugin that lets you can see the running configuration of all containers
- that are running inside pods, I created it so I could peer inside the pods and see
- the details of containers (sidecars) running in a pod and then extended it so all
- containers could be viewed at once.
+A kubectl plugin that lets you can see details of all containers that are running
+ inside pods, I created it so I could peer inside the pods and see the details of
+ containers (sidecars) running in a pod and then extended it so all containers
+ could be viewed at once.
 
 ice lists useful information about the (sidecar) containers present inside a
  pod, useful for trouble-shooting multi container issues. You can view volume, 
