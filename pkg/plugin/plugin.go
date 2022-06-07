@@ -157,6 +157,26 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdImage)
 	rootCmd.AddCommand(cmdImage)
 
+	//lifecycle
+	var cmdLifecycle = &cobra.Command{
+		Use:     "lifecycle",
+		Short:   lifecycleShort,
+		Long:    fmt.Sprintf("%s\n\n%s", lifecycleShort, lifecycleDescription),
+		Example: fmt.Sprintf(lifecycleExample, rootCmd.CommandPath()),
+		Aliases: []string{"im"},
+		// SuggestFor: []string{""},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := Lifecycle(cmd, KubernetesConfigFlags, args); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	KubernetesConfigFlags.AddFlags(cmdLifecycle.Flags())
+	addCommonFlags(cmdLifecycle)
+	rootCmd.AddCommand(cmdLifecycle)
+
 	//memory
 	var cmdMemory = &cobra.Command{
 		Use:     "memory",

@@ -72,6 +72,7 @@ kubectl-ice environment   # List the env name and value for each container
 kubectl-ice help          # Help about any command
 kubectl-ice image         # List the image name and pull status for each container
 kubectl-ice ip            # List ip addresses of all pods in the namespace listed
+kubectl-ice lifecycle     # Show lifecycle actions for each container in a named pod
 kubectl-ice memory        # Show configured memory size, limit and % usage of each container
 kubectl-ice ports         # Shows ports exposed by the containers in a pod
 kubectl-ice probes        # Shows details of configured startup, readiness and liveness probes of each container

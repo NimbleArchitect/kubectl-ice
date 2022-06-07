@@ -55,7 +55,13 @@ spec:
       limits:
         cpu: 1m
         memory: 256M
-
+    lifecycle:
+      postStart:
+        httpGet:
+          path: /index.html
+          port: 80
+          host: localhost
+          scheme: HTTP
   volumes:
   - name: app
     configMap:
