@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
@@ -103,16 +102,16 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 		info.containerType = "S"
 		for _, container := range pod.Spec.Containers {
+			// should the container be processed
+			if skipContainerName(commonFlagList, container.Name) {
+				continue
+			}
 			info.containerName = container.Name
 			// add the probes to our map (if defined) so we can loop through each
 			probeList := buildProbeList(container)
 			// loop over all probes build the output table and add the podname if multipule pods will be output
 			for _, probe := range probeList {
 				for _, action := range probe {
-					// should the container be processed
-					if skipContainerName(commonFlagList, container.Name) {
-						continue
-					}
 					tblOut := probesBuildRow(info, action)
 					table.AddRow(tblOut...)
 				}
@@ -224,28 +223,4 @@ func buildProbeAction(name string, probe *v1.Probe) []probeAction {
 	}
 
 	return probeList
-}
-
-// takes a port object and returns either the number or the name as a string with a proceeding :
-// returns empty string if port is empty
-func portAsString(port intstr.IntOrString) string {
-	//port number provided
-	if port.Type == 0 {
-		if port.IntVal > 0 {
-			return fmt.Sprintf(":%d", port.IntVal)
-		} else {
-			return ""
-		}
-	}
-
-	//port name provided
-	if port.Type == 1 {
-		if len(port.StrVal) > 0 {
-			return ":" + port.StrVal
-		} else {
-			return ""
-		}
-	}
-
-	return ""
 }

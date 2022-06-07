@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"strings"
+
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // always returns false if the flagList.container is empty as we expect to show all containers
@@ -104,4 +106,28 @@ func outputTableAs(t Table, outType string) {
 		t.PrintJson()
 	}
 
+}
+
+// takes a port object and returns either the number or the name as a string with a proceeding :
+// returns empty string if port is empty
+func portAsString(port intstr.IntOrString) string {
+	//port number provided
+	if port.Type == 0 {
+		if port.IntVal > 0 {
+			return fmt.Sprintf(":%d", port.IntVal)
+		} else {
+			return ""
+		}
+	}
+
+	//port name provided
+	if port.Type == 1 {
+		if len(port.StrVal) > 0 {
+			return ":" + port.StrVal
+		} else {
+			return ""
+		}
+	}
+
+	return ""
 }
