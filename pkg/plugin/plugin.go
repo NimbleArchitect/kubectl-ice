@@ -381,11 +381,16 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 			outAs := cmd.Flag("output").Value.String()
 			// we use a switch to match -o flag so I can expand in future
 			switch strings.ToLower(outAs) {
+			case "csv":
+				f.outputAs = "csv"
+			case "list":
+				f.outputAs = "list"
 			case "json":
 				f.outputAs = "json"
-
+			case "yaml":
+				f.outputAs = "yaml"
 			default:
-				return commonFlags{}, errors.New("unknown output format only json is supported")
+				return commonFlags{}, errors.New("unknown output format only csv, list, json and yaml are supported")
 			}
 		}
 	}

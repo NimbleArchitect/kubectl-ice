@@ -201,7 +201,7 @@ func (t *Table) PrintJson() {
 	for rowNum := 0; rowNum < len(t.data); rowNum++ {
 		line := "{"
 		row := t.data[rowNum]
-		// now loop through each column the the currentl selected row
+		// now loop through each column for the currently selected row
 		for col := 0; col < t.headCount; col++ {
 			word := row[col].text
 			if len(word) == 0 {
@@ -224,6 +224,92 @@ func (t *Table) PrintJson() {
 	}
 	fmt.Println("]}")
 
+}
+
+// Prints the table on the terminal as yaml, all fileds are shown and all are unsorted as
+// other programs can be used to filter and sort
+func (t *Table) PrintYaml() {
+	// loop through each row
+	fmt.Println("data:")
+	for rowNum := 0; rowNum < len(t.data); rowNum++ {
+		line := ""
+		sep := "-"
+
+		row := t.data[rowNum]
+		// now loop through each column for the currently selected row
+		for col := 0; col < t.headCount; col++ {
+			word := row[col].text
+			if len(word) == 0 {
+				word = ""
+			}
+			line += fmt.Sprintf("%s %s: \"%s\"\n", sep, t.head[col].title, word)
+			sep = " "
+		}
+		fmt.Print(line)
+	}
+
+}
+
+// prints the key and value on a single line by its self. all fileds are shown and all are unsorted as
+// other programs can be used to filter and sort
+func (t *Table) PrintList() {
+	// loop through each row
+	for rowNum := 0; rowNum < len(t.data); rowNum++ {
+		row := t.data[rowNum]
+		// now loop through each column for the currently selected row
+		for col := 0; col < t.headCount; col++ {
+			word := row[col].text
+			if len(word) == 0 {
+				word = ""
+			}
+			fmt.Println(t.head[col].title+":", word)
+		}
+	}
+}
+
+//prints the table as a csv including the header row. all fileds are shown and all are unsorted as
+// other programs can be used to filter and sort
+func (t *Table) PrintCsv() {
+
+	if len(t.data) <= 0 {
+		return
+	}
+
+	line := ""
+	row := t.data[0]
+	// now loop through each column for the currently selected row
+	for col := 0; col < t.headCount; col++ {
+		word := row[col].text
+		if len(word) == 0 {
+			word = ""
+		}
+		line += fmt.Sprintf("\"%s\"", t.head[col].title)
+		// add , to the end of every column name except the last
+		if col+1 < t.headCount {
+			line += ", "
+		}
+	}
+	fmt.Println(line)
+
+	// loop through each column to get the column names
+	for rowNum := 0; rowNum < len(t.data); rowNum++ {
+		line := ""
+		row := t.data[rowNum]
+		// now loop through each column for the currently selected row
+		for col := 0; col < t.headCount; col++ {
+			word := row[col].text
+			if len(word) == 0 {
+				word = ""
+			}
+			line += fmt.Sprintf("\"%s\"", word)
+			// add , to the end of every key/value except the last
+			if col+1 < t.headCount {
+				line += ", "
+			}
+		}
+
+		fmt.Println(line)
+	}
 }
 
 // Sort via the column number, uses the full column count including hidden columns

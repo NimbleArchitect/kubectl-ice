@@ -102,8 +102,14 @@ func outputTableAs(t Table, outType string) {
 
 	case "":
 		t.Print()
+	case "csv":
+		t.PrintCsv()
+	case "list":
+		t.PrintList()
 	case "json":
 		t.PrintJson()
+	case "yaml":
+		t.PrintYaml()
 	}
 
 }
