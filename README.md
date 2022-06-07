@@ -90,6 +90,7 @@ Flags:
       --context string                 The name of the kubeconfig context to use
       --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
   -n, --namespace string               If present, the namespace scope for this CLI request
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
   -l, --selector string                Selector (label query) to filter on
 ```

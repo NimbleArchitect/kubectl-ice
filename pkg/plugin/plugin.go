@@ -337,7 +337,7 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("selector", "l", "", `Selector (label query) to filter on, supports '=', '==', and '!='.(e.g. -l key1=value1,key2=value2`)
 	cmdObj.Flags().StringP("container", "c", "", `Container name. If omitted show all containers in the pod`)
 	cmdObj.Flags().StringP("sort", "", "", `Sort by column`)
-	cmdObj.Flags().StringP("output", "o", "", `Output format, only json is supported`)
+	cmdObj.Flags().StringP("output", "o", "", `Output format, currently csv, list, json and yaml are supported`)
 	cmdObj.Flags().StringP("match", "", "", `Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != `)
 	cmdObj.Flags().StringP("select", "", "", `Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != `)
 }
