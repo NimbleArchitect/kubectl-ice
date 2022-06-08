@@ -326,6 +326,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdVolume.Flags())
+	cmdVolume.Flags().BoolP("device", "d", false, "show raw block device mappings within a container")
 	addCommonFlags(cmdVolume)
 	rootCmd.AddCommand(cmdVolume)
 

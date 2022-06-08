@@ -1,4 +1,33 @@
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-volume-2
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-claim-2
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+
+---
+apiVersion: v1
 kind: Pod
 metadata:
   name: web-pod
@@ -37,7 +66,9 @@ spec:
       limits:
         cpu: 1m
         memory: 512M
-        
+    volumeDevices:
+    - devicePath: /mnt/localmount
+      name: pvc-claim-2
   - name: myapp
     image: python:latest
     command: 
@@ -68,7 +99,9 @@ spec:
       name: app.py
       defaultMode: 0777
       items:
-      # - key: mainapp
       - key: singlepod
         path: mainapp.py
+  - name: pvc-claim-2 
+    persistentVolumeClaim: 
+      claimName: block-device
       

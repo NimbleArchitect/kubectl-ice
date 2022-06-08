@@ -46,6 +46,7 @@ var volumesExample = `  # List volumes from containers inside pods from current 
 func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
 	var showPodName bool = true
+	var showVolumeDevice bool
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -71,10 +72,20 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 		return err
 	}
 
+	if cmd.Flag("device").Value.String() == "true" {
+		showVolumeDevice = true
+	}
+
 	table := Table{}
-	table.SetHeader(
-		"PODNAME", "CONTAINER", "VOLUME", "TYPE", "BACKING", "SIZE", "RO", "MOUNT-POINT",
-	)
+	if !showVolumeDevice {
+		table.SetHeader(
+			"PODNAME", "CONTAINER", "VOLUME", "TYPE", "BACKING", "SIZE", "RO", "MOUNT-POINT",
+		)
+	} else {
+		table.SetHeader(
+			"T", "PODNAME", "CONTAINER", "PVC_NAME", "DEVICE_PATH",
+		)
+	}
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -89,17 +100,63 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	}
 
 	for _, pod := range podList {
-		podVolumes := createVolumeMap(pod.Spec.Volumes)
+		info := containerInfomation{
+			podName: pod.Name,
+		}
 
-		containerList := append(pod.Spec.InitContainers, pod.Spec.Containers...)
-		for _, container := range containerList {
-			for _, mount := range container.VolumeMounts {
+		if !showPodName {
+			podVolumes := createVolumeMap(pod.Spec.Volumes)
+
+			containerList := append(pod.Spec.InitContainers, pod.Spec.Containers...)
+			for _, container := range containerList {
+				info.containerName = container.Name
+				for _, mount := range container.VolumeMounts {
+					// should the container be processed
+					if skipContainerName(commonFlagList, container.Name) {
+						continue
+					}
+					tblOut := volumesBuildRow(info, podVolumes, mount)
+					table.AddRow(tblOut...)
+				}
+			}
+		} else {
+			info.containerType = "S"
+			for _, container := range pod.Spec.Containers {
 				// should the container be processed
 				if skipContainerName(commonFlagList, container.Name) {
 					continue
 				}
-				tblOut := volumesBuildRow(container, pod.Name, podVolumes, mount)
-				table.AddRow(tblOut...)
+				info.containerName = container.Name
+				for _, mount := range container.VolumeDevices {
+					tblOut := mountsBuildRow(info, mount)
+					table.AddRow(tblOut...)
+				}
+			}
+
+			info.containerType = "I"
+			for _, container := range pod.Spec.InitContainers {
+				// should the container be processed
+				if skipContainerName(commonFlagList, container.Name) {
+					continue
+				}
+				info.containerName = container.Name
+				for _, mount := range container.VolumeDevices {
+					tblOut := mountsBuildRow(info, mount)
+					table.AddRow(tblOut...)
+				}
+			}
+
+			info.containerType = "E"
+			for _, container := range pod.Spec.EphemeralContainers {
+				// should the container be processed
+				if skipContainerName(commonFlagList, container.Name) {
+					continue
+				}
+				info.containerName = container.Name
+				for _, mount := range container.VolumeDevices {
+					tblOut := mountsBuildRow(info, mount)
+					table.AddRow(tblOut...)
+				}
 			}
 		}
 	}
@@ -230,7 +287,7 @@ func decodeVolumeType(volType string, volume v1.VolumeSource) map[string]Cell {
 	return outMap
 }
 
-func volumesBuildRow(container v1.Container, podName string, podVolumes map[string]map[string]Cell, mount v1.VolumeMount) []Cell {
+func volumesBuildRow(info containerInfomation, podVolumes map[string]map[string]Cell, mount v1.VolumeMount) []Cell {
 	var volumeType Cell
 	var size Cell
 	var backing Cell
@@ -244,8 +301,8 @@ func volumesBuildRow(container v1.Container, podName string, podVolumes map[stri
 	}
 
 	return []Cell{
-		NewCellText(podName),
-		NewCellText(container.Name),
+		NewCellText(info.podName),
+		NewCellText(info.containerName),
 		NewCellText(mount.Name),
 		volumeType,
 		backing,
@@ -254,4 +311,15 @@ func volumesBuildRow(container v1.Container, podName string, podVolumes map[stri
 		NewCellText(mount.MountPath),
 	}
 
+}
+
+func mountsBuildRow(info containerInfomation, mountInfo v1.VolumeDevice) []Cell {
+
+	return []Cell{
+		NewCellText(info.containerType),
+		NewCellText(info.podName),
+		NewCellText(info.containerName),
+		NewCellText(mountInfo.Name),
+		NewCellText(mountInfo.DevicePath),
+	}
 }
