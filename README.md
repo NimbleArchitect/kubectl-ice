@@ -1,10 +1,10 @@
 # kubectl-ice
-A kubectl plugin that lets you can see details of all containers that are running
- inside pods, I created it so I could peer inside the pods and see the details of
- containers (sidecars) running in a pod and then extended it so all containers
- could be viewed at once.
+A kubectl plugin that allows you to easily view advanced configuration of all containers
+ that are running inside pods, I created it so I could peer inside the pods and see
+ the details of the containers that are inside running pods and then extended it so all
+ containers could be viewed at once.
 
-ice lists useful information about the (sidecar) containers present inside a
+ice lists detailed information about the containers present inside a
  pod, useful for trouble-shooting multi container issues. You can view volume, 
  image, port and executable configurations, along with current cpu and memory
  metrics all at the container level (requires metrics server)
@@ -17,16 +17,17 @@ ice lists useful information about the (sidecar) containers present inside a
 [![CodeQL](https://github.com/NimbleArchitect/kubectl-ice/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/NimbleArchitect/kubectl-ice/actions/workflows/codeql-analysis.yml)
 
 ## Features:
+* Runs on Windows, Linux and MacOS
 * Only uses read permissions, no writes are called
-* Lists the containers in all pods in the current namespace and context
 * Selectors work just like they do with the standard kubectl command
-* Sortable output columns 
+* Sortable output columns
 * Can list all containers from all pods across all namespaces
 * Exclude rows from output using the match flag, useful to exclude containers with low memory or cpu usage
 * List only cpu and memory results that dont fall within range using the oddities flag
-* Displays information on init and ephemerial containers
+* Also displays information on init and ephemerial containers
 * Pods can be filtered using their priority and priorityClassName
 * Most sub commands utilize aliases meaning less typing (eg command and cmd are the same)
+* Easily view securityContext details and POSIX capabilities
 
 
 # Installation
@@ -65,7 +66,7 @@ if kubectl-ice is in your path you can replace the command ```kubectl-ice``` wit
 
 The following commands are available for `kubectl-ice`
 ```
-kubectl-ice capabilities  # Shows details of configured container capabilities
+kubectl-ice capabilities  # Shows details of configured container POSIX capabilities
 kubectl-ice command       # Retrieves the command line and any arguments specified at the container level
 kubectl-ice cpu           # Show configured cpu size, limit and % usage of each container
 kubectl-ice environment   # List the env name and value for each container
