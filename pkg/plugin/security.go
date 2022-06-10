@@ -45,6 +45,7 @@ var securityExample = `  # List container security info from pods
 func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var podname []string
 	var showPodName bool = true
+	var showSELinuxOptions bool
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -70,9 +71,17 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	}
 
 	table := Table{}
-	table.SetHeader(
-		"T", "PODNAME", "CONTAINER", "ALLOW_PRIVILEGE_ESCALATION", "PRIVILEGED", "RO_ROOT_FS", "RUN_AS_NON_ROOT", "RUN_AS_USER", "RUN_AS_GROUP",
-	)
+
+	if cmd.Flag("selinux").Value.String() == "true" {
+		showSELinuxOptions = true
+		table.SetHeader(
+			"T", "PODNAME", "CONTAINER", "USER", "ROLE", "TYPE", "LEVEL",
+		)
+	} else {
+		table.SetHeader(
+			"T", "PODNAME", "CONTAINER", "ALLOW_PRIVILEGE_ESCALATION", "PRIVILEGED", "RO_ROOT_FS", "RUN_AS_NON_ROOT", "RUN_AS_USER", "RUN_AS_GROUP",
+		)
+	}
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -83,24 +92,43 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	if !showPodName {
 		// we need to hide the pod name in the table
-		table.HideColumn(0)
+		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
+		info := containerInfomation{
+			podName: pod.Name,
+		}
+
+		info.containerType = "S"
 		for _, container := range pod.Spec.Containers {
+			var tblOut []Cell
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := securityBuildRow(container, pod.Name, "S", pod.Spec.SecurityContext)
+			info.containerName = container.Name
+			if showSELinuxOptions {
+				tblOut = seLinuxBuildRow(info, container.SecurityContext, pod.Spec.SecurityContext)
+			} else {
+				tblOut = securityBuildRow(info, container.SecurityContext, pod.Spec.SecurityContext)
+			}
 			table.AddRow(tblOut...)
 		}
+
+		info.containerType = "I"
 		for _, container := range pod.Spec.InitContainers {
+			var tblOut []Cell
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			tblOut := securityBuildRow(container, pod.Name, "I", pod.Spec.SecurityContext)
+			info.containerName = container.Name
+			if showSELinuxOptions {
+				tblOut = seLinuxBuildRow(info, container.SecurityContext, pod.Spec.SecurityContext)
+			} else {
+				tblOut = securityBuildRow(info, container.SecurityContext, pod.Spec.SecurityContext)
+			}
 			table.AddRow(tblOut...)
 		}
 	}
@@ -114,7 +142,7 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 }
 
-func securityBuildRow(container v1.Container, podName string, containerType string, psc *v1.PodSecurityContext) []Cell {
+func securityBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
 
 	ape := Cell{}
 	p := Cell{}
@@ -137,7 +165,6 @@ func securityBuildRow(container v1.Container, podName string, containerType stri
 		}
 	}
 
-	csc := container.SecurityContext
 	if csc != nil {
 		if csc.AllowPrivilegeEscalation != nil {
 			ape = NewCellText(fmt.Sprintf("%t", *csc.AllowPrivilegeEscalation))
@@ -165,14 +192,74 @@ func securityBuildRow(container v1.Container, podName string, containerType stri
 	}
 
 	return []Cell{
-		NewCellText(containerType),
-		NewCellText(podName),
-		NewCellText(container.Name),
+		NewCellText(info.containerType),
+		NewCellText(info.podName),
+		NewCellText(info.containerName),
 		ape,
 		p,
 		rorfs,
 		ranr,
 		rau,
 		rag,
+	}
+}
+
+func seLinuxBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
+
+	seLevel := Cell{}
+	seRole := Cell{}
+	seType := Cell{}
+	seUser := Cell{}
+
+	if psc != nil {
+		if psc.SELinuxOptions != nil {
+			pselinux := psc.SELinuxOptions
+			if len(pselinux.Level) > 0 {
+				seLevel = NewCellText(pselinux.Level)
+			}
+
+			if len(pselinux.Role) > 0 {
+				seRole = NewCellText(pselinux.Role)
+			}
+
+			if len(pselinux.Type) > 0 {
+				seType = NewCellText(pselinux.Type)
+			}
+
+			if len(pselinux.User) > 0 {
+				seUser = NewCellText(pselinux.User)
+			}
+		}
+	}
+
+	if csc != nil {
+		if csc.SELinuxOptions != nil {
+			cselinux := psc.SELinuxOptions
+			if len(cselinux.Level) > 0 {
+				seLevel = NewCellText(cselinux.Level)
+			}
+
+			if len(cselinux.Role) > 0 {
+				seRole = NewCellText(cselinux.Role)
+			}
+
+			if len(cselinux.Type) > 0 {
+				seType = NewCellText(cselinux.Type)
+			}
+
+			if len(cselinux.User) > 0 {
+				seUser = NewCellText(cselinux.User)
+			}
+		}
+	}
+
+	return []Cell{
+		NewCellText(info.containerType),
+		NewCellText(info.podName),
+		NewCellText(info.containerName),
+		seUser,
+		seRole,
+		seType,
+		seLevel,
 	}
 }

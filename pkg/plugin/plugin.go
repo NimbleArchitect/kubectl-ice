@@ -281,6 +281,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdSecurity.Flags())
+	cmdSecurity.Flags().BoolP("selinux", "", false, "show the SELinux context thats applied to the containers")
 	addCommonFlags(cmdSecurity)
 	rootCmd.AddCommand(cmdSecurity)
 
