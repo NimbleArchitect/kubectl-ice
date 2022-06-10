@@ -79,11 +79,12 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	table := Table{}
 	if !showVolumeDevice {
 		table.SetHeader(
-			"PODNAME", "CONTAINER", "VOLUME", "TYPE", "BACKING", "SIZE", "RO", "MOUNT-POINT",
+			"T", "NAMESPACE", "PODNAME", "CONTAINER", "VOLUME", "TYPE", "BACKING", "SIZE", "RO", "MOUNT-POINT",
 		)
+		table.HideColumn(0)
 	} else {
 		table.SetHeader(
-			"T", "PODNAME", "CONTAINER", "PVC_NAME", "DEVICE_PATH",
+			"T", "NAMESPACE", "PODNAME", "CONTAINER", "PVC_NAME", "DEVICE_PATH",
 		)
 	}
 
@@ -96,12 +97,17 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 
 	if !showPodName {
 		// we need to hide the pod name in the table
-		table.HideColumn(0)
+		table.HideColumn(2)
+	}
+
+	if !commonFlagList.showNamespaceName {
+		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
 		info := containerInfomation{
-			podName: pod.Name,
+			podName:   pod.Name,
+			namespace: pod.Namespace,
 		}
 
 		if !showPodName {
@@ -301,6 +307,8 @@ func volumesBuildRow(info containerInfomation, podVolumes map[string]map[string]
 	}
 
 	return []Cell{
+		NewCellText(info.containerType),
+		NewCellText(info.namespace),
 		NewCellText(info.podName),
 		NewCellText(info.containerName),
 		NewCellText(mount.Name),
@@ -317,6 +325,7 @@ func mountsBuildRow(info containerInfomation, mountInfo v1.VolumeDevice) []Cell 
 
 	return []Cell{
 		NewCellText(info.containerType),
+		NewCellText(info.namespace),
 		NewCellText(info.podName),
 		NewCellText(info.containerName),
 		NewCellText(mountInfo.Name),

@@ -80,7 +80,7 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 	table := Table{}
 	table.SetHeader(
-		"PODNAME", "CONTAINER", "PROBE", "DELAY", "PERIOD", "TIMEOUT", "SUCCESS", "FAILURE", "CHECK", "ACTION",
+		"NAMESPACE", "PODNAME", "CONTAINER", "PROBE", "DELAY", "PERIOD", "TIMEOUT", "SUCCESS", "FAILURE", "CHECK", "ACTION",
 	)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -92,12 +92,17 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 	if !showPodName {
 		// we need to hide the pod name in the table
-		table.HideColumn(0)
+		table.HideColumn(2)
+	}
+
+	if !commonFlagList.showNamespaceName {
+		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
 		info := containerInfomation{
-			podName: pod.Name,
+			podName:   pod.Name,
+			namespace: pod.Namespace,
 		}
 
 		info.containerType = "S"
@@ -131,6 +136,7 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 func probesBuildRow(info containerInfomation, action probeAction) []Cell {
 
 	return []Cell{
+		NewCellText(info.namespace),
 		NewCellText(info.podName),
 		NewCellText(info.containerName),
 		NewCellText(action.probeName),

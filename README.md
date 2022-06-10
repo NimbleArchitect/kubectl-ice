@@ -28,6 +28,7 @@ ice lists detailed information about the containers present inside a
 * Pods can be filtered using their priority and priorityClassName
 * Most sub commands utilize aliases meaning less typing (eg command and cmd are the same)
 * Easily view securityContext details and POSIX capabilities
+* Use the show-namespace flag to output the pods namespace
 
 
 # Installation
@@ -94,6 +95,7 @@ Flags:
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
   -l, --selector string                Selector (label query) to filter on
+      --show-namespace                 Shows a column containing the pods namespace name for each container
 ```
 select subcommands also support the following flags
 ```

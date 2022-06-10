@@ -76,7 +76,7 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	table := Table{}
 	table.SetHeader(
-		"T", "PODNAME", "CONTAINER", "LIFECYCLE", "HANDLER", "ACTION",
+		"T", "NAMESPACE", "PODNAME", "CONTAINER", "LIFECYCLE", "HANDLER", "ACTION",
 	)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -88,12 +88,17 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	if !showPodName {
 		// we need to hide the pod name in the table
+		table.HideColumn(2)
+	}
+
+	if !commonFlagList.showNamespaceName {
 		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
 		info := containerInfomation{
-			podName: pod.Name,
+			podName:   pod.Name,
+			namespace: pod.Namespace,
 		}
 
 		info.containerType = "S"
@@ -165,6 +170,7 @@ func lifecycleBuildRow(info containerInfomation, handlerName string, lifecycles 
 
 	return []Cell{
 		NewCellText(info.containerType),
+		NewCellText(info.namespace),
 		NewCellText(info.podName),
 		NewCellText(info.containerName),
 		NewCellText(handlerName),

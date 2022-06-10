@@ -70,7 +70,7 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	table := Table{}
 	table.SetHeader(
-		"T", "PODNAME", "CONTAINER", "RESTARTS",
+		"T", "NAMESPACE", "PODNAME", "CONTAINER", "RESTARTS",
 	)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -82,12 +82,17 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	if !showPodName {
 		// we need to hide the pod name in the table
+		table.HideColumn(2)
+	}
+
+	if !commonFlagList.showNamespaceName {
 		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
 		info := containerInfomation{
-			podName: pod.Name,
+			podName:   pod.Name,
+			namespace: pod.Namespace,
 		}
 
 		info.containerType = "S"
@@ -148,6 +153,7 @@ func restartsBuildRow(info containerInfomation, restartCount int32) []Cell {
 
 	return []Cell{
 		NewCellText(info.containerType),
+		NewCellText(info.namespace),
 		NewCellText(info.podName),
 		NewCellText(info.containerName),
 		NewCellInt(fmt.Sprintf("%d", restartCount), int64(restartCount)),

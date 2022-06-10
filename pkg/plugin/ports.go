@@ -72,7 +72,7 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 	table := Table{}
 	table.SetHeader(
-		"T", "PODNAME", "CONTAINER", "PORTNAME", "PORT", "PROTO", "HOSTPORT",
+		"T", "NAMESPACE", "PODNAME", "CONTAINER", "PORTNAME", "PORT", "PROTO", "HOSTPORT",
 	)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -81,14 +81,20 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 			return err
 		}
 	}
+
 	if !showPodName {
 		// we need to hide the pod name in the table
+		table.HideColumn(2)
+	}
+
+	if !commonFlagList.showNamespaceName {
 		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
 		info := containerInfomation{
-			podName: pod.Name,
+			podName:   pod.Name,
+			namespace: pod.Namespace,
 		}
 
 		info.containerType = "S"
@@ -151,6 +157,7 @@ func portsBuildRow(info containerInfomation, port v1.ContainerPort) []Cell {
 
 	return []Cell{
 		NewCellText(info.containerType),
+		NewCellText(info.namespace),
 		NewCellText(info.podName),
 		NewCellText(info.containerName),
 		NewCellText(port.Name),

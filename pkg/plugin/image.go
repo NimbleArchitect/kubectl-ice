@@ -69,7 +69,7 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 	table := Table{}
 	table.SetHeader(
-		"T", "PODNAME", "CONTAINER", "PULL", "IMAGE",
+		"T", "NAMESPACE", "PODNAME", "CONTAINER", "PULL", "IMAGE",
 	)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -81,12 +81,17 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 	if !showPodName {
 		// we need to hide the pod name in the table
+		table.HideColumn(2)
+	}
+
+	if !commonFlagList.showNamespaceName {
 		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
 		info := containerInfomation{
-			podName: pod.Name,
+			podName:   pod.Name,
+			namespace: pod.Namespace,
 		}
 
 		info.containerType = "S"
@@ -135,6 +140,7 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 func imageBuildRow(info containerInfomation, imageName string, pullPolicy string) []Cell {
 	return []Cell{
 		NewCellText(info.containerType),
+		NewCellText(info.namespace),
 		NewCellText(info.podName),
 		NewCellText(info.containerName),
 		NewCellText(pullPolicy),

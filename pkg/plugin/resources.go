@@ -97,7 +97,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	table := Table{}
 	table.SetHeader(
-		"T", "PODNAME", "CONTAINER", "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
+		"T", "NAMESPACE", "PODNAME", "CONTAINER", "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
 	)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -109,13 +109,18 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	if !showPodName {
 		// we need to hide the pod name in the table
+		table.HideColumn(2)
+	}
+
+	if !commonFlagList.showNamespaceName {
 		table.HideColumn(1)
 	}
 
 	podState := podMetrics2Hashtable(podStateList)
 	for _, pod := range podList {
 		info := containerInfomation{
-			podName: pod.Name,
+			podName:   pod.Name,
+			namespace: pod.Namespace,
 		}
 
 		if commonFlagList.showInitContainers {
@@ -268,6 +273,7 @@ func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, 
 
 	return []Cell{
 		NewCellText(info.containerType),
+		NewCellText(info.namespace),
 		NewCellText(info.podName),
 		NewCellText(info.containerName),
 		NewCellInt(displayValue, rawValue),

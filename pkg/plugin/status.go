@@ -83,11 +83,11 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	table := Table{}
 	if !showPrevious {
 		table.SetHeader(
-			"T", "PODNAME", "CONTAINER", "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE",
+			"T", "NAMESPACE", "PODNAME", "CONTAINER", "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE",
 		)
 	} else {
 		table.SetHeader(
-			"T", "PODNAME", "CONTAINER", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE",
+			"T", "NAMESPACE", "PODNAME", "CONTAINER", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE",
 		)
 	}
 
@@ -100,12 +100,17 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 	if !showPodName {
 		// we need to hide the pod name in the table
+		table.HideColumn(2)
+	}
+
+	if !commonFlagList.showNamespaceName {
 		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
 		info := containerInfomation{
-			podName: pod.Name,
+			podName:   pod.Name,
+			namespace: pod.Namespace,
 		}
 
 		info.containerType = "S"
@@ -214,6 +219,7 @@ func statusBuildRow(container v1.ContainerStatus, info containerInfomation, show
 	if showPrevious {
 		return []Cell{
 			NewCellText(info.containerType),
+			NewCellText(info.namespace),
 			NewCellText(info.podName),
 			NewCellText(container.Name),
 			NewCellText(strState),
@@ -226,6 +232,7 @@ func statusBuildRow(container v1.ContainerStatus, info containerInfomation, show
 	} else {
 		return []Cell{
 			NewCellText(info.containerType),
+			NewCellText(info.namespace),
 			NewCellText(info.podName),
 			NewCellText(container.Name),
 			NewCellText(ready),

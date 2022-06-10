@@ -75,7 +75,7 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 
 	table := Table{}
 	table.SetHeader(
-		"T", "PODNAME", "CONTAINER", "NAME", "VALUE",
+		"T", "NAMESPACE", "PODNAME", "CONTAINER", "NAME", "VALUE",
 	)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -87,17 +87,23 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 
 	if !showPodName {
 		// we need to hide the pod name in the table
+		table.HideColumn(2)
+	}
+
+	if !commonFlagList.showNamespaceName {
 		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
 		info := containerInfomation{
-			podName: pod.Name,
+			podName:   pod.Name,
+			namespace: pod.Namespace,
 		}
 
 		connect.SetNamespace(pod.Namespace)
 		info.containerType = "S"
 		for _, container := range pod.Spec.Containers {
+
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
@@ -150,26 +156,38 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 
 func envBuildRow(info containerInfomation, env v1.EnvVar, connect Connector, translate bool) []Cell {
 	var envKey, envValue string
-	var configMap string
+	var configName string
 	var key string
 
 	envKey = env.Name
 	if len(env.Value) == 0 {
 		if env.ValueFrom.ConfigMapKeyRef != nil {
-			configMap = env.ValueFrom.ConfigMapKeyRef.LocalObjectReference.Name
+			configName = env.ValueFrom.ConfigMapKeyRef.LocalObjectReference.Name
 			key = env.ValueFrom.ConfigMapKeyRef.Key
-			envValue = "CONFIGMAP:" + configMap + " KEY:" + key
+			envValue = "CONFIGMAP:" + configName + " KEY:" + key
 		}
 
 		if env.ValueFrom.SecretKeyRef != nil {
-			configMap = env.ValueFrom.SecretKeyRef.LocalObjectReference.Name
+			configName = env.ValueFrom.SecretKeyRef.LocalObjectReference.Name
 			key = env.ValueFrom.SecretKeyRef.Key
-			envValue = "SECRETMAP:" + configMap + " KEY:" + key
+			envValue = "SECRETMAP:" + configName + " KEY:" + key
 			translate = false //never translate secrets
 		}
 
+		if env.ValueFrom.FieldRef != nil {
+			configName = env.ValueFrom.FieldRef.FieldPath
+			envValue = "FIELDREF:" + configName
+			translate = false //we cant translate FieldRef at the minute
+		}
+
+		if env.ValueFrom.ResourceFieldRef != nil {
+			configName = env.ValueFrom.ResourceFieldRef.Resource
+			envValue = "RESOURCE:" + configName
+			translate = false //we cant translate resourceFieldRef at the moment
+		}
+
 		if translate {
-			envValue = connect.GetConfigMapValue(configMap, key)
+			envValue = connect.GetConfigMapValue(configName, key)
 		}
 
 	} else {
@@ -178,6 +196,7 @@ func envBuildRow(info containerInfomation, env v1.EnvVar, connect Connector, tra
 
 	return []Cell{
 		NewCellText(info.containerType),
+		NewCellText(info.namespace),
 		NewCellText(info.podName),
 		NewCellText(info.containerName),
 		NewCellText(envKey),

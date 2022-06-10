@@ -70,7 +70,7 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 
 	table := Table{}
 	table.SetHeader(
-		"T", "PODNAME", "CONTAINER", "ADD", "DROP",
+		"T", "NAMESPACE", "PODNAME", "CONTAINER", "ADD", "DROP",
 	)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -82,12 +82,17 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 
 	if !showPodName {
 		// we need to hide the pod name in the table
-		table.HideColumn(0)
+		table.HideColumn(2)
+	}
+
+	if !commonFlagList.showNamespaceName {
+		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
 		info := containerInfomation{
-			podName: pod.Name,
+			podName:   pod.Name,
+			namespace: pod.Namespace,
 		}
 
 		info.containerType = "S"
@@ -161,6 +166,7 @@ func capabilitiesBuildRow(securityContext *v1.SecurityContext, info containerInf
 
 	return []Cell{
 		NewCellText(info.containerType),
+		NewCellText(info.namespace),
 		NewCellText(info.podName),
 		NewCellText(info.containerName),
 		NewCellText(capAdd),

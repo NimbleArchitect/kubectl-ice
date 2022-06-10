@@ -17,6 +17,7 @@ type commonFlags struct {
 	labels             string                // k8s pod labels
 	showInitContainers bool                  //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
 	showOddities       bool                  // this isnt really common but it does show up across 3+ commands and im lazy
+	showNamespaceName  bool                  // shows the namespace name of each pod
 	byteSize           string                // sets the bytes conversion for the output size
 	outputAs           string                // how to output the table, currently only accepts json
 	sortList           []string              //column names to sort on when table.Print() is called
@@ -27,6 +28,7 @@ type containerInfomation struct {
 	podName       string
 	containerName string
 	containerType string
+	namespace     string
 }
 
 func InitSubCommands(rootCmd *cobra.Command) {
@@ -342,6 +344,7 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("output", "o", "", `Output format, currently csv, list, json and yaml are supported`)
 	cmdObj.Flags().StringP("match", "", "", `Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != `)
 	cmdObj.Flags().StringP("select", "", "", `Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != `)
+	cmdObj.Flags().BoolP("show-namespace", "", false, `shows the namespace column`)
 }
 
 func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
@@ -433,6 +436,10 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 				return commonFlags{}, err
 			}
 		}
+	}
+
+	if cmd.Flag("show-namespace").Value.String() == "true" {
+		f.showNamespaceName = true
 	}
 
 	return f, nil

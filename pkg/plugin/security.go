@@ -75,11 +75,11 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	if cmd.Flag("selinux").Value.String() == "true" {
 		showSELinuxOptions = true
 		table.SetHeader(
-			"T", "PODNAME", "CONTAINER", "USER", "ROLE", "TYPE", "LEVEL",
+			"T", "NAMESPACE", "PODNAME", "CONTAINER", "USER", "ROLE", "TYPE", "LEVEL",
 		)
 	} else {
 		table.SetHeader(
-			"T", "PODNAME", "CONTAINER", "ALLOW_PRIVILEGE_ESCALATION", "PRIVILEGED", "RO_ROOT_FS", "RUN_AS_NON_ROOT", "RUN_AS_USER", "RUN_AS_GROUP",
+			"T", "NAMESPACE", "PODNAME", "CONTAINER", "ALLOW_PRIVILEGE_ESCALATION", "PRIVILEGED", "RO_ROOT_FS", "RUN_AS_NON_ROOT", "RUN_AS_USER", "RUN_AS_GROUP",
 		)
 	}
 
@@ -92,12 +92,17 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	if !showPodName {
 		// we need to hide the pod name in the table
+		table.HideColumn(2)
+	}
+
+	if !commonFlagList.showNamespaceName {
 		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
 		info := containerInfomation{
-			podName: pod.Name,
+			podName:   pod.Name,
+			namespace: pod.Namespace,
 		}
 
 		info.containerType = "S"
@@ -193,6 +198,7 @@ func securityBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1
 
 	return []Cell{
 		NewCellText(info.containerType),
+		NewCellText(info.namespace),
 		NewCellText(info.podName),
 		NewCellText(info.containerName),
 		ape,
@@ -255,6 +261,7 @@ func seLinuxBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1.
 
 	return []Cell{
 		NewCellText(info.containerType),
+		NewCellText(info.namespace),
 		NewCellText(info.podName),
 		NewCellText(info.containerName),
 		seUser,
