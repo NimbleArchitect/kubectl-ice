@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: demo-odd-cpu
-  namespace: ice
 spec:
   replicas: 16
   selector:

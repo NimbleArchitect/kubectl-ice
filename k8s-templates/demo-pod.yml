@@ -31,7 +31,6 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: web-pod
-  namespace: ice
   labels:
     app: myapp
 spec:
@@ -66,9 +65,9 @@ spec:
       limits:
         cpu: 1m
         memory: 512M
-    volumeDevices:
-    - devicePath: /mnt/localmount
-      name: pvc-claim-2
+    # volumeDevices:
+    # - devicePath: /mnt/localmount
+    #   name: pvc-claim-2
   - name: myapp
     image: python:latest
     command: 
@@ -103,5 +102,5 @@ spec:
         path: mainapp.py
   - name: pvc-claim-2 
     persistentVolumeClaim: 
-      claimName: block-device
+      claimName: pvc-claim-2
       

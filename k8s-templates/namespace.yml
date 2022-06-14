@@ -1,6 +1,16 @@
 kind: Namespace
 apiVersion: v1
 metadata:
-  name: ice
-  labels:
-    name: ice
+  name: cpu-demo
+
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: resource-demo
+
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: single-pods

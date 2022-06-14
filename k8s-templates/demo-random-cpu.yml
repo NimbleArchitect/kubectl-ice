@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: demo-random-cpu
-  namespace: ice
 spec:
   replicas: 4
   selector:
