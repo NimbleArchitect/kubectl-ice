@@ -354,6 +354,7 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 
 	if cmd.Flag("all-namespaces").Value.String() == "true" {
 		f.allNamespaces = true
+		f.showNamespaceName = true
 	}
 
 	if cmd.Flag("include-init") != nil {

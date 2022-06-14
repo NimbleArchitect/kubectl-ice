@@ -92,11 +92,11 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 	if !showPodName {
 		// we need to hide the pod name in the table
-		table.HideColumn(2)
+		table.HideColumn(1)
 	}
 
 	if !commonFlagList.showNamespaceName {
-		table.HideColumn(1)
+		table.HideColumn(0)
 	}
 
 	for _, pod := range podList {
