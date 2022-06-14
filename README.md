@@ -30,6 +30,7 @@ ice lists detailed information about the containers present inside a
 * Easily view securityContext details and POSIX capabilities
 * Use the show-namespace flag to output the pods namespace
 
+[![asciicast](https://asciinema.org/a/501737.svg)](https://asciinema.org/a/501737)
 
 # Installation
 
@@ -125,12 +126,12 @@ using labels you can search all pods that are part of a deployment where the lab
 ``` shell
 $ kubectl-ice probes -l app=demoprobe
 PODNAME                      CONTAINER     PROBE     DELAY  PERIOD  TIMEOUT  SUCCESS  FAILURE  CHECK    ACTION
-demo-probe-76b66d5766-jlnnd  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
-demo-probe-76b66d5766-jlnnd  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
-demo-probe-76b66d5766-jlnnd  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
-demo-probe-76b66d5766-jmqpf  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
-demo-probe-76b66d5766-jmqpf  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
-demo-probe-76b66d5766-jmqpf  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
+demo-probe-76b66d5766-g84l9  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
+demo-probe-76b66d5766-g84l9  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
+demo-probe-76b66d5766-g84l9  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
+demo-probe-76b66d5766-zgvlh  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
+demo-probe-76b66d5766-zgvlh  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
+demo-probe-76b66d5766-zgvlh  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
 
 ```
 ### Container status
@@ -138,9 +139,9 @@ most commands work the same way including the status command which also lets you
 ``` shell
 $ kubectl-ice status -l app=myapp --previous
 T  PODNAME  CONTAINER    STATE       REASON              EXIT-CODE  SIGNAL  TIMESTAMP                      MESSAGE
-S  web-pod  app-broken   Terminated  Error               1          0       2022-06-06 10:08:54 +0100 BST  -
-S  web-pod  app-watcher  Terminated  Error               2          0       2022-06-06 10:09:55 +0100 BST  -
-S  web-pod  myapp        Terminated  ContainerCannotRun  127        0       2022-06-06 10:08:26 +0100 BST  OCI runtime create failed: container_linux.go:380: starting container process caused: exec: "python /myapp/mainapp.py\n": stat python /myapp/mainapp.py\n: no such file or directory: unknown
+S  web-pod  app-broken   Terminated  Error               1          0       2022-06-14 17:06:49 +0100 BST  -
+S  web-pod  app-watcher  Terminated  Error               2          0       2022-06-14 17:07:07 +0100 BST  -
+S  web-pod  myapp        Terminated  ContainerCannotRun  127        0       2022-06-14 17:05:37 +0100 BST  OCI runtime create failed: container_linux.go:380: starting container process caused: exec: "python /myapp/mainapp.py\n": stat python /myapp/mainapp.py\n: no such file or directory: unknown
 I  web-pod  app-init     -           -                   -          -       -                              -
 
 ```
@@ -149,22 +150,21 @@ return memory requests size and limits of each container where the pods have an 
 ``` shell
 $ kubectl-ice cpu -l "app in (useoddcpu)" -c web-frontend
 PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
-demo-odd-cpu-5f947f9db4-5w88x  web-frontend  103m  1m       1000m  10285.12  10.29
-demo-odd-cpu-5f947f9db4-6k2wf  web-frontend  3m    1m       1000m  216.82    0.22
-demo-odd-cpu-5f947f9db4-86d7q  web-frontend  2m    1m       1000m  182.98    0.18
-demo-odd-cpu-5f947f9db4-9gmhq  web-frontend  3m    1m       1000m  271.87    0.27
-demo-odd-cpu-5f947f9db4-bsfzf  web-frontend  3m    1m       1000m  228.82    0.23
-demo-odd-cpu-5f947f9db4-cf787  web-frontend  3m    1m       1000m  211.69    0.21
-demo-odd-cpu-5f947f9db4-g5k7q  web-frontend  2m    1m       1000m  180.05    0.18
-demo-odd-cpu-5f947f9db4-h5tql  web-frontend  3m    1m       1000m  218.84    0.22
-demo-odd-cpu-5f947f9db4-h9zpr  web-frontend  2m    1m       1000m  177.78    0.18
-demo-odd-cpu-5f947f9db4-kddvb  web-frontend  2m    1m       1000m  188.46    0.19
-demo-odd-cpu-5f947f9db4-n5slb  web-frontend  114m  1m       1000m  11377.78  11.38
-demo-odd-cpu-5f947f9db4-nmxrj  web-frontend  2m    1m       1000m  176.04    0.18
-demo-odd-cpu-5f947f9db4-qkvzq  web-frontend  2m    1m       1000m  168.35    0.17
-demo-odd-cpu-5f947f9db4-tvqbs  web-frontend  2m    1m       1000m  183.71    0.18
-demo-odd-cpu-5f947f9db4-x24r2  web-frontend  3m    1m       1000m  228.32    0.23
-demo-odd-cpu-5f947f9db4-xv67t  web-frontend  2m    1m       1000m  168.46    0.17
+demo-odd-cpu-5f947f9db4-4dg5q  web-frontend  3m    1m       1000m  228.80    0.23
+demo-odd-cpu-5f947f9db4-4g2jz  web-frontend  3m    1m       1000m  272.17    0.27
+demo-odd-cpu-5f947f9db4-5srw5  web-frontend  135m  1m       1000m  13421.78  13.42
+demo-odd-cpu-5f947f9db4-68bps  web-frontend  3m    1m       1000m  218.85    0.22
+demo-odd-cpu-5f947f9db4-8l8hf  web-frontend  132m  1m       1000m  13132.87  13.13
+demo-odd-cpu-5f947f9db4-9mb5r  web-frontend  3m    1m       1000m  231.19    0.23
+demo-odd-cpu-5f947f9db4-dd97w  web-frontend  3m    1m       1000m  230.31    0.23
+demo-odd-cpu-5f947f9db4-gg2nm  web-frontend  3m    1m       1000m  206.96    0.21
+demo-odd-cpu-5f947f9db4-ggwh5  web-frontend  3m    1m       1000m  235.47    0.24
+demo-odd-cpu-5f947f9db4-gnvhb  web-frontend  3m    1m       1000m  263.84    0.26
+demo-odd-cpu-5f947f9db4-hss2g  web-frontend  3m    1m       1000m  210.29    0.21
+demo-odd-cpu-5f947f9db4-ph6ml  web-frontend  3m    1m       1000m  218.21    0.22
+demo-odd-cpu-5f947f9db4-pjcm5  web-frontend  3m    1m       1000m  259.03    0.26
+demo-odd-cpu-5f947f9db4-rshnq  web-frontend  3m    1m       1000m  216.83    0.22
+demo-odd-cpu-5f947f9db4-wglts  web-frontend  3m    1m       1000m  236.64    0.24
 
 ```
 ### Odditites and sorting
@@ -172,8 +172,8 @@ given the listed output above the optional --oddities flag picks out the contain
 ``` shell
 $ kubectl-ice cpu -l "app in (useoddcpu)" -c web-frontend --oddities --sort '!%REQ'
 PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
-demo-odd-cpu-5f947f9db4-n5slb  web-frontend  114m  1m       1000m  11377.78  11.38
-demo-odd-cpu-5f947f9db4-5w88x  web-frontend  103m  1m       1000m  10285.12  10.29
+demo-odd-cpu-5f947f9db4-5srw5  web-frontend  135m  1m       1000m  13421.78  13.42
+demo-odd-cpu-5f947f9db4-8l8hf  web-frontend  132m  1m       1000m  13132.87  13.13
 
 ```
 ### Pod volumes
@@ -181,11 +181,11 @@ list all container volumes with mount points
 ``` shell
 $ kubectl-ice volumes web-pod
 CONTAINER    VOLUME                 TYPE       BACKING           SIZE  RO    MOUNT-POINT
-app-init     kube-api-access-tzk9t  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
-app-watcher  kube-api-access-tzk9t  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
-app-broken   kube-api-access-tzk9t  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-init     kube-api-access-rjpxb  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-watcher  kube-api-access-rjpxb  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-broken   kube-api-access-rjpxb  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
 myapp        app                    ConfigMap  app.py            -     false /myapp/
-myapp        kube-api-access-tzk9t  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+myapp        kube-api-access-rjpxb  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
 
 ```
 

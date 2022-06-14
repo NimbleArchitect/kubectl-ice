@@ -67,7 +67,6 @@ All standard kubectl flags are supported including the beow, see the examples se
       --context string                 The name of the kubeconfig context to use
       --match string                   excludes results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
   -n, --namespace string               If present, the namespace scope for this CLI request
-  -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
   -l, --selector string                Selector (label query) to filter on
 ```
@@ -80,7 +79,7 @@ selected subcommands also support the following flags
 ```
 
 ## Capabilities
-Shows details of configured container capabilities
+Shows details of configured containers POSIX capabilities
 
 View POSIX Capabilities that have been applied to the running containers.
 
@@ -92,7 +91,9 @@ Aliases:
   capabilities, cap
 
 Flags:
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+      --show-namespace                 shows the namespace column
 
 ```
 also includes standard common kubectl flags
@@ -143,7 +144,9 @@ Aliases:
   command, cmd, exec, args
 
 Flags:
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+      --show-namespace                 shows the namespace column
 
 ```
 also includes standard common kubectl flags
@@ -194,8 +197,10 @@ Usage:
 Flags:
   -i, --include-init                   include init container(s) in the output, by default init containers are hidden
       --oddities                       show only the outlier rows that dont fall within the computed range
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
   -r, --raw                            show raw values
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+      --show-namespace                 shows the namespace column
 
 ```
 also includes standard common kubectl flags
@@ -246,7 +251,9 @@ Aliases:
   environment, env, vars
 
 Flags:
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+      --show-namespace                 shows the namespace column
   -t, --translate                      read the configmap show its values
 
 ```
@@ -298,7 +305,9 @@ Aliases:
   image, im
 
 Flags:
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+      --show-namespace                 shows the namespace column
 
 ```
 also includes standard common kubectl flags
@@ -343,7 +352,9 @@ Usage:
   kubectl-ice ip [flags]
 
 Flags:
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+      --show-namespace                 shows the namespace column
 
 ```
 also includes standard common kubectl flags
@@ -385,8 +396,10 @@ Aliases:
 Flags:
   -i, --include-init                   include init container(s) in the output, by default init containers are hidden
       --oddities                       show only the outlier rows that dont fall within the computed range
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
   -r, --raw                            show raw values
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+      --show-namespace                 shows the namespace column
       --size string                    allows conversion to the selected size rather then the default megabyte output (default "Mi")
 
 ```
@@ -438,7 +451,9 @@ Aliases:
   ports, port, po
 
 Flags:
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+      --show-namespace                 shows the namespace column
 
 ```
 also includes standard common kubectl flags
@@ -488,7 +503,9 @@ Aliases:
   probes, probe
 
 Flags:
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+      --show-namespace                 shows the namespace column
 
 ```
 also includes standard common kubectl flags
@@ -539,7 +556,9 @@ Aliases:
 
 Flags:
       --oddities                       show only the outlier rows that dont fall within the computed range
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+      --show-namespace                 shows the namespace column
 
 ```
 also includes standard common kubectl flags
@@ -587,7 +606,10 @@ Aliases:
   security, sec
 
 Flags:
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+      --selinux                        show the SELinux context thats applied to the containers
+      --show-namespace                 shows the namespace column
 
 ```
 also includes standard common kubectl flags
@@ -640,8 +662,10 @@ Aliases:
 
 Flags:
       --oddities                       show only the outlier rows that dont fall within the computed range
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
   -p, --previous                       show previous state
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+      --show-namespace                 shows the namespace column
 
 ```
 also includes standard common kubectl flags
@@ -694,7 +718,10 @@ Aliases:
   volumes, volume, vol
 
 Flags:
+  -d, --device                         show raw block device mappings within a container
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
+      --show-namespace                 shows the namespace column
 
 ```
 also includes standard common kubectl flags
