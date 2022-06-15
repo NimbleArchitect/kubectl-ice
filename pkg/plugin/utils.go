@@ -50,8 +50,6 @@ func memoryGetUnitLst(byteType string) (int64, string) {
 
 // takes a float and converts to a nearest size with unit discriptor as a string
 func memoryHumanReadable(memorySize int64, displayAs string) string {
-	var floatfmt string
-
 	power := 100.0
 	outVal := ""
 
@@ -61,28 +59,10 @@ func memoryHumanReadable(memorySize int64, displayAs string) string {
 
 	multiplier, identifier := memoryGetUnitLst(displayAs)
 
-	// convertTo = "M"
-	// if len(displayAs) <= 2 {
-	// 	convertTo = displayAs
-	// }
-
-	// if val, ok := byteList[convertTo]; ok {
-	// 	multiplier = val
-	// } else {
-	// 	multiplier = byteList["M"]
-	// }
-
 	size := float64(memorySize) / float64(multiplier)
 	val := math.Round(size*power) / power
 
-	remain := int64(math.Round(size*power)) % int64(power)
-	if remain == 0 {
-		floatfmt = "%.2f%s"
-	} else {
-		floatfmt = "%.2f%s"
-	}
-
-	outVal = fmt.Sprintf(floatfmt, val, identifier)
+	outVal = fmt.Sprintf("%.2f%s", val, identifier)
 
 	return outVal
 }
