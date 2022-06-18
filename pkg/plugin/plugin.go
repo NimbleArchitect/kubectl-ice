@@ -340,7 +340,7 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("match", "", "", `Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != `)
 	cmdObj.Flags().StringP("select", "", "", `Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != `)
 	cmdObj.Flags().BoolP("show-namespace", "", false, `shows the namespace column`)
-	cmdObj.Flags().BoolP("show-nodename", "", false, `shows the node name column`)
+	cmdObj.Flags().BoolP("show-node", "", false, `shows the node name column`)
 }
 
 func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
@@ -439,7 +439,7 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 		f.showNamespaceName = true
 	}
 
-	if cmd.Flag("show-nodename").Value.String() == "true" {
+	if cmd.Flag("show-node").Value.String() == "true" {
 		f.showNodeName = true
 	}
 
