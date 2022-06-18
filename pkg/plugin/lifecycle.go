@@ -48,6 +48,7 @@ type lifecycleAction struct {
 }
 
 func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var columnInfo containerInfomation
 	var tblHead []string
 	var podname []string
 	var showPodName bool = true
@@ -76,7 +77,7 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	}
 
 	table := Table{}
-	tblHead = append(infoTableHead(), "LIFECYCLE", "HANDLER", "ACTION")
+	tblHead = append(columnInfo.GetDefaultHead(), "LIFECYCLE", "HANDLER", "ACTION")
 	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -86,66 +87,58 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		}
 	}
 
-	if !showPodName {
-		// we need to hide the pod name in the table
-		table.HideColumn(2)
-	}
-
-	if !commonFlagList.showNamespaceName {
-		table.HideColumn(1)
-	}
+	commonFlagList.showPodName = showPodName
+	columnInfo.SetVisibleColumns(table, commonFlagList)
 
 	for _, pod := range podList {
-		info := containerInfomation{
-			podName:   pod.Name,
-			namespace: pod.Namespace,
-		}
+		columnInfo.podName = pod.Name
+		columnInfo.namespace = pod.Namespace
 
-		info.containerType = "S"
+		columnInfo.containerType = "S"
 		for _, container := range pod.Spec.Containers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			info.containerName = container.Name
+			columnInfo.containerName = container.Name
 			// add the probes to our map (if defined) so we can loop through each
 			lifecycleList := buildLifecycleList(container.Lifecycle)
 			// loop over all probes build the output table and add the podname if multipule pods will be output
 			for name, action := range lifecycleList {
-				tblOut := lifecycleBuildRow(info, name, action)
-				tblFullRow := append(infoTable(info), tblOut...)
+				tblOut := lifecycleBuildRow(columnInfo, name, action)
+				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
 				table.AddRow(tblFullRow...)
 			}
 		}
 
-		info.containerType = "I"
+		columnInfo.containerType = "I"
 		for _, container := range pod.Spec.InitContainers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			info.containerName = container.Name
+			columnInfo.containerName = container.Name
 			lifecycleList := buildLifecycleList(container.Lifecycle)
 			// loop over all probes build the output table and add the podname if multipule pods will be output
 			for name, action := range lifecycleList {
-				tblOut := lifecycleBuildRow(info, name, action)
-				tblFullRow := append(infoTable(info), tblOut...)
+				tblOut := lifecycleBuildRow(columnInfo, name, action)
+				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
 				table.AddRow(tblFullRow...)
 			}
 		}
 
-		info.containerType = "E"
+		columnInfo.containerType = "E"
 		for _, container := range pod.Spec.EphemeralContainers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			info.containerName = container.Name
+			columnInfo.containerName = container.Name
 			lifecycleList := buildLifecycleList(container.Lifecycle)
 			// loop over all probes build the output table and add the podname if multipule pods will be output
 			for name, action := range lifecycleList {
-				tblOut := lifecycleBuildRow(info, name, action)
-				tblFullRow := append(infoTable(info), tblOut...)
+				tblOut := lifecycleBuildRow(columnInfo, name, action)
+				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
 				table.AddRow(tblFullRow...)
 			}
 		}

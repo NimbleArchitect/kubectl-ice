@@ -42,6 +42,7 @@ var environmentExample = `  # List containers env info from pods
   %[1]s env -l "app in (web,mail)"`
 
 func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var columnInfo containerInfomation
 	var tblHead []string
 	var podname []string
 	var showPodName bool = true
@@ -75,7 +76,7 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	}
 
 	table := Table{}
-	tblHead = append(infoTableHead(), "NAME", "VALUE")
+	tblHead = append(columnInfo.GetDefaultHead(), "NAME", "VALUE")
 	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -85,64 +86,56 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 		}
 	}
 
-	if !showPodName {
-		// we need to hide the pod name in the table
-		table.HideColumn(2)
-	}
-
-	if !commonFlagList.showNamespaceName {
-		table.HideColumn(1)
-	}
+	commonFlagList.showPodName = showPodName
+	columnInfo.SetVisibleColumns(table, commonFlagList)
 
 	for _, pod := range podList {
-		info := containerInfomation{
-			podName:   pod.Name,
-			namespace: pod.Namespace,
-		}
+		columnInfo.podName = pod.Name
+		columnInfo.namespace = pod.Namespace
 
 		connect.SetNamespace(pod.Namespace)
-		info.containerType = "S"
+		columnInfo.containerType = "S"
 		for _, container := range pod.Spec.Containers {
 
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			info.containerName = container.Name
+			columnInfo.containerName = container.Name
 			allRows := buildEnvFromContainer(container)
 			for _, envRow := range allRows {
-				tblOut := envBuildRow(info, envRow, connect, translateConfigMap)
-				tblFullRow := append(infoTable(info), tblOut...)
+				tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
+				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
 				table.AddRow(tblFullRow...)
 			}
 		}
 
-		info.containerType = "I"
+		columnInfo.containerType = "I"
 		for _, container := range pod.Spec.InitContainers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			info.containerName = container.Name
+			columnInfo.containerName = container.Name
 			allRows := buildEnvFromContainer(container)
 			for _, envRow := range allRows {
-				tblOut := envBuildRow(info, envRow, connect, translateConfigMap)
-				tblFullRow := append(infoTable(info), tblOut...)
+				tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
+				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
 				table.AddRow(tblFullRow...)
 			}
 		}
 
-		info.containerType = "E"
+		columnInfo.containerType = "E"
 		for _, container := range pod.Spec.EphemeralContainers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			info.containerName = container.Name
+			columnInfo.containerName = container.Name
 			allRows := buildEnvFromEphemeral(container)
 			for _, envRow := range allRows {
-				tblOut := envBuildRow(info, envRow, connect, translateConfigMap)
-				tblFullRow := append(infoTable(info), tblOut...)
+				tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
+				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
 				table.AddRow(tblFullRow...)
 			}
 		}

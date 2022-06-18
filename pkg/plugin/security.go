@@ -43,6 +43,7 @@ var securityExample = `  # List container security info from pods
 
 //list details of configured liveness readiness and startup security
 func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var columnInfo containerInfomation
 	var tblHead []string
 	var podname []string
 	var showPodName bool = true
@@ -75,9 +76,9 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	if cmd.Flag("selinux").Value.String() == "true" {
 		showSELinuxOptions = true
-		tblHead = append(infoTableHead(), "USER", "ROLE", "TYPE", "LEVEL")
+		tblHead = append(columnInfo.GetDefaultHead(), "USER", "ROLE", "TYPE", "LEVEL")
 	} else {
-		tblHead = append(infoTableHead(), "ALLOW_PRIVILEGE_ESCALATION", "PRIVILEGED", "RO_ROOT_FS", "RUN_AS_NON_ROOT", "RUN_AS_USER", "RUN_AS_GROUP")
+		tblHead = append(columnInfo.GetDefaultHead(), "ALLOW_PRIVILEGE_ESCALATION", "PRIVILEGED", "RO_ROOT_FS", "RUN_AS_NON_ROOT", "RUN_AS_USER", "RUN_AS_GROUP")
 	}
 	table.SetHeader(tblHead...)
 
@@ -88,52 +89,44 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 		}
 	}
 
-	if !showPodName {
-		// we need to hide the pod name in the table
-		table.HideColumn(2)
-	}
-
-	if !commonFlagList.showNamespaceName {
-		table.HideColumn(1)
-	}
+	commonFlagList.showPodName = showPodName
+	columnInfo.SetVisibleColumns(table, commonFlagList)
 
 	for _, pod := range podList {
-		info := containerInfomation{
-			podName:   pod.Name,
-			namespace: pod.Namespace,
-		}
+		columnInfo.podName = pod.Name
+		columnInfo.namespace = pod.Namespace
 
-		info.containerType = "S"
+		columnInfo.containerType = "S"
 		for _, container := range pod.Spec.Containers {
 			var tblOut []Cell
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			info.containerName = container.Name
+			columnInfo.containerName = container.Name
 			if showSELinuxOptions {
-				tblOut = seLinuxBuildRow(info, container.SecurityContext, pod.Spec.SecurityContext)
+				tblOut = seLinuxBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
 			} else {
-				tblOut = securityBuildRow(info, container.SecurityContext, pod.Spec.SecurityContext)
+				tblOut = securityBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
 			}
-			tblFullRow := append(infoTable(info), tblOut...)
+			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
 			table.AddRow(tblFullRow...)
 		}
 
-		info.containerType = "I"
+		columnInfo.containerType = "I"
 		for _, container := range pod.Spec.InitContainers {
 			var tblOut []Cell
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			info.containerName = container.Name
+			columnInfo.containerName = container.Name
 			if showSELinuxOptions {
-				tblOut = seLinuxBuildRow(info, container.SecurityContext, pod.Spec.SecurityContext)
+				tblOut = seLinuxBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
 			} else {
-				tblOut = securityBuildRow(info, container.SecurityContext, pod.Spec.SecurityContext)
+				tblOut = securityBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
 			}
-			tblFullRow := append(infoTable(info), tblOut...)
+			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
 			table.AddRow(tblFullRow...)
 		}
 	}

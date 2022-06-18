@@ -49,6 +49,7 @@ var statusExample = `  # List individual container status from pods
   %[1]s status -l "app in (web,mail)"`
 
 func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var columnInfo containerInfomation
 	var tblHead []string
 	var podname []string
 	var showPodName bool = true
@@ -83,9 +84,9 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 	table := Table{}
 	if !showPrevious {
-		tblHead = append(infoTableHead(), "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE")
+		tblHead = append(columnInfo.GetDefaultHead(), "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE")
 	} else {
-		tblHead = append(infoTableHead(), "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE")
+		tblHead = append(columnInfo.GetDefaultHead(), "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE")
 	}
 	table.SetHeader(tblHead...)
 
@@ -96,54 +97,46 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		}
 	}
 
-	if !showPodName {
-		// we need to hide the pod name in the table
-		table.HideColumn(2)
-	}
-
-	if !commonFlagList.showNamespaceName {
-		table.HideColumn(1)
-	}
+	commonFlagList.showPodName = showPodName
+	columnInfo.SetVisibleColumns(table, commonFlagList)
 
 	for _, pod := range podList {
-		info := containerInfomation{
-			podName:   pod.Name,
-			namespace: pod.Namespace,
-		}
+		columnInfo.podName = pod.Name
+		columnInfo.namespace = pod.Namespace
 
-		info.containerType = "S"
+		columnInfo.containerType = "S"
 		for _, container := range pod.Status.ContainerStatuses {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			info.containerName = container.Name
-			tblOut := statusBuildRow(container, info, showPrevious)
-			tblFullRow := append(infoTable(info), tblOut...)
+			columnInfo.containerName = container.Name
+			tblOut := statusBuildRow(container, columnInfo, showPrevious)
+			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
 			table.AddRow(tblFullRow...)
 		}
 
-		info.containerType = "I"
+		columnInfo.containerType = "I"
 		for _, container := range pod.Status.InitContainerStatuses {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			info.containerName = container.Name
-			tblOut := statusBuildRow(container, info, showPrevious)
-			tblFullRow := append(infoTable(info), tblOut...)
+			columnInfo.containerName = container.Name
+			tblOut := statusBuildRow(container, columnInfo, showPrevious)
+			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
 			table.AddRow(tblFullRow...)
 		}
 
-		info.containerType = "E"
+		columnInfo.containerType = "E"
 		for _, container := range pod.Status.EphemeralContainerStatuses {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			info.containerName = container.Name
-			tblOut := statusBuildRow(container, info, showPrevious)
-			tblFullRow := append(infoTable(info), tblOut...)
+			columnInfo.containerName = container.Name
+			tblOut := statusBuildRow(container, columnInfo, showPrevious)
+			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
 			table.AddRow(tblFullRow...)
 		}
 	}

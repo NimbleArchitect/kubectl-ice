@@ -15,18 +15,29 @@ type containerInfomation struct {
 	namespace     string
 }
 
-func infoTableHead() []string {
+func (ci *containerInfomation) GetDefaultHead() []string {
 	return []string{
 		"T", "NAMESPACE", "PODNAME", "CONTAINER",
 	}
 }
 
-func infoTable(info containerInfomation) []Cell {
+func (ci *containerInfomation) GetDefaultCells() []Cell {
 	return []Cell{
-		NewCellText(info.containerType),
-		NewCellText(info.namespace),
-		NewCellText(info.podName),
-		NewCellText(info.containerName),
+		NewCellText(ci.containerType),
+		NewCellText(ci.namespace),
+		NewCellText(ci.podName),
+		NewCellText(ci.containerName),
+	}
+}
+
+func (ci *containerInfomation) SetVisibleColumns(table Table, commonFlagList commonFlags) {
+	if !commonFlagList.showPodName {
+		// we need to hide the pod name in the table
+		table.HideColumn(2)
+	}
+
+	if !commonFlagList.showNamespaceName {
+		table.HideColumn(1)
 	}
 }
 

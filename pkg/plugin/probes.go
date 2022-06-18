@@ -52,6 +52,7 @@ type probeAction struct {
 
 //list details of configured liveness readiness and startup probes
 func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var columnInfo containerInfomation
 	var tblHead []string
 	var podname []string
 	var showPodName bool = true
@@ -80,7 +81,7 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	}
 
 	table := Table{}
-	tblHead = append(infoTableHead(), "PROBE", "DELAY", "PERIOD", "TIMEOUT", "SUCCESS", "FAILURE", "CHECK", "ACTION")
+	tblHead = append(columnInfo.GetDefaultHead(), "PROBE", "DELAY", "PERIOD", "TIMEOUT", "SUCCESS", "FAILURE", "CHECK", "ACTION")
 	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -93,35 +94,27 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	// always hide the container type column as probes can only be set in standard conatiners
 	table.HideColumn(0)
 
-	if !showPodName {
-		// we need to hide the pod name in the table
-		table.HideColumn(2)
-	}
-
-	if !commonFlagList.showNamespaceName {
-		table.HideColumn(1)
-	}
+	commonFlagList.showPodName = showPodName
+	columnInfo.SetVisibleColumns(table, commonFlagList)
 
 	for _, pod := range podList {
-		info := containerInfomation{
-			podName:   pod.Name,
-			namespace: pod.Namespace,
-		}
+		columnInfo.podName = pod.Name
+		columnInfo.namespace = pod.Namespace
 
-		info.containerType = "S"
+		columnInfo.containerType = "S"
 		for _, container := range pod.Spec.Containers {
 			// should the container be processed
 			if skipContainerName(commonFlagList, container.Name) {
 				continue
 			}
-			info.containerName = container.Name
+			columnInfo.containerName = container.Name
 			// add the probes to our map (if defined) so we can loop through each
 			probeList := buildProbeList(container)
 			// loop over all probes build the output table and add the podname if multipule pods will be output
 			for _, probe := range probeList {
 				for _, action := range probe {
-					tblOut := probesBuildRow(info, action)
-					tblFullRow := append(infoTable(info), tblOut...)
+					tblOut := probesBuildRow(columnInfo, action)
+					tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
 					table.AddRow(tblFullRow...)
 				}
 			}

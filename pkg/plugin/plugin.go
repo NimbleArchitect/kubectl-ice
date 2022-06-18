@@ -18,6 +18,7 @@ type commonFlags struct {
 	showInitContainers bool                  //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
 	showOddities       bool                  // this isnt really common but it does show up across 3+ commands and im lazy
 	showNamespaceName  bool                  // shows the namespace name of each pod
+	showPodName        bool                  // wether to show the pod name
 	byteSize           string                // sets the bytes conversion for the output size
 	outputAs           string                // how to output the table, currently only accepts json
 	sortList           []string              //column names to sort on when table.Print() is called
