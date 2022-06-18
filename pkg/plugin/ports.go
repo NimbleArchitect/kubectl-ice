@@ -44,6 +44,7 @@ var portsExample = `  # List containers port info from pods
   %[1]s ports -l "app in (web,mail)"`
 
 func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var tblHead []string
 	var podname []string
 	var showPodName bool = true
 
@@ -71,9 +72,8 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	}
 
 	table := Table{}
-	table.SetHeader(
-		"T", "NAMESPACE", "PODNAME", "CONTAINER", "PORTNAME", "PORT", "PROTO", "HOSTPORT",
-	)
+	tblHead = append(infoTableHead(), "PORTNAME", "PORT", "PROTO", "HOSTPORT")
+	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -106,7 +106,8 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 				}
 				info.containerName = container.Name
 				tblOut := portsBuildRow(info, port)
-				table.AddRow(tblOut...)
+				tblFullRow := append(infoTable(info), tblOut...)
+				table.AddRow(tblFullRow...)
 			}
 		}
 
@@ -119,7 +120,8 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 				}
 				info.containerName = container.Name
 				tblOut := portsBuildRow(info, port)
-				table.AddRow(tblOut...)
+				tblFullRow := append(infoTable(info), tblOut...)
+				table.AddRow(tblFullRow...)
 			}
 		}
 
@@ -132,7 +134,8 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 				}
 				info.containerName = container.Name
 				tblOut := portsBuildRow(info, port)
-				table.AddRow(tblOut...)
+				tblFullRow := append(infoTable(info), tblOut...)
+				table.AddRow(tblFullRow...)
 			}
 		}
 	}
@@ -156,10 +159,6 @@ func portsBuildRow(info containerInfomation, port v1.ContainerPort) []Cell {
 	}
 
 	return []Cell{
-		NewCellText(info.containerType),
-		NewCellText(info.namespace),
-		NewCellText(info.podName),
-		NewCellText(info.containerName),
 		NewCellText(port.Name),
 		NewCellInt(fmt.Sprintf("%d", port.ContainerPort), int64(port.ContainerPort)),
 		NewCellText(string(port.Protocol)),

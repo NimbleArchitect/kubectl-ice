@@ -42,6 +42,7 @@ var environmentExample = `  # List containers env info from pods
   %[1]s env -l "app in (web,mail)"`
 
 func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var tblHead []string
 	var podname []string
 	var showPodName bool = true
 	var translateConfigMap bool
@@ -74,9 +75,8 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	}
 
 	table := Table{}
-	table.SetHeader(
-		"T", "NAMESPACE", "PODNAME", "CONTAINER", "NAME", "VALUE",
-	)
+	tblHead = append(infoTableHead(), "NAME", "VALUE")
+	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -112,7 +112,8 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 			allRows := buildEnvFromContainer(container)
 			for _, envRow := range allRows {
 				tblOut := envBuildRow(info, envRow, connect, translateConfigMap)
-				table.AddRow(tblOut...)
+				tblFullRow := append(infoTable(info), tblOut...)
+				table.AddRow(tblFullRow...)
 			}
 		}
 
@@ -126,7 +127,8 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 			allRows := buildEnvFromContainer(container)
 			for _, envRow := range allRows {
 				tblOut := envBuildRow(info, envRow, connect, translateConfigMap)
-				table.AddRow(tblOut...)
+				tblFullRow := append(infoTable(info), tblOut...)
+				table.AddRow(tblFullRow...)
 			}
 		}
 
@@ -140,7 +142,8 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 			allRows := buildEnvFromEphemeral(container)
 			for _, envRow := range allRows {
 				tblOut := envBuildRow(info, envRow, connect, translateConfigMap)
-				table.AddRow(tblOut...)
+				tblFullRow := append(infoTable(info), tblOut...)
+				table.AddRow(tblFullRow...)
 			}
 		}
 	}
@@ -195,10 +198,6 @@ func envBuildRow(info containerInfomation, env v1.EnvVar, connect Connector, tra
 	}
 
 	return []Cell{
-		NewCellText(info.containerType),
-		NewCellText(info.namespace),
-		NewCellText(info.podName),
-		NewCellText(info.containerName),
 		NewCellText(envKey),
 		NewCellText(envValue),
 	}

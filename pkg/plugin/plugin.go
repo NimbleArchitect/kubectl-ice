@@ -24,13 +24,6 @@ type commonFlags struct {
 	matchSpecList      map[string]matchValue //filter pods based on matches to the v1.Pods.Spec fields
 }
 
-type containerInfomation struct {
-	podName       string
-	containerName string
-	containerType string
-	namespace     string
-}
-
 func InitSubCommands(rootCmd *cobra.Command) {
 	var includeInitShort string = "include init container(s) in the output, by default init containers are hidden"
 	var odditiesShort string = "show only the outlier rows that dont fall within the computed range"

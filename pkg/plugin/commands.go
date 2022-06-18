@@ -48,6 +48,7 @@ type commandLine struct {
 }
 
 func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var tblHead []string
 	var podname []string
 	var showPodName bool = true
 
@@ -75,9 +76,8 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	}
 
 	table := Table{}
-	table.SetHeader(
-		"T", "NAMESPACE", "PODNAME", "CONTAINER", "COMMAND", "ARGUMENTS",
-	)
+	tblHead = append(infoTableHead(), "COMMAND", "ARGUMENTS")
+	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -113,7 +113,8 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 				args: container.Args,
 			}
 			tblOut := commandsBuildRow(cmdLine, info)
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 
 		info.containerType = "I"
@@ -128,7 +129,8 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 				args: container.Args,
 			}
 			tblOut := commandsBuildRow(cmdLine, info)
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 
 		info.containerType = "E"
@@ -143,7 +145,8 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 				args: container.Args,
 			}
 			tblOut := commandsBuildRow(cmdLine, info)
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 	}
 
@@ -158,10 +161,6 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 func commandsBuildRow(cmdLine commandLine, info containerInfomation) []Cell {
 	return []Cell{
-		NewCellText(info.containerType),
-		NewCellText(info.namespace),
-		NewCellText(info.podName),
-		NewCellText(info.containerName),
 		NewCellText(strings.Join(cmdLine.cmd, " ")),
 		NewCellText(strings.Join(cmdLine.args, " ")),
 	}

@@ -56,6 +56,7 @@ func resourceExample(r string) string {
 }
 
 func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string, resourceType string) error {
+	var tblHead []string
 	var podname []string
 	var showPodName bool = true
 	var showRaw bool
@@ -96,9 +97,8 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	}
 
 	table := Table{}
-	table.SetHeader(
-		"T", "NAMESPACE", "PODNAME", "CONTAINER", "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
-	)
+	tblHead = append(infoTableHead(), "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT")
+	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -133,7 +133,8 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 				}
 				info.containerName = container.Name
 				tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], info, resourceType, showRaw, commonFlagList.byteSize)
-				table.AddRow(tblOut...)
+				tblFullRow := append(infoTable(info), tblOut...)
+				table.AddRow(tblFullRow...)
 			}
 		} else {
 			// hide the container type column as its only needed when the init containers are being shown
@@ -149,7 +150,8 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			}
 			info.containerName = container.Name
 			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], info, resourceType, showRaw, commonFlagList.byteSize)
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 
 		info.containerType = "E"
@@ -160,7 +162,8 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			}
 			info.containerName = container.Name
 			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], info, resourceType, showRaw, commonFlagList.byteSize)
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 	}
 
@@ -272,10 +275,6 @@ func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, 
 	}
 
 	return []Cell{
-		NewCellText(info.containerType),
-		NewCellText(info.namespace),
-		NewCellText(info.podName),
-		NewCellText(info.containerName),
 		NewCellInt(displayValue, rawValue),
 		NewCellInt(request, rawRequest),
 		NewCellInt(limit, rawLimit),

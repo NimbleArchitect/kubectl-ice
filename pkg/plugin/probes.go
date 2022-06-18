@@ -52,6 +52,7 @@ type probeAction struct {
 
 //list details of configured liveness readiness and startup probes
 func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var tblHead []string
 	var podname []string
 	var showPodName bool = true
 
@@ -79,9 +80,8 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	}
 
 	table := Table{}
-	table.SetHeader(
-		"NAMESPACE", "PODNAME", "CONTAINER", "PROBE", "DELAY", "PERIOD", "TIMEOUT", "SUCCESS", "FAILURE", "CHECK", "ACTION",
-	)
+	tblHead = append(infoTableHead(), "PROBE", "DELAY", "PERIOD", "TIMEOUT", "SUCCESS", "FAILURE", "CHECK", "ACTION")
+	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -90,13 +90,16 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		}
 	}
 
+	// always hide the container type column as probes can only be set in standard conatiners
+	table.HideColumn(0)
+
 	if !showPodName {
 		// we need to hide the pod name in the table
-		table.HideColumn(1)
+		table.HideColumn(2)
 	}
 
 	if !commonFlagList.showNamespaceName {
-		table.HideColumn(0)
+		table.HideColumn(1)
 	}
 
 	for _, pod := range podList {
@@ -118,7 +121,8 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			for _, probe := range probeList {
 				for _, action := range probe {
 					tblOut := probesBuildRow(info, action)
-					table.AddRow(tblOut...)
+					tblFullRow := append(infoTable(info), tblOut...)
+					table.AddRow(tblFullRow...)
 				}
 			}
 		}
@@ -136,9 +140,6 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 func probesBuildRow(info containerInfomation, action probeAction) []Cell {
 
 	return []Cell{
-		NewCellText(info.namespace),
-		NewCellText(info.podName),
-		NewCellText(info.containerName),
 		NewCellText(action.probeName),
 		NewCellInt(fmt.Sprintf("%d", action.probe.InitialDelaySeconds), int64(action.probe.InitialDelaySeconds)),
 		NewCellInt(fmt.Sprintf("%d", action.probe.PeriodSeconds), int64(action.probe.PeriodSeconds)),

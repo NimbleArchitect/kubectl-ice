@@ -8,6 +8,28 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+type containerInfomation struct {
+	podName       string
+	containerName string
+	containerType string
+	namespace     string
+}
+
+func infoTableHead() []string {
+	return []string{
+		"T", "NAMESPACE", "PODNAME", "CONTAINER",
+	}
+}
+
+func infoTable(info containerInfomation) []Cell {
+	return []Cell{
+		NewCellText(info.containerType),
+		NewCellText(info.namespace),
+		NewCellText(info.podName),
+		NewCellText(info.containerName),
+	}
+}
+
 // always returns false if the flagList.container is empty as we expect to show all containers
 // returns true if we dont have a match
 func skipContainerName(flagList commonFlags, containerName string) bool {

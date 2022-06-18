@@ -49,6 +49,7 @@ var statusExample = `  # List individual container status from pods
   %[1]s status -l "app in (web,mail)"`
 
 func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var tblHead []string
 	var podname []string
 	var showPodName bool = true
 	var showPrevious bool
@@ -82,14 +83,11 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 	table := Table{}
 	if !showPrevious {
-		table.SetHeader(
-			"T", "NAMESPACE", "PODNAME", "CONTAINER", "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE",
-		)
+		tblHead = append(infoTableHead(), "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE")
 	} else {
-		table.SetHeader(
-			"T", "NAMESPACE", "PODNAME", "CONTAINER", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE",
-		)
+		tblHead = append(infoTableHead(), "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE")
 	}
+	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -121,7 +119,8 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			}
 			info.containerName = container.Name
 			tblOut := statusBuildRow(container, info, showPrevious)
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 
 		info.containerType = "I"
@@ -132,7 +131,8 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			}
 			info.containerName = container.Name
 			tblOut := statusBuildRow(container, info, showPrevious)
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 
 		info.containerType = "E"
@@ -143,7 +143,8 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			}
 			info.containerName = container.Name
 			tblOut := statusBuildRow(container, info, showPrevious)
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 	}
 
@@ -218,10 +219,6 @@ func statusBuildRow(container v1.ContainerStatus, info containerInfomation, show
 
 	if showPrevious {
 		return []Cell{
-			NewCellText(info.containerType),
-			NewCellText(info.namespace),
-			NewCellText(info.podName),
-			NewCellText(container.Name),
 			NewCellText(strState),
 			NewCellText(reason),
 			NewCellInt(exitCode, rawExitCode),
@@ -231,10 +228,6 @@ func statusBuildRow(container v1.ContainerStatus, info containerInfomation, show
 		}
 	} else {
 		return []Cell{
-			NewCellText(info.containerType),
-			NewCellText(info.namespace),
-			NewCellText(info.podName),
-			NewCellText(container.Name),
 			NewCellText(ready),
 			NewCellText(started),
 			NewCellInt(restarts, rawRestarts),

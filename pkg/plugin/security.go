@@ -43,6 +43,7 @@ var securityExample = `  # List container security info from pods
 
 //list details of configured liveness readiness and startup security
 func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var tblHead []string
 	var podname []string
 	var showPodName bool = true
 	var showSELinuxOptions bool
@@ -74,14 +75,11 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	if cmd.Flag("selinux").Value.String() == "true" {
 		showSELinuxOptions = true
-		table.SetHeader(
-			"T", "NAMESPACE", "PODNAME", "CONTAINER", "USER", "ROLE", "TYPE", "LEVEL",
-		)
+		tblHead = append(infoTableHead(), "USER", "ROLE", "TYPE", "LEVEL")
 	} else {
-		table.SetHeader(
-			"T", "NAMESPACE", "PODNAME", "CONTAINER", "ALLOW_PRIVILEGE_ESCALATION", "PRIVILEGED", "RO_ROOT_FS", "RUN_AS_NON_ROOT", "RUN_AS_USER", "RUN_AS_GROUP",
-		)
+		tblHead = append(infoTableHead(), "ALLOW_PRIVILEGE_ESCALATION", "PRIVILEGED", "RO_ROOT_FS", "RUN_AS_NON_ROOT", "RUN_AS_USER", "RUN_AS_GROUP")
 	}
+	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -118,7 +116,8 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 			} else {
 				tblOut = securityBuildRow(info, container.SecurityContext, pod.Spec.SecurityContext)
 			}
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 
 		info.containerType = "I"
@@ -134,7 +133,8 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 			} else {
 				tblOut = securityBuildRow(info, container.SecurityContext, pod.Spec.SecurityContext)
 			}
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 	}
 
@@ -197,10 +197,6 @@ func securityBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1
 	}
 
 	return []Cell{
-		NewCellText(info.containerType),
-		NewCellText(info.namespace),
-		NewCellText(info.podName),
-		NewCellText(info.containerName),
 		ape,
 		p,
 		rorfs,
@@ -260,10 +256,6 @@ func seLinuxBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1.
 	}
 
 	return []Cell{
-		NewCellText(info.containerType),
-		NewCellText(info.namespace),
-		NewCellText(info.podName),
-		NewCellText(info.containerName),
 		seUser,
 		seRole,
 		seType,

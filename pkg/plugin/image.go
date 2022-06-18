@@ -41,6 +41,7 @@ var imageExample = `  # List containers image info from pods
   %[1]s image -l "app in (web,mail)"`
 
 func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var tblHead []string
 	var podname []string
 	var showPodName bool = true
 
@@ -68,9 +69,8 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	}
 
 	table := Table{}
-	table.SetHeader(
-		"T", "NAMESPACE", "PODNAME", "CONTAINER", "PULL", "IMAGE",
-	)
+	tblHead = append(infoTableHead(), "PULL", "IMAGE")
+	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -102,7 +102,8 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 			}
 			info.containerName = container.Name
 			tblOut := imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 
 		info.containerType = "I"
@@ -113,7 +114,8 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 			}
 			info.containerName = container.Name
 			tblOut := imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 
 		info.containerType = "E"
@@ -124,7 +126,8 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 			}
 			info.containerName = container.Name
 			tblOut := imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 	}
 
@@ -139,10 +142,6 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 func imageBuildRow(info containerInfomation, imageName string, pullPolicy string) []Cell {
 	return []Cell{
-		NewCellText(info.containerType),
-		NewCellText(info.namespace),
-		NewCellText(info.podName),
-		NewCellText(info.containerName),
 		NewCellText(pullPolicy),
 		NewCellText(imageName),
 	}

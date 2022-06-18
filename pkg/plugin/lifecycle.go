@@ -48,6 +48,7 @@ type lifecycleAction struct {
 }
 
 func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var tblHead []string
 	var podname []string
 	var showPodName bool = true
 
@@ -75,9 +76,8 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	}
 
 	table := Table{}
-	table.SetHeader(
-		"T", "NAMESPACE", "PODNAME", "CONTAINER", "LIFECYCLE", "HANDLER", "ACTION",
-	)
+	tblHead = append(infoTableHead(), "LIFECYCLE", "HANDLER", "ACTION")
+	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -113,7 +113,8 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			// loop over all probes build the output table and add the podname if multipule pods will be output
 			for name, action := range lifecycleList {
 				tblOut := lifecycleBuildRow(info, name, action)
-				table.AddRow(tblOut...)
+				tblFullRow := append(infoTable(info), tblOut...)
+				table.AddRow(tblFullRow...)
 			}
 		}
 
@@ -128,7 +129,8 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			// loop over all probes build the output table and add the podname if multipule pods will be output
 			for name, action := range lifecycleList {
 				tblOut := lifecycleBuildRow(info, name, action)
-				table.AddRow(tblOut...)
+				tblFullRow := append(infoTable(info), tblOut...)
+				table.AddRow(tblFullRow...)
 			}
 		}
 
@@ -143,7 +145,8 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			// loop over all probes build the output table and add the podname if multipule pods will be output
 			for name, action := range lifecycleList {
 				tblOut := lifecycleBuildRow(info, name, action)
-				table.AddRow(tblOut...)
+				tblFullRow := append(infoTable(info), tblOut...)
+				table.AddRow(tblFullRow...)
 			}
 		}
 	}
@@ -169,10 +172,6 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 func lifecycleBuildRow(info containerInfomation, handlerName string, lifecycles lifecycleAction) []Cell {
 
 	return []Cell{
-		NewCellText(info.containerType),
-		NewCellText(info.namespace),
-		NewCellText(info.podName),
-		NewCellText(info.containerName),
 		NewCellText(handlerName),
 		NewCellText(lifecycles.actionName),
 		NewCellText(lifecycles.action),

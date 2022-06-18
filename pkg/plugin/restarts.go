@@ -42,6 +42,7 @@ var restartsExample = `  # List individual container restart count from pods
   %[1]s restarts -l "app in (web,mail)"`
 
 func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var tblHead []string
 	var podname []string
 	var showPodName bool = true
 
@@ -69,9 +70,8 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	}
 
 	table := Table{}
-	table.SetHeader(
-		"T", "NAMESPACE", "PODNAME", "CONTAINER", "RESTARTS",
-	)
+	tblHead = append(infoTableHead(), "RESTARTS")
+	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -103,7 +103,8 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 			}
 			info.containerName = container.Name
 			tblOut := restartsBuildRow(info, container.RestartCount)
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 
 		info.containerType = "I"
@@ -114,7 +115,8 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 			}
 			info.containerName = container.Name
 			tblOut := restartsBuildRow(info, container.RestartCount)
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 
 		info.containerType = "E"
@@ -125,7 +127,8 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 			}
 			info.containerName = container.Name
 			tblOut := restartsBuildRow(info, container.RestartCount)
-			table.AddRow(tblOut...)
+			tblFullRow := append(infoTable(info), tblOut...)
+			table.AddRow(tblFullRow...)
 		}
 	}
 
@@ -152,10 +155,6 @@ func restartsBuildRow(info containerInfomation, restartCount int32) []Cell {
 	// restarts := fmt.Sprintf("%d", container.RestartCount)
 
 	return []Cell{
-		NewCellText(info.containerType),
-		NewCellText(info.namespace),
-		NewCellText(info.podName),
-		NewCellText(info.containerName),
 		NewCellInt(fmt.Sprintf("%d", restartCount), int64(restartCount)),
 	}
 }

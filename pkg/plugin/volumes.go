@@ -44,6 +44,7 @@ var volumesExample = `  # List volumes from containers inside pods from current 
   %[1]s volumes -l "app in (web,mail)"`
 
 func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	var tblHead []string
 	var podname []string
 	var showPodName bool = true
 	var showVolumeDevice bool
@@ -78,15 +79,12 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 
 	table := Table{}
 	if !showVolumeDevice {
-		table.SetHeader(
-			"T", "NAMESPACE", "PODNAME", "CONTAINER", "VOLUME", "TYPE", "BACKING", "SIZE", "RO", "MOUNT-POINT",
-		)
-		table.HideColumn(0)
+		tblHead = append(infoTableHead(), "VOLUME", "TYPE", "BACKING", "SIZE", "RO", "MOUNT-POINT")
 	} else {
-		table.SetHeader(
-			"T", "NAMESPACE", "PODNAME", "CONTAINER", "PVC_NAME", "DEVICE_PATH",
-		)
+		tblHead = append(infoTableHead(), "PVC_NAME", "DEVICE_PATH")
 	}
+	table.SetHeader(tblHead...)
+	table.HideColumn(0)
 
 	if len(commonFlagList.filterList) >= 1 {
 		err = table.SetFilter(commonFlagList.filterList)
@@ -122,7 +120,8 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 						continue
 					}
 					tblOut := volumesBuildRow(info, podVolumes, mount)
-					table.AddRow(tblOut...)
+					tblFullRow := append(infoTable(info), tblOut...)
+					table.AddRow(tblFullRow...)
 				}
 			}
 		} else {
@@ -135,7 +134,8 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 				info.containerName = container.Name
 				for _, mount := range container.VolumeDevices {
 					tblOut := mountsBuildRow(info, mount)
-					table.AddRow(tblOut...)
+					tblFullRow := append(infoTable(info), tblOut...)
+					table.AddRow(tblFullRow...)
 				}
 			}
 
@@ -148,7 +148,8 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 				info.containerName = container.Name
 				for _, mount := range container.VolumeDevices {
 					tblOut := mountsBuildRow(info, mount)
-					table.AddRow(tblOut...)
+					tblFullRow := append(infoTable(info), tblOut...)
+					table.AddRow(tblFullRow...)
 				}
 			}
 
@@ -161,7 +162,8 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 				info.containerName = container.Name
 				for _, mount := range container.VolumeDevices {
 					tblOut := mountsBuildRow(info, mount)
-					table.AddRow(tblOut...)
+					tblFullRow := append(infoTable(info), tblOut...)
+					table.AddRow(tblFullRow...)
 				}
 			}
 		}
@@ -307,10 +309,6 @@ func volumesBuildRow(info containerInfomation, podVolumes map[string]map[string]
 	}
 
 	return []Cell{
-		NewCellText(info.containerType),
-		NewCellText(info.namespace),
-		NewCellText(info.podName),
-		NewCellText(info.containerName),
 		NewCellText(mount.Name),
 		volumeType,
 		backing,
