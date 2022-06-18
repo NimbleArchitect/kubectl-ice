@@ -90,8 +90,7 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	columnInfo.SetVisibleColumns(table, commonFlagList)
 
 	for _, pod := range podList {
-		columnInfo.podName = pod.Name
-		columnInfo.namespace = pod.Namespace
+		columnInfo.LoadFromPod(pod)
 
 		connect.SetNamespace(pod.Namespace)
 		columnInfo.containerType = "S"

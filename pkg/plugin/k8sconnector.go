@@ -203,7 +203,7 @@ func (c *Connector) GetMetricPods(podNameList []string) ([]v1beta1.PodMetrics, e
 		podList, err := c.metricSet.MetricsV1beta1().PodMetricses(namespace).List(context.TODO(), selector)
 		if err == nil {
 			if len(podList.Items) == 0 {
-				return []v1beta1.PodMetrics{}, errors.New("no pods found in default namespace")
+				return []v1beta1.PodMetrics{}, errors.New("no metric info found for pods in namespace")
 			} else {
 				return podList.Items, nil
 			}

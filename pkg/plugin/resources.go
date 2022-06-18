@@ -113,8 +113,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	podState := podMetrics2Hashtable(podStateList)
 	for _, pod := range podList {
-		columnInfo.podName = pod.Name
-		columnInfo.namespace = pod.Namespace
+		columnInfo.LoadFromPod(pod)
 
 		if commonFlagList.showInitContainers {
 			// process init containers

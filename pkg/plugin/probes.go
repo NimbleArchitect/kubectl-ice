@@ -98,8 +98,7 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	columnInfo.SetVisibleColumns(table, commonFlagList)
 
 	for _, pod := range podList {
-		columnInfo.podName = pod.Name
-		columnInfo.namespace = pod.Namespace
+		columnInfo.LoadFromPod(pod)
 
 		columnInfo.containerType = "S"
 		for _, container := range pod.Spec.Containers {
