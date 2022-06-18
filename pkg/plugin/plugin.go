@@ -19,6 +19,7 @@ type commonFlags struct {
 	showOddities       bool                  // this isnt really common but it does show up across 3+ commands and im lazy
 	showNamespaceName  bool                  // shows the namespace name of each pod
 	showPodName        bool                  // wether to show the pod name
+	showNodeName       bool                  // do we need to show the node name in the output
 	byteSize           string                // sets the bytes conversion for the output size
 	outputAs           string                // how to output the table, currently only accepts json
 	sortList           []string              //column names to sort on when table.Print() is called
@@ -339,6 +340,7 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("match", "", "", `Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != `)
 	cmdObj.Flags().StringP("select", "", "", `Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != `)
 	cmdObj.Flags().BoolP("show-namespace", "", false, `shows the namespace column`)
+	cmdObj.Flags().BoolP("show-nodename", "", false, `shows the node name column`)
 }
 
 func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
@@ -435,6 +437,10 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 
 	if cmd.Flag("show-namespace").Value.String() == "true" {
 		f.showNamespaceName = true
+	}
+
+	if cmd.Flag("show-nodename").Value.String() == "true" {
+		f.showNodeName = true
 	}
 
 	return f, nil
