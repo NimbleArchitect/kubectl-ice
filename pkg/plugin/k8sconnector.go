@@ -56,7 +56,7 @@ func (c *Connector) LoadMetricConfig(configFlags *genericclioptions.ConfigFlags)
 
 	metricset, err := metricsclientset.NewForConfig(config)
 	if err != nil {
-		return fmt.Errorf("failed to create clientset: %w", err)
+		return fmt.Errorf("failed to create clientset for metrics: %w", err)
 	}
 
 	c.metricSet = *metricset
