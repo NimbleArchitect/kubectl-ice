@@ -170,6 +170,7 @@ func statusBuildRow(container v1.ContainerStatus, info containerInfomation, show
 	var strState string
 	var state v1.ContainerState
 	var rawExitCode, rawSignal, rawRestarts int64
+	var timestampFormat = "2006-01-02 15:04:05"
 
 	// fmt.Println("F:statusBuildRow:Name=", container.Name)
 
@@ -191,13 +192,13 @@ func statusBuildRow(container v1.ContainerStatus, info containerInfomation, show
 		rawExitCode = int64(state.Terminated.ExitCode)
 		signal = fmt.Sprintf("%d", state.Terminated.Signal)
 		rawSignal = int64(state.Terminated.Signal)
-		startedAt = state.Terminated.StartedAt.String()
+		startedAt = state.Terminated.StartedAt.Format(timestampFormat)
 		reason = state.Terminated.Reason
 		message = state.Terminated.Message
 	}
 	if state.Running != nil {
 		strState = "Running"
-		startedAt = state.Running.StartedAt.String()
+		startedAt = state.Running.StartedAt.Format(timestampFormat)
 	}
 
 	if container.Started != nil {
