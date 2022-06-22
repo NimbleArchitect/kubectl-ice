@@ -74,13 +74,13 @@ func (t *Table) SetHeader(headItem ...string) {
 
 // Adds a new row to the end of the table, accepts an array of strings
 func (t *Table) AddRow(row ...Cell) {
-
 	for i := 0; i < t.headCount; i++ {
-		if len(row[i].text) >= t.head[i].columnLength {
-			if (len(row[i].text) + 2) > maxLineLength {
+		strLen := len([]rune(row[i].text))
+		if strLen >= t.head[i].columnLength {
+			if (strLen + 2) > maxLineLength {
 				t.head[i].columnLength = maxLineLength
 			} else {
-				t.head[i].columnLength = len(row[i].text) + 2
+				t.head[i].columnLength = strLen + 2
 			}
 		}
 
@@ -145,7 +145,7 @@ func (t *Table) Print() {
 		if len(word) == 0 {
 			word = "-"
 		}
-		pad := strings.Repeat(" ", t.head[idx].columnLength-len(word))
+		pad := strings.Repeat(" ", t.head[idx].columnLength-len([]rune(word)))
 		headLine += fmt.Sprint(word, pad)
 	}
 	// print the header in one long line
@@ -179,7 +179,7 @@ func (t *Table) Print() {
 				excludeRow = t.exclusionFilter(cell, idx)
 			}
 
-			spaceCount := t.head[idx].columnLength - len(cell.text)
+			spaceCount := t.head[idx].columnLength - len([]rune(cell.text))
 			if spaceCount <= 0 {
 				spaceCount = maxLineLength
 			}
