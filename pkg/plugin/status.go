@@ -3,11 +3,15 @@ package plugin
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
+	duration "k8s.io/apimachinery/pkg/util/duration"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
+
+var timestampFormat = "2006-01-02 15:04:05"
 
 var statusShort = "List status of each container in a pod"
 
@@ -54,6 +58,9 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	var podname []string
 	var showPodName bool = true
 	var showPrevious bool
+	var columnAge int
+	var columnTimestamp int
+	var columnMessage int
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -82,12 +89,28 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		showPrevious = true
 	}
 
-	table := Table{}
-	if !showPrevious {
-		tblHead = append(columnInfo.GetDefaultHead(), "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE")
-	} else {
-		tblHead = append(columnInfo.GetDefaultHead(), "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "MESSAGE")
+	if cmd.Flag("tree").Value.String() == "true" {
+		columnInfo.treeView = true
 	}
+
+	table := Table{}
+
+	if !showPrevious {
+		tblHead = append(columnInfo.GetDefaultHead(), "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "AGE", "MESSAGE")
+		columnTimestamp = 12
+		columnAge = 13
+		columnMessage = 14
+	} else {
+		tblHead = append(columnInfo.GetDefaultHead(), "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "AGE", "MESSAGE")
+		columnTimestamp = 10
+		columnAge = 11
+		columnMessage = 12
+	}
+
+	if columnInfo.treeView {
+		tblHead = append(columnInfo.GetDefaultHead(), "NAME", "READY", "STARTED", "RESTARTS", "STATE", "REASON", "AGE")
+	}
+
 	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -100,9 +123,25 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	commonFlagList.showPodName = showPodName
 	columnInfo.SetVisibleColumns(table, commonFlagList)
 
+	if commonFlagList.showDetails {
+		// hide the age
+		table.HideColumn(columnAge)
+	} else {
+		table.HideColumn(columnTimestamp)
+		table.HideColumn(columnMessage)
+	}
+
 	for _, pod := range podList {
 		columnInfo.LoadFromPod(pod)
 
+		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+		if columnInfo.treeView {
+			tblOut := podStatusBuildRow(pod, columnInfo, showPrevious)
+			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+			table.AddRow(tblFullRow...)
+		}
+
+		//now show the container line
 		columnInfo.containerType = "S"
 		for _, container := range pod.Status.ContainerStatuses {
 			// should the container be processed
@@ -140,18 +179,21 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		}
 	}
 
-	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
-		return err
-	}
+	// sorting by column breaks the tree view also previous is not valid so we sliently skip those actions
+	if !columnInfo.treeView {
+		if err := table.SortByNames(commonFlagList.sortList...); err != nil {
+			return err
+		}
 
-	if !showPrevious { // restart count dosent show up when using previous flag
-		// do we need to find the outliers, we have enough data to compute a range
-		if commonFlagList.showOddities {
-			row2Remove, err := table.ListOutOfRange(6, table.GetRows()) //3 = restarts column
-			if err != nil {
-				return err
+		if !showPrevious { // restart count dosent show up when using previous flag
+			// do we need to find the outliers, we have enough data to compute a range
+			if commonFlagList.showOddities {
+				row2Remove, err := table.ListOutOfRange(6, table.GetRows()) //3 = restarts column
+				if err != nil {
+					return err
+				}
+				table.HideRows(row2Remove)
 			}
-			table.HideRows(row2Remove)
 		}
 	}
 
@@ -160,17 +202,36 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 }
 
+func podStatusBuildRow(pod v1.Pod, info containerInfomation, showPrevious bool) []Cell {
+	starttime := pod.Status.StartTime.Time
+	phase := string(pod.Status.Phase)
+	rawAge := time.Since(starttime)
+	age := duration.HumanDuration(rawAge)
+
+	return []Cell{
+		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
+		NewCellText(""),                       //ready
+		NewCellText(""),                       //started
+		NewCellInt("0", 0),                    //restarts
+		NewCellText(strings.TrimSpace(phase)), //state
+		NewCellText(pod.Status.Reason),        //reson
+		NewCellText(age),                      //age
+	}
+}
+
 func statusBuildRow(container v1.ContainerStatus, info containerInfomation, showPrevious bool) []Cell {
 	var reason string
 	var exitCode string
 	var signal string
 	var message string
 	var startedAt string
+	var startTime time.Time
+	var skipAgeCalculation bool
 	var started string
 	var strState string
+	var age string
 	var state v1.ContainerState
 	var rawExitCode, rawSignal, rawRestarts int64
-	var timestampFormat = "2006-01-02 15:04:05"
 
 	// fmt.Println("F:statusBuildRow:Name=", container.Name)
 
@@ -184,6 +245,8 @@ func statusBuildRow(container v1.ContainerStatus, info containerInfomation, show
 		strState = "Waiting"
 		reason = state.Waiting.Reason
 		message = state.Waiting.Message
+		// waiting state dosent have a start time so we skip setting the age variable, used further down
+		skipAgeCalculation = true
 	}
 
 	if state.Terminated != nil {
@@ -192,31 +255,67 @@ func statusBuildRow(container v1.ContainerStatus, info containerInfomation, show
 		rawExitCode = int64(state.Terminated.ExitCode)
 		signal = fmt.Sprintf("%d", state.Terminated.Signal)
 		rawSignal = int64(state.Terminated.Signal)
+		startTime = state.Terminated.StartedAt.Time
 		startedAt = state.Terminated.StartedAt.Format(timestampFormat)
 		reason = state.Terminated.Reason
 		message = state.Terminated.Message
 	}
+
 	if state.Running != nil {
 		strState = "Running"
 		startedAt = state.Running.StartedAt.Format(timestampFormat)
+		startTime = state.Running.StartedAt.Time
 	}
 
 	if container.Started != nil {
 		started = fmt.Sprintf("%t", *container.Started)
 	}
+
 	ready := fmt.Sprintf("%t", container.Ready)
 	restarts := fmt.Sprintf("%d", container.RestartCount)
 	rawRestarts = int64(container.RestartCount)
 	// remove pod and container name from the message string
 	message = trimStatusMessage(message, info.podName, info.containerName)
 
-	if showPrevious {
+	if skipAgeCalculation {
+		age = ""
+	} else {
+		rawAge := time.Since(startTime)
+		age = duration.HumanDuration(rawAge)
+	}
+
+	if info.treeView {
+		var namePrefix string
+		if info.containerType == "S" {
+			namePrefix = "Container/"
+		}
+		if info.containerType == "I" {
+			namePrefix = "InitContainer/"
+		}
+		if info.containerType == "E" {
+			namePrefix = "EphemeralContainer/"
+		}
+
+		//we can only show the age if we have a start time some states dont have said starttime so we have to skip them
+
+		return []Cell{
+			NewCellText(fmt.Sprint("└─", namePrefix, info.containerName)),
+			NewCellText(ready),
+			NewCellText(started),
+			NewCellInt(restarts, rawRestarts),
+			NewCellText(strState),
+			NewCellText(reason),
+			NewCellText(age),
+		}
+
+	} else if showPrevious {
 		return []Cell{
 			NewCellText(strState),
 			NewCellText(reason),
 			NewCellInt(exitCode, rawExitCode),
 			NewCellInt(signal, rawSignal),
 			NewCellText(startedAt),
+			NewCellText(age),
 			NewCellText(message),
 		}
 	} else {
@@ -229,6 +328,7 @@ func statusBuildRow(container v1.ContainerStatus, info containerInfomation, show
 			NewCellInt(exitCode, rawExitCode),
 			NewCellInt(signal, rawSignal),
 			NewCellText(startedAt),
+			NewCellText(age),
 			NewCellText(message),
 		}
 	}

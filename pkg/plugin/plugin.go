@@ -15,6 +15,7 @@ type commonFlags struct {
 	container          string                // name of the container to search for
 	filterList         map[string]matchValue // used to filter out rows form the table during Print function
 	labels             string                // k8s pod labels
+	showDetails        bool                  // shows extra the timestamp instead of the age column along with a few extra columns
 	showInitContainers bool                  //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
 	showOddities       bool                  // this isnt really common but it does show up across 3+ commands and im lazy
 	showNamespaceName  bool                  // shows the namespace name of each pod
@@ -302,8 +303,10 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdStatus.Flags())
-	cmdStatus.Flags().BoolP("previous", "p", false, "show previous state")
+	cmdStatus.Flags().BoolP("details", "d", false, `Display the timestamp instead of age along with the message column`)
 	cmdStatus.Flags().BoolP("oddities", "", false, odditiesShort)
+	cmdStatus.Flags().BoolP("previous", "p", false, "Show previous state")
+	cmdStatus.Flags().BoolP("tree", "t", false, "Display tree like view instead of the standard list")
 	addCommonFlags(cmdStatus)
 	rootCmd.AddCommand(cmdStatus)
 
@@ -441,6 +444,10 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 
 	if cmd.Flag("show-node").Value.String() == "true" {
 		f.showNodeName = true
+	}
+
+	if cmd.Flag("details").Value.String() == "true" {
+		f.showDetails = true
 	}
 
 	return f, nil
