@@ -93,6 +93,10 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		columnInfo.treeView = true
 	}
 
+	if cmd.Flag("details").Value.String() == "true" {
+		commonFlagList.showDetails = true
+	}
+
 	table := Table{}
 
 	if !showPrevious {
@@ -102,9 +106,9 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		columnMessage = 14
 	} else {
 		tblHead = append(columnInfo.GetDefaultHead(), "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "AGE", "MESSAGE")
-		columnTimestamp = 10
-		columnAge = 11
-		columnMessage = 12
+		columnTimestamp = 9
+		columnAge = 10
+		columnMessage = 11
 	}
 
 	if columnInfo.treeView {

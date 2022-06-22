@@ -94,6 +94,7 @@ Flags:
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --show-namespace                 shows the namespace column
+      --show-node                      shows the node name column
 
 ```
 also includes standard common kubectl flags
@@ -147,6 +148,7 @@ Flags:
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --show-namespace                 shows the namespace column
+      --show-node                      shows the node name column
 
 ```
 also includes standard common kubectl flags
@@ -201,6 +203,7 @@ Flags:
   -r, --raw                            show raw values
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --show-namespace                 shows the namespace column
+      --show-node                      shows the node name column
 
 ```
 also includes standard common kubectl flags
@@ -254,6 +257,7 @@ Flags:
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --show-namespace                 shows the namespace column
+      --show-node                      shows the node name column
   -t, --translate                      read the configmap show its values
 
 ```
@@ -308,6 +312,7 @@ Flags:
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --show-namespace                 shows the namespace column
+      --show-node                      shows the node name column
 
 ```
 also includes standard common kubectl flags
@@ -355,6 +360,7 @@ Flags:
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --show-namespace                 shows the namespace column
+      --show-node                      shows the node name column
 
 ```
 also includes standard common kubectl flags
@@ -400,6 +406,7 @@ Flags:
   -r, --raw                            show raw values
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --show-namespace                 shows the namespace column
+      --show-node                      shows the node name column
       --size string                    allows conversion to the selected size rather then the default megabyte output (default "Mi")
 
 ```
@@ -454,6 +461,7 @@ Flags:
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --show-namespace                 shows the namespace column
+      --show-node                      shows the node name column
 
 ```
 also includes standard common kubectl flags
@@ -506,6 +514,7 @@ Flags:
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --show-namespace                 shows the namespace column
+      --show-node                      shows the node name column
 
 ```
 also includes standard common kubectl flags
@@ -559,6 +568,7 @@ Flags:
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --show-namespace                 shows the namespace column
+      --show-node                      shows the node name column
 
 ```
 also includes standard common kubectl flags
@@ -610,6 +620,7 @@ Flags:
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --selinux                        show the SELinux context thats applied to the containers
       --show-namespace                 shows the namespace column
+      --show-node                      shows the node name column
 
 ```
 also includes standard common kubectl flags
@@ -661,11 +672,14 @@ Aliases:
   status, st
 
 Flags:
+  -d, --details                        Display the timestamp instead of age along with the message column
       --oddities                       show only the outlier rows that dont fall within the computed range
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
-  -p, --previous                       show previous state
+  -p, --previous                       Show previous state
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --show-namespace                 shows the namespace column
+      --show-node                      shows the node name column
+  -t, --tree                           Display tree like view instead of the standard list
 
 ```
 also includes standard common kubectl flags
@@ -722,6 +736,7 @@ Flags:
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --show-namespace                 shows the namespace column
+      --show-node                      shows the node name column
 
 ```
 also includes standard common kubectl flags

@@ -446,10 +446,6 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 		f.showNodeName = true
 	}
 
-	if cmd.Flag("details").Value.String() == "true" {
-		f.showDetails = true
-	}
-
 	return f, nil
 }
 
