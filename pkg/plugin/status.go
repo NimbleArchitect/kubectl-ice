@@ -203,10 +203,14 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 }
 
 func podStatusBuildRow(pod v1.Pod, info containerInfomation, showPrevious bool) []Cell {
-	starttime := pod.Status.StartTime.Time
+	var age string
+
 	phase := string(pod.Status.Phase)
-	rawAge := time.Since(starttime)
-	age := duration.HumanDuration(rawAge)
+	if pod.Status.StartTime != nil {
+		starttime := pod.Status.StartTime.Time
+		rawAge := time.Since(starttime)
+		age = duration.HumanDuration(rawAge)
+	}
 
 	return []Cell{
 		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
