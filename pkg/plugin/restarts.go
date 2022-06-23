@@ -95,8 +95,9 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 			}
 			columnInfo.containerName = container.Name
 			tblOut := restartsBuildRow(columnInfo, container.RestartCount)
-			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			table.AddRow(tblFullRow...)
+			columnInfo.ApplyRow(&table, tblOut)
+			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+			// table.AddRow(tblFullRow...)
 		}
 
 		columnInfo.containerType = "I"
@@ -107,8 +108,9 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 			}
 			columnInfo.containerName = container.Name
 			tblOut := restartsBuildRow(columnInfo, container.RestartCount)
-			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			table.AddRow(tblFullRow...)
+			columnInfo.ApplyRow(&table, tblOut)
+			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+			// table.AddRow(tblFullRow...)
 		}
 
 		columnInfo.containerType = "E"
@@ -119,8 +121,9 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 			}
 			columnInfo.containerName = container.Name
 			tblOut := restartsBuildRow(columnInfo, container.RestartCount)
-			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			table.AddRow(tblFullRow...)
+			columnInfo.ApplyRow(&table, tblOut)
+			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+			// table.AddRow(tblFullRow...)
 		}
 	}
 

@@ -108,8 +108,9 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 			} else {
 				tblOut = securityBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
 			}
-			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			table.AddRow(tblFullRow...)
+			columnInfo.ApplyRow(&table, tblOut)
+			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+			// table.AddRow(tblFullRow...)
 		}
 
 		columnInfo.containerType = "I"
@@ -125,8 +126,9 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 			} else {
 				tblOut = securityBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
 			}
-			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			table.AddRow(tblFullRow...)
+			columnInfo.ApplyRow(&table, tblOut)
+			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+			// table.AddRow(tblFullRow...)
 		}
 	}
 

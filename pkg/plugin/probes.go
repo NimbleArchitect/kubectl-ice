@@ -113,8 +113,9 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			for _, probe := range probeList {
 				for _, action := range probe {
 					tblOut := probesBuildRow(columnInfo, action)
-					tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-					table.AddRow(tblFullRow...)
+					columnInfo.ApplyRow(&table, tblOut)
+					// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+					// table.AddRow(tblFullRow...)
 				}
 			}
 		}

@@ -135,14 +135,28 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		table.HideColumn(columnMessage)
 	}
 
+	// do we need to load the node labels
+	// something like this maybe??
+	// labelList := loadNodeLabels
+	// columnInfo.labelName = "appfamily"
+	// columnInfo.labelValue = labelList[podname]
+
 	for _, pod := range podList {
+		// p := pod.GetOwnerReferences()
+		// for i, a := range p {
+		// 	fmt.Println("index:", i)
+		// 	fmt.Println("** name:", a.Name)
+		// 	fmt.Println("** kind:", a.Kind)
+		// }
+
 		columnInfo.LoadFromPod(pod)
 
 		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
 		if columnInfo.treeView {
 			tblOut := podStatusBuildRow(pod, columnInfo, showPrevious)
-			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			table.AddRow(tblFullRow...)
+			columnInfo.ApplyRow(&table, tblOut)
+			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+			// table.AddRow(tblFullRow...)
 		}
 
 		//now show the container line
@@ -154,8 +168,9 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			}
 			columnInfo.containerName = container.Name
 			tblOut := statusBuildRow(container, columnInfo, showPrevious)
-			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			table.AddRow(tblFullRow...)
+			columnInfo.ApplyRow(&table, tblOut)
+			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+			// table.AddRow(tblFullRow...)
 		}
 
 		columnInfo.containerType = "I"
@@ -166,8 +181,9 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			}
 			columnInfo.containerName = container.Name
 			tblOut := statusBuildRow(container, columnInfo, showPrevious)
-			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			table.AddRow(tblFullRow...)
+			columnInfo.ApplyRow(&table, tblOut)
+			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+			// table.AddRow(tblFullRow...)
 		}
 
 		columnInfo.containerType = "E"
@@ -178,8 +194,9 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			}
 			columnInfo.containerName = container.Name
 			tblOut := statusBuildRow(container, columnInfo, showPrevious)
-			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			table.AddRow(tblFullRow...)
+			columnInfo.ApplyRow(&table, tblOut)
+			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+			// table.AddRow(tblFullRow...)
 		}
 	}
 

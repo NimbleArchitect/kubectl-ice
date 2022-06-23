@@ -104,8 +104,9 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 			allRows := buildEnvFromContainer(container)
 			for _, envRow := range allRows {
 				tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
-				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				table.AddRow(tblFullRow...)
+				columnInfo.ApplyRow(&table, tblOut)
+				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+				// table.AddRow(tblFullRow...)
 			}
 		}
 
@@ -119,8 +120,9 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 			allRows := buildEnvFromContainer(container)
 			for _, envRow := range allRows {
 				tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
-				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				table.AddRow(tblFullRow...)
+				columnInfo.ApplyRow(&table, tblOut)
+				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+				// table.AddRow(tblFullRow...)
 			}
 		}
 
@@ -134,8 +136,9 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 			allRows := buildEnvFromEphemeral(container)
 			for _, envRow := range allRows {
 				tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
-				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				table.AddRow(tblFullRow...)
+				columnInfo.ApplyRow(&table, tblOut)
+				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+				// table.AddRow(tblFullRow...)
 			}
 		}
 	}

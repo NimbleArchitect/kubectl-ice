@@ -125,8 +125,9 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 				}
 				columnInfo.containerName = container.Name
 				tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
-				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				table.AddRow(tblFullRow...)
+				columnInfo.ApplyRow(&table, tblOut)
+				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+				// table.AddRow(tblFullRow...)
 			}
 		} else {
 			// hide the container type column as its only needed when the init containers are being shown
@@ -142,8 +143,9 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			}
 			columnInfo.containerName = container.Name
 			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
-			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			table.AddRow(tblFullRow...)
+			columnInfo.ApplyRow(&table, tblOut)
+			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+			// table.AddRow(tblFullRow...)
 		}
 
 		columnInfo.containerType = "E"
@@ -154,8 +156,9 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			}
 			columnInfo.containerName = container.Name
 			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
-			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			table.AddRow(tblFullRow...)
+			columnInfo.ApplyRow(&table, tblOut)
+			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+			// table.AddRow(tblFullRow...)
 		}
 	}
 

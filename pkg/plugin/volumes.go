@@ -112,8 +112,9 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 						continue
 					}
 					tblOut := volumesBuildRow(columnInfo, podVolumes, mount)
-					tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-					table.AddRow(tblFullRow...)
+					columnInfo.ApplyRow(&table, tblOut)
+					// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+					// table.AddRow(tblFullRow...)
 				}
 			}
 		} else {
@@ -126,8 +127,9 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 				columnInfo.containerName = container.Name
 				for _, mount := range container.VolumeDevices {
 					tblOut := mountsBuildRow(columnInfo, mount)
-					tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-					table.AddRow(tblFullRow...)
+					columnInfo.ApplyRow(&table, tblOut)
+					// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+					// table.AddRow(tblFullRow...)
 				}
 			}
 
@@ -140,8 +142,9 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 				columnInfo.containerName = container.Name
 				for _, mount := range container.VolumeDevices {
 					tblOut := mountsBuildRow(columnInfo, mount)
-					tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-					table.AddRow(tblFullRow...)
+					columnInfo.ApplyRow(&table, tblOut)
+					// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+					// table.AddRow(tblFullRow...)
 				}
 			}
 
@@ -154,8 +157,9 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 				columnInfo.containerName = container.Name
 				for _, mount := range container.VolumeDevices {
 					tblOut := mountsBuildRow(columnInfo, mount)
-					tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-					table.AddRow(tblFullRow...)
+					columnInfo.ApplyRow(&table, tblOut)
+					// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+					// table.AddRow(tblFullRow...)
 				}
 			}
 		}

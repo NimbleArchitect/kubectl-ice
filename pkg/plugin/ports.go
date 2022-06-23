@@ -98,8 +98,9 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 				}
 				columnInfo.containerName = container.Name
 				tblOut := portsBuildRow(columnInfo, port)
-				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				table.AddRow(tblFullRow...)
+				columnInfo.ApplyRow(&table, tblOut)
+				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+				// table.AddRow(tblFullRow...)
 			}
 		}
 
@@ -112,8 +113,9 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 				}
 				columnInfo.containerName = container.Name
 				tblOut := portsBuildRow(columnInfo, port)
-				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				table.AddRow(tblFullRow...)
+				columnInfo.ApplyRow(&table, tblOut)
+				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+				// table.AddRow(tblFullRow...)
 			}
 		}
 
@@ -126,8 +128,9 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 				}
 				columnInfo.containerName = container.Name
 				tblOut := portsBuildRow(columnInfo, port)
-				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				table.AddRow(tblFullRow...)
+				columnInfo.ApplyRow(&table, tblOut)
+				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+				// table.AddRow(tblFullRow...)
 			}
 		}
 	}

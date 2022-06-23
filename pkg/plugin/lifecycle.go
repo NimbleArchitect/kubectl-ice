@@ -105,8 +105,9 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			// loop over all probes build the output table and add the podname if multipule pods will be output
 			for name, action := range lifecycleList {
 				tblOut := lifecycleBuildRow(columnInfo, name, action)
-				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				table.AddRow(tblFullRow...)
+				columnInfo.ApplyRow(&table, tblOut)
+				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+				// table.AddRow(tblFullRow...)
 			}
 		}
 
@@ -121,8 +122,9 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			// loop over all probes build the output table and add the podname if multipule pods will be output
 			for name, action := range lifecycleList {
 				tblOut := lifecycleBuildRow(columnInfo, name, action)
-				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				table.AddRow(tblFullRow...)
+				columnInfo.ApplyRow(&table, tblOut)
+				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+				// table.AddRow(tblFullRow...)
 			}
 		}
 
@@ -137,8 +139,9 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			// loop over all probes build the output table and add the podname if multipule pods will be output
 			for name, action := range lifecycleList {
 				tblOut := lifecycleBuildRow(columnInfo, name, action)
-				tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				table.AddRow(tblFullRow...)
+				columnInfo.ApplyRow(&table, tblOut)
+				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+				// table.AddRow(tblFullRow...)
 			}
 		}
 	}

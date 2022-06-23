@@ -4,27 +4,49 @@ import v1 "k8s.io/api/core/v1"
 
 // holds a set of columns that are common to every subcommand
 type containerInfomation struct {
-	podName       string
+	labelName     string
+	labelValue    string
 	containerName string
 	containerType string
 	namespace     string
 	nodeName      string
+	podName       string
 	treeView      bool
+}
+
+func (ci *containerInfomation) ApplyRow(table *Table, cellList ...[]Cell) {
+	rowList := ci.GetDefaultCells()
+	for _, c := range cellList {
+		rowList = append(rowList, c...)
+	}
+
+	if ci.labelName != "" {
+		rowList = append(rowList, NewCellText(ci.labelValue))
+	}
+	table.AddRow(rowList...)
 }
 
 // GetDefaultHead: returns the common headers in order
 func (ci *containerInfomation) GetDefaultHead() []string {
+	var headList []string
+
 	if ci.treeView {
 		//in tree view we only create the namespace and nodename columns, the name colume is created outside of this
 		// function so we have full control over its contents
-		return []string{
+		headList = []string{
 			"NAMESPACE", "NODE",
 		}
 	} else {
-		return []string{
+		headList = []string{
 			"T", "NAMESPACE", "NODE", "PODNAME", "CONTAINER",
 		}
 	}
+
+	if ci.labelName != "" {
+		headList = append(headList, ci.labelName)
+	}
+
+	return headList
 }
 
 // GetDefaultCells: returns an array of cells prepopulated with the common information
