@@ -110,9 +110,92 @@ func (c *Connector) GetPods(podNameList []string) ([]v1.Pod, error) {
 
 }
 
-func (c *Connector) GetNodeLabels(podList []v1.Pod) map[string]map[string]string {
+func (c *Connector) GetPodLabels(podList []v1.Pod) (map[string]map[string]string, error) {
+	//
+	labelMap := make(map[string]map[string]string)
 
-	return map[string]map[string]string{}
+	for _, pod := range podList {
+		podName := pod.Name
+		labels := pod.Labels
+		labelMap[podName] = labels
+	}
+
+	return labelMap, nil
+}
+
+func (c *Connector) GetNodeLabels(podList []v1.Pod) (map[string]map[string]string, error) {
+	//
+	var nameList []string
+
+	labelMap := make(map[string]map[string]string)
+	nodeNames := make(map[string]int)
+
+	for _, pod := range podList {
+		nodeName := pod.Spec.NodeName
+		if _, ok := nodeNames[nodeName]; !ok {
+			nodeNames[nodeName] = 1
+			nameList = append(nameList, nodeName)
+		}
+	}
+
+	nodeList, err := c.GetNodes(nameList)
+	if err != nil {
+		return map[string]map[string]string{}, err
+	}
+
+	for _, node := range nodeList {
+		name := node.Name
+		labels := node.Labels
+		labelMap[name] = labels
+	}
+
+	return labelMap, nil
+}
+
+// returns a list of nodes
+func (c *Connector) GetNodes(nodeNameList []string) ([]v1.Node, error) {
+	nodeList := []v1.Node{}
+	selector := metav1.ListOptions{}
+
+	if len(nodeNameList) > 0 {
+		if len(c.Flags.labels) > 0 {
+			return []v1.Node{}, fmt.Errorf("error: you cannot specify a node name and a selector together")
+		}
+
+		// single node
+		for _, nodename := range nodeNameList {
+			node, err := c.clientSet.CoreV1().Nodes().Get(context.TODO(), nodename, metav1.GetOptions{})
+			if err == nil {
+				nodeList = append(nodeList, []v1.Node{*node}...)
+			} else {
+				return []v1.Node{}, fmt.Errorf("failed to retrieve node from server: %w", err)
+			}
+		}
+
+		return nodeList, nil
+	}
+
+	// multi nodes
+	if len(c.Flags.labels) > 0 {
+		selector.LabelSelector = c.Flags.labels
+	}
+
+	nodes, err := c.clientSet.CoreV1().Nodes().List(context.TODO(), selector)
+	if err == nil {
+		if len(nodes.Items) == 0 {
+			return []v1.Node{}, errors.New("no nodes found in default namespace")
+			// } else {
+			// 	if len(c.Flags.matchSpecList) > 0 {
+			// 		return c.SelectMatchinghNodeSpec(nodes.Items)
+			// 	} else {
+			// 		return nodes.Items, nil
+			// 	}
+		}
+	} else {
+		return []v1.Node{}, fmt.Errorf("failed to retrieve node list from server: %w", err)
+	}
+
+	return nodes.Items, nil
 }
 
 // SelectMatchingPodSpec select pods to inclue or eclude based on the field in v1.Pods.Spec an operator (!=, ==, =) and a string value to match with

@@ -1,28 +1,38 @@
 package plugin
 
-import v1 "k8s.io/api/core/v1"
+import (
+	v1 "k8s.io/api/core/v1"
+)
 
 // holds a set of columns that are common to every subcommand
 type containerInfomation struct {
-	labelName     string
-	labelValue    string
-	containerName string
-	containerType string
-	namespace     string
-	nodeName      string
-	podName       string
-	treeView      bool
+	labelNodeName  string
+	labelNodeValue string
+	labelPodName   string
+	labelPodValue  string
+	containerName  string
+	containerType  string
+	namespace      string
+	nodeName       string
+	podName        string
+	treeView       bool
 }
 
 func (ci *containerInfomation) ApplyRow(table *Table, cellList ...[]Cell) {
 	rowList := ci.GetDefaultCells()
+
+	if ci.labelNodeName != "" {
+		rowList = append(rowList, NewCellText(ci.labelNodeValue))
+	}
+
+	if ci.labelPodName != "" {
+		rowList = append(rowList, NewCellText(ci.labelPodValue))
+	}
+
 	for _, c := range cellList {
 		rowList = append(rowList, c...)
 	}
 
-	if ci.labelName != "" {
-		rowList = append(rowList, NewCellText(ci.labelValue))
-	}
 	table.AddRow(rowList...)
 }
 
@@ -42,10 +52,13 @@ func (ci *containerInfomation) GetDefaultHead() []string {
 		}
 	}
 
-	if ci.labelName != "" {
-		headList = append(headList, ci.labelName)
+	if ci.labelNodeName != "" {
+		headList = append(headList, ci.labelNodeName)
 	}
 
+	if ci.labelPodName != "" {
+		headList = append(headList, ci.labelPodName)
+	}
 	return headList
 }
 

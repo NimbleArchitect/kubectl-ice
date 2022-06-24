@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -58,7 +59,8 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	var podname []string
 	var showPodName bool = true
 	var showPrevious bool
-	var labels map[string]map[string]string
+	var nodeLabels map[string]map[string]string
+	var podLabels map[string]map[string]string
 	var hideColumns []int
 
 	connect := Connector{}
@@ -89,6 +91,9 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	}
 
 	if cmd.Flag("tree").Value.String() == "true" {
+		if len(commonFlagList.sortList) != 0 {
+			return errors.New("you may not use the tree and sort flags together")
+		}
 		columnInfo.treeView = true
 	}
 
@@ -97,8 +102,19 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	}
 
 	if cmd.Flag("node-label").Value.String() != "" {
-		columnInfo.labelName = cmd.Flag("node-label").Value.String()
-		labels = connect.GetNodeLabels(podList)
+		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
+		nodeLabels, err = connect.GetNodeLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	if cmd.Flag("pod-label").Value.String() != "" {
+		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
+		podLabels, err = connect.GetPodLabels(podList)
+		if err != nil {
+			return err
+		}
 	}
 
 	table := Table{}
@@ -146,18 +162,9 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	commonFlagList.showPodName = showPodName
 	columnInfo.SetVisibleColumns(table, commonFlagList)
 
-	// fmt.Println(">>", tblHead)
-
 	for _, id := range hideColumns {
-		// fmt.Println("**", id, defaultHeaderLen+id)
 		table.HideColumn(defaultHeaderLen + id)
 	}
-
-	// do we need to load the node labels
-	// something like this maybe??
-	// labelList := loadNodeLabels
-	// columnInfo.labelName = "appfamily"
-	// columnInfo.labelValue = labelList[podname]
 
 	for _, pod := range podList {
 		// p := pod.GetOwnerReferences()
@@ -169,16 +176,18 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 		columnInfo.LoadFromPod(pod)
 
+		//check if we have any labels that need to be shown as columns
+		if columnInfo.labelNodeName != "" {
+			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
+		}
+		if columnInfo.labelPodName != "" {
+			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
+		}
+
 		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
 		if columnInfo.treeView {
 			tblOut := podStatusBuildRow(pod, columnInfo, showPrevious)
 			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
-		}
-
-		if columnInfo.labelName != "" {
-			columnInfo.labelValue = labels[columnInfo.nodeName][columnInfo.podName]
 		}
 
 		//now show the container line
@@ -191,8 +200,6 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			columnInfo.containerName = container.Name
 			tblOut := statusBuildRow(container, columnInfo, showPrevious)
 			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
 		}
 
 		columnInfo.containerType = "I"
@@ -204,8 +211,6 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			columnInfo.containerName = container.Name
 			tblOut := statusBuildRow(container, columnInfo, showPrevious)
 			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
 		}
 
 		columnInfo.containerType = "E"
@@ -217,8 +222,6 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			columnInfo.containerName = container.Name
 			tblOut := statusBuildRow(container, columnInfo, showPrevious)
 			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
 		}
 	}
 
@@ -231,7 +234,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		if !showPrevious { // restart count dosent show up when using previous flag
 			// do we need to find the outliers, we have enough data to compute a range
 			if commonFlagList.showOddities {
-				row2Remove, err := table.ListOutOfRange(6, table.GetRows()) //3 = restarts column
+				row2Remove, err := table.ListOutOfRange(defaultHeaderLen+2, table.GetRows()) //3 = restarts column
 				if err != nil {
 					return err
 				}
