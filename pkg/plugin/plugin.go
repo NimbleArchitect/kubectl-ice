@@ -307,6 +307,9 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	cmdStatus.Flags().BoolP("oddities", "", false, odditiesShort)
 	cmdStatus.Flags().BoolP("previous", "p", false, "Show previous state")
 	cmdStatus.Flags().BoolP("tree", "t", false, "Display tree like view instead of the standard list")
+	cmdStatus.Flags().StringP("node-label", "", "", "show the selected node label as a column")
+	cmdStatus.Flags().StringP("pod-label", "", "", "show the selected pod label as a column")
+	// check if I can add labels for service/replicaset/configmap etc.
 	addCommonFlags(cmdStatus)
 	rootCmd.AddCommand(cmdStatus)
 

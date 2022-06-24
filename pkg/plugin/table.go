@@ -125,8 +125,10 @@ func (t *Table) Order(items ...int) {
 
 // select the column number to hide, columns numbers are the unsorted column number
 func (t *Table) HideColumn(columnNumber int) {
-	if len(t.head) >= columnNumber {
+	if len(t.head) > columnNumber {
 		t.head[columnNumber].hidden = true
+	} else {
+		panic(fmt.Sprintln("invalid column number", columnNumber))
 	}
 }
 

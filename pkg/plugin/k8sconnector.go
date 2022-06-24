@@ -110,6 +110,11 @@ func (c *Connector) GetPods(podNameList []string) ([]v1.Pod, error) {
 
 }
 
+func (c *Connector) GetNodeLabels(podList []v1.Pod) map[string]map[string]string {
+
+	return map[string]map[string]string{}
+}
+
 // SelectMatchingPodSpec select pods to inclue or eclude based on the field in v1.Pods.Spec an operator (!=, ==, =) and a string value to match with
 func (c *Connector) SelectMatchinghPodSpec(pods []v1.Pod) ([]v1.Pod, error) {
 	var newPodList []v1.Pod

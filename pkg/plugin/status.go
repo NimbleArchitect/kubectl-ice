@@ -58,9 +58,8 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	var podname []string
 	var showPodName bool = true
 	var showPrevious bool
-	var columnAge int
-	var columnTimestamp int
-	var columnMessage int
+	var labels map[string]map[string]string
+	var hideColumns []int
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -97,24 +96,44 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		commonFlagList.showDetails = true
 	}
 
+	if cmd.Flag("node-label").Value.String() != "" {
+		columnInfo.labelName = cmd.Flag("node-label").Value.String()
+		labels = connect.GetNodeLabels(podList)
+	}
+
 	table := Table{}
 
-	if !showPrevious {
-		tblHead = append(columnInfo.GetDefaultHead(), "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "AGE", "MESSAGE")
-		columnTimestamp = 12
-		columnAge = 13
-		columnMessage = 14
-	} else {
-		tblHead = append(columnInfo.GetDefaultHead(), "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "AGE", "MESSAGE")
-		columnTimestamp = 9
-		columnAge = 10
-		columnMessage = 11
-	}
-
+	tblHead = columnInfo.GetDefaultHead()
+	defaultHeaderLen := len(tblHead)
 	if columnInfo.treeView {
-		tblHead = append(columnInfo.GetDefaultHead(), "NAME", "READY", "STARTED", "RESTARTS", "STATE", "REASON", "AGE")
+		//NAMESPACE NODE NAME READY STARTED RESTARTS STATE REASON AGE
+		tblHead = append(tblHead, "NAME")
+		if commonFlagList.showDetails {
+			hideColumns = append(hideColumns, 9)
+		} else {
+			hideColumns = append(hideColumns, 8)
+			hideColumns = append(hideColumns, 10)
+		}
+	} else {
+		//default column ids to hide
+		if commonFlagList.showDetails {
+			hideColumns = append(hideColumns, 8)
+		}
 	}
 
+	if showPrevious {
+		// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
+		hideColumns = append(hideColumns, 0)
+		hideColumns = append(hideColumns, 1)
+		hideColumns = append(hideColumns, 2)
+	}
+
+	if len(hideColumns) == 0 {
+		hideColumns = append(hideColumns, 7)
+		hideColumns = append(hideColumns, 9)
+	}
+
+	tblHead = append(tblHead, "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "AGE", "MESSAGE")
 	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -127,12 +146,11 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	commonFlagList.showPodName = showPodName
 	columnInfo.SetVisibleColumns(table, commonFlagList)
 
-	if commonFlagList.showDetails {
-		// hide the age
-		table.HideColumn(columnAge)
-	} else {
-		table.HideColumn(columnTimestamp)
-		table.HideColumn(columnMessage)
+	// fmt.Println(">>", tblHead)
+
+	for _, id := range hideColumns {
+		// fmt.Println("**", id, defaultHeaderLen+id)
+		table.HideColumn(defaultHeaderLen + id)
 	}
 
 	// do we need to load the node labels
@@ -157,6 +175,10 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			columnInfo.ApplyRow(&table, tblOut)
 			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
 			// table.AddRow(tblFullRow...)
+		}
+
+		if columnInfo.labelName != "" {
+			columnInfo.labelValue = labels[columnInfo.nodeName][columnInfo.podName]
 		}
 
 		//now show the container line
@@ -225,10 +247,12 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 func podStatusBuildRow(pod v1.Pod, info containerInfomation, showPrevious bool) []Cell {
 	var age string
+	var timestamp string
 
 	phase := string(pod.Status.Phase)
 	if pod.Status.StartTime != nil {
 		starttime := pod.Status.StartTime.Time
+		timestamp = starttime.Format(timestampFormat)
 		rawAge := time.Since(starttime)
 		age = duration.HumanDuration(rawAge)
 	}
@@ -239,12 +263,17 @@ func podStatusBuildRow(pod v1.Pod, info containerInfomation, showPrevious bool) 
 		NewCellText(""),                       //started
 		NewCellInt("0", 0),                    //restarts
 		NewCellText(strings.TrimSpace(phase)), //state
-		NewCellText(pod.Status.Reason),        //reson
+		NewCellText(pod.Status.Reason),        //reason
+		NewCellText(""),                       //exit-code
+		NewCellText(""),                       //signal
+		NewCellText(timestamp),                //timestamp
 		NewCellText(age),                      //age
+		NewCellText(""),                       //message
 	}
 }
 
 func statusBuildRow(container v1.ContainerStatus, info containerInfomation, showPrevious bool) []Cell {
+	var cellList []Cell
 	var reason string
 	var exitCode string
 	var signal string
@@ -302,6 +331,7 @@ func statusBuildRow(container v1.ContainerStatus, info containerInfomation, show
 	// remove pod and container name from the message string
 	message = trimStatusMessage(message, info.podName, info.containerName)
 
+	//we can only show the age if we have a start time some states dont have said starttime so we have to skip them
 	if skipAgeCalculation {
 		age = ""
 	} else {
@@ -321,43 +351,26 @@ func statusBuildRow(container v1.ContainerStatus, info containerInfomation, show
 			namePrefix = "EphemeralContainer/"
 		}
 
-		//we can only show the age if we have a start time some states dont have said starttime so we have to skip them
-
-		return []Cell{
+		cellList = append(cellList,
 			NewCellText(fmt.Sprint("└─", namePrefix, info.containerName)),
-			NewCellText(ready),
-			NewCellText(started),
-			NewCellInt(restarts, rawRestarts),
-			NewCellText(strState),
-			NewCellText(reason),
-			NewCellText(age),
-		}
-
-	} else if showPrevious {
-		return []Cell{
-			NewCellText(strState),
-			NewCellText(reason),
-			NewCellInt(exitCode, rawExitCode),
-			NewCellInt(signal, rawSignal),
-			NewCellText(startedAt),
-			NewCellText(age),
-			NewCellText(message),
-		}
-	} else {
-		return []Cell{
-			NewCellText(ready),
-			NewCellText(started),
-			NewCellInt(restarts, rawRestarts),
-			NewCellText(strState),
-			NewCellText(reason),
-			NewCellInt(exitCode, rawExitCode),
-			NewCellInt(signal, rawSignal),
-			NewCellText(startedAt),
-			NewCellText(age),
-			NewCellText(message),
-		}
+		)
 	}
 
+	// READY STARTED RESTARTS STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
+	cellList = append(cellList,
+		NewCellText(ready),
+		NewCellText(started),
+		NewCellInt(restarts, rawRestarts),
+		NewCellText(strState),
+		NewCellText(reason),
+		NewCellInt(exitCode, rawExitCode),
+		NewCellInt(signal, rawSignal),
+		NewCellText(startedAt),
+		NewCellText(age),
+		NewCellText(message),
+	)
+
+	return cellList
 }
 
 // Removes the pod name and container name from the status message as its already in the output table
