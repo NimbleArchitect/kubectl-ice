@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -90,13 +89,6 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		showPrevious = true
 	}
 
-	if cmd.Flag("tree").Value.String() == "true" {
-		if len(commonFlagList.sortList) != 0 {
-			return errors.New("you may not use the tree and sort flags together")
-		}
-		columnInfo.treeView = true
-	}
-
 	if cmd.Flag("details").Value.String() == "true" {
 		commonFlagList.showDetails = true
 	}
@@ -118,10 +110,11 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	}
 
 	table := Table{}
+	columnInfo.treeView = commonFlagList.showTreeView
 
 	tblHead = columnInfo.GetDefaultHead()
 	defaultHeaderLen := len(tblHead)
-	if columnInfo.treeView {
+	if commonFlagList.showTreeView {
 		//NAMESPACE NODE NAME READY STARTED RESTARTS STATE REASON AGE
 		tblHead = append(tblHead, "NAME")
 		if commonFlagList.showDetails {
@@ -226,7 +219,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	}
 
 	// sorting by column breaks the tree view also previous is not valid so we sliently skip those actions
-	if !columnInfo.treeView {
+	if !commonFlagList.showTreeView {
 		if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 			return err
 		}
@@ -343,20 +336,7 @@ func statusBuildRow(container v1.ContainerStatus, info containerInfomation, show
 	}
 
 	if info.treeView {
-		var namePrefix string
-		if info.containerType == "S" {
-			namePrefix = "Container/"
-		}
-		if info.containerType == "I" {
-			namePrefix = "InitContainer/"
-		}
-		if info.containerType == "E" {
-			namePrefix = "EphemeralContainer/"
-		}
-
-		cellList = append(cellList,
-			NewCellText(fmt.Sprint("└─", namePrefix, info.containerName)),
-		)
+		cellList = buildTreeCell(info, cellList)
 	}
 
 	// READY STARTED RESTARTS STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE

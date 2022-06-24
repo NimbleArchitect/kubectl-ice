@@ -21,6 +21,7 @@ type commonFlags struct {
 	showNamespaceName  bool                  // shows the namespace name of each pod
 	showPodName        bool                  // wether to show the pod name
 	showNodeName       bool                  // do we need to show the node name in the output
+	showTreeView       bool                  // show the table in a tree like view
 	byteSize           string                // sets the bytes conversion for the output size
 	outputAs           string                // how to output the table, currently only accepts json
 	sortList           []string              //column names to sort on when table.Print() is called
@@ -50,6 +51,9 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdCapabilities.Flags())
+	cmdCapabilities.Flags().BoolP("tree", "t", false, "Display tree like view instead of the standard list")
+	cmdCapabilities.Flags().StringP("node-label", "", "", "show the selected node label as a column")
+	cmdCapabilities.Flags().StringP("pod-label", "", "", "show the selected pod label as a column")
 	addCommonFlags(cmdCapabilities)
 	rootCmd.AddCommand(cmdCapabilities)
 
@@ -429,6 +433,13 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 				return commonFlags{}, err
 			}
 		}
+	}
+
+	if cmd.Flag("tree").Value.String() == "true" {
+		if len(f.sortList) != 0 {
+			return commonFlags{}, errors.New("you may not use the tree and sort flags together")
+		}
+		f.showTreeView = true
 	}
 
 	if cmd.Flag("select") != nil {

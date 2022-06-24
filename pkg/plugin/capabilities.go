@@ -46,6 +46,8 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 	var tblHead []string
 	var podname []string
 	var showPodName bool = true
+	var nodeLabels map[string]map[string]string
+	var podLabels map[string]map[string]string
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -70,8 +72,33 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 		return err
 	}
 
+	if cmd.Flag("node-label").Value.String() != "" {
+		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
+		nodeLabels, err = connect.GetNodeLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	if cmd.Flag("pod-label").Value.String() != "" {
+		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
+		podLabels, err = connect.GetPodLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
 	table := Table{}
-	tblHead = append(columnInfo.GetDefaultHead(), "ADD", "DROP")
+	columnInfo.treeView = commonFlagList.showTreeView
+
+	tblHead = columnInfo.GetDefaultHead()
+	if commonFlagList.showTreeView {
+		// we have to control the name when displaying a tree view as the table
+		//  object dosent have the extra info to be able to process it
+		tblHead = append(tblHead, "NAME")
+	}
+
+	tblHead = append(tblHead, "ADD", "DROP")
 	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -86,6 +113,19 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 
 	for _, pod := range podList {
 		columnInfo.LoadFromPod(pod)
+
+		if columnInfo.labelNodeName != "" {
+			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
+		}
+		if columnInfo.labelPodName != "" {
+			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
+		}
+
+		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+		if columnInfo.treeView {
+			tblOut := podCapabilitiesBuildRow(pod, columnInfo)
+			columnInfo.ApplyRow(&table, tblOut)
+		}
 
 		columnInfo.containerType = "S"
 		for _, container := range pod.Spec.Containers {
@@ -136,7 +176,18 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 
 }
 
+func podCapabilitiesBuildRow(pod v1.Pod, info containerInfomation) []Cell {
+
+	return []Cell{
+		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
+		NewCellText(""),
+		NewCellText(""),
+	}
+}
+
 func capabilitiesBuildRow(securityContext *v1.SecurityContext, info containerInfomation) []Cell {
+	var cellList []Cell
+
 	capAdd := ""
 	capDrop := ""
 
@@ -162,8 +213,14 @@ func capabilitiesBuildRow(securityContext *v1.SecurityContext, info containerInf
 
 	// capDrop := container.SecurityContext.Capabilities.Drop
 
-	return []Cell{
+	if info.treeView {
+		cellList = buildTreeCell(info, cellList)
+	}
+
+	cellList = append(cellList,
 		NewCellText(capAdd),
 		NewCellText(capDrop),
-	}
+	)
+
+	return cellList
 }
