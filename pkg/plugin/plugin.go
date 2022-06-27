@@ -28,11 +28,18 @@ type commonFlags struct {
 	matchSpecList      map[string]matchValue //filter pods based on matches to the v1.Pods.Spec fields
 }
 
+var helpTemplate = `
+{{if or .Runnable .HasSubCommands}}{{.UsageString}}{{end}}
+
+More information at: https://github/NimbleArchitect/kubectl-ice
+`
+
 func InitSubCommands(rootCmd *cobra.Command) {
 	var includeInitShort string = "include init container(s) in the output, by default init containers are hidden"
 	var odditiesShort string = "show only the outlier rows that dont fall within the computed range"
 	var sizeShort string = "allows conversion to the selected size rather then the default megabyte output"
 	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
+	rootCmd.SetHelpTemplate(helpTemplate)
 
 	//capabilities
 	var cmdCapabilities = &cobra.Command{
@@ -316,6 +323,17 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	// check if I can add labels for service/replicaset/configmap etc.
 	addCommonFlags(cmdStatus)
 	rootCmd.AddCommand(cmdStatus)
+
+	//version
+	var cmdVersion = &cobra.Command{
+		Use:   "version",
+		Short: versionsShort,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			Version(cmd, KubernetesConfigFlags, args)
+			return nil
+		},
+	}
+	rootCmd.AddCommand(cmdVersion)
 
 	//volumes
 	var cmdVolume = &cobra.Command{
