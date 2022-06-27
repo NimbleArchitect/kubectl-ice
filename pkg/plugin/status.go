@@ -283,8 +283,6 @@ func statusBuildRow(container v1.ContainerStatus, info containerInfomation, show
 	var state v1.ContainerState
 	var rawExitCode, rawSignal, rawRestarts int64
 
-	// fmt.Println("F:statusBuildRow:Name=", container.Name)
-
 	if showPrevious {
 		state = container.LastTerminationState
 	} else {

@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 
 	"github.com/spf13/cobra"
@@ -180,7 +181,6 @@ func createVolumeMap(volumes []v1.Volume) map[string]map[string]Cell {
 	for _, vol := range volumes {
 		v := reflect.ValueOf(vol.VolumeSource)
 		typeOfS := v.Type()
-		// fmt.Println("===", v.Kind())
 
 		for i := 0; i < v.NumField(); i++ {
 			if !v.Field(i).IsZero() {
@@ -285,7 +285,7 @@ func decodeVolumeType(volType string, volume v1.VolumeSource) map[string]Cell {
 		outMap["backing"] = NewCellText(volume.VsphereVolume.VolumePath)
 
 	default:
-		fmt.Println("ERROR: unknown volume type", volType)
+		fmt.Fprintln(os.Stderr, "ERROR: unknown volume type", volType)
 		return nil
 	}
 	return outMap
@@ -296,7 +296,6 @@ func volumesBuildRow(info containerInfomation, podVolumes map[string]map[string]
 	var size Cell
 	var backing Cell
 
-	// fmt.Println(volume["name"])
 	if podVolumes[mount.Name] != nil {
 		volume := podVolumes[mount.Name]
 		volumeType = volume["type"]

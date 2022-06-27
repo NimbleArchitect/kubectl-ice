@@ -393,7 +393,6 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 		}
 	}
 
-	//fmt.Println(cmd.Flag("selector"))
 	if cmd.Flag("selector") != nil {
 		if len(cmd.Flag("selector").Value.String()) > 0 {
 			f.labels = cmd.Flag("selector").Value.String()

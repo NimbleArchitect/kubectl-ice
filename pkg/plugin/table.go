@@ -113,7 +113,6 @@ func (t *Table) Order(items ...int) {
 			}
 		}
 		if !found {
-			//fmt.Println(t.columnOrder[i])
 			orderedList = append(orderedList, t.columnOrder[i])
 		}
 	}

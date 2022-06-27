@@ -325,7 +325,6 @@ func (c *Connector) GetConfigMapValue(configMap string, key string) string {
 	}
 
 	if _, ok := c.configMapArray[configMap]; !ok {
-		//fmt.Println("Loadme", configMap)
 		cm, err := c.GetConfigMaps(configMap)
 		if err != nil {
 			c.configMapArray[configMap] = make(map[string]string)
@@ -342,7 +341,6 @@ func (c *Connector) GetConfigMapValue(configMap string, key string) string {
 
 	}
 
-	//fmt.Println("===", configMap, " + ", key, " - ", c.configMapArray[configMap][key], "===")
 	return c.configMapArray[configMap][key]
 }
 
