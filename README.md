@@ -30,7 +30,7 @@ ice lists detailed information about the containers present inside a
 * Easily view securityContext details and POSIX capabilities
 * Use the show-namespace flag to output the pods namespace
 
-[![asciicast](https://asciinema.org/a/501737.svg)](https://asciinema.org/a/504766)
+[![asciicast](https://asciinema.org/a/504766.svg)](https://asciinema.org/a/504766)
 
 # Installation
 
