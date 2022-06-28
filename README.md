@@ -30,7 +30,7 @@ ice lists detailed information about the containers present inside a
 * Easily view securityContext details and POSIX capabilities
 * Use the show-namespace flag to output the pods namespace
 
-[![asciicast](https://asciinema.org/a/501737.svg)](https://asciinema.org/a/501737)
+[![asciicast](https://asciinema.org/a/501737.svg)](https://asciinema.org/a/504766)
 
 # Installation
 
@@ -118,9 +118,9 @@ Shows the currently used memory along with the configured memory requests and li
 ``` shell
 $ kubectl-ice memory web-pod
 CONTAINER    USED    REQUEST  LIMIT  %REQ    %LIMIT
-app-watcher  0       1M       512M   -       -
+app-watcher  5.61Mi  1M       512M   587.78  1.15
 app-broken   0       1M       512M   -       -
-myapp        8.16Mi  1M       256M   855.24  3.34
+myapp        5.65Mi  1M       256M   592.28  2.31
 
 ```
 ### Using labels
@@ -128,24 +128,24 @@ using labels you can search all pods that are part of a deployment where the lab
 ``` shell
 $ kubectl-ice probes -l app=demoprobe
 PODNAME                      CONTAINER     PROBE     DELAY  PERIOD  TIMEOUT  SUCCESS  FAILURE  CHECK    ACTION
-demo-probe-76b66d5766-gb6bp  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
-demo-probe-76b66d5766-gb6bp  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
-demo-probe-76b66d5766-gb6bp  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
-demo-probe-76b66d5766-jqq99  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
-demo-probe-76b66d5766-jqq99  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
-demo-probe-76b66d5766-jqq99  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
+demo-probe-76b66d5766-5qd5c  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
+demo-probe-76b66d5766-5qd5c  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
+demo-probe-76b66d5766-5qd5c  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
+demo-probe-76b66d5766-w9jwt  web-frontend  liveness  10     5       1        1        3        Exec     exit 0
+demo-probe-76b66d5766-w9jwt  web-frontend  readiness 5      5       1        1        3        Exec     cat /tmp/health
+demo-probe-76b66d5766-w9jwt  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
 
 ```
 ### Alternate status view
 the tree flag show the containers and pods in a tree like view
 ``` shell
 $ kubectl-ice status -l app=myapp --tree
-NAMESPACE  NAME                      READY  STARTED  RESTARTS  STATE       REASON            AGE
-ice        Pod/web-pod               -      -        0         Running     -                 10m
-ice        └─Container/app-broken    false  false    6         Waiting     CrashLoopBackOff  -
-ice        └─Container/app-watcher   false  false    6         Waiting     CrashLoopBackOff  -
-ice        └─Container/myapp         true   true     0         Running     -                 10m
-ice        └─InitContainer/app-init  true   -        0         Terminated  Completed         10m
+NAMESPACE  NAME                      READY  STARTED  RESTARTS  STATE       REASON            EXIT-CODE  SIGNAL  AGE
+ice        Pod/web-pod               -      -        0         Running     -                 -          -       52m
+ice        └─Container/app-broken    false  false    14        Waiting     CrashLoopBackOff  -          -       -
+ice        └─Container/app-watcher   true   true     0         Running     -                 -          -       51m
+ice        └─Container/myapp         true   true     0         Running     -                 -          -       51m
+ice        └─InitContainer/app-init  true   -        0         Terminated  Completed         0          0       52m
 
 ```
 ### Status details
@@ -153,21 +153,21 @@ using the details flag displays the timestamp and message columns
 ``` shell
 $ kubectl-ice status -l app=myapp --details
 T  PODNAME  CONTAINER    READY  STARTED  RESTARTS  STATE       REASON            EXIT-CODE  SIGNAL  TIMESTAMP            MESSAGE
-S  web-pod  app-broken   false  false    6         Waiting     CrashLoopBackOff  -          -       -                    back-off 5m0s restarting failed
-S  web-pod  app-watcher  false  false    6         Waiting     CrashLoopBackOff  -          -       -                    back-off 5m0s restarting failed
-S  web-pod  myapp        true   true     0         Running     -                 -          -       2022-06-22 22:52:05  -
-I  web-pod  app-init     true   -        0         Terminated  Completed         0          0       2022-06-22 22:51:49  -
+S  web-pod  app-broken   false  false    14        Waiting     CrashLoopBackOff  -          -       -                    back-off 5m0s restarting failed
+S  web-pod  app-watcher  true   true     0         Running     -                 -          -       2022-06-28 18:44:23  -
+S  web-pod  myapp        true   true     0         Running     -                 -          -       2022-06-28 18:44:34  -
+I  web-pod  app-init     true   -        0         Terminated  Completed         0          0       2022-06-28 18:43:49  -
 
 ```
 ### Container status
 most commands work the same way including the status command which also lets you see which container(s) are causing the restarts and by using the optional --previous flag you can view the containers previous exit code
 ``` shell
 $ kubectl-ice status -l app=myapp --previous
-T  PODNAME  CONTAINER    STATE       REASON  EXIT-CODE  SIGNAL  AGE
-S  web-pod  app-broken   Terminated  Error   1          0       3m49s
-S  web-pod  app-watcher  Terminated  Error   2          0       2m23s
-S  web-pod  myapp        -           -       -          -       292y
-I  web-pod  app-init     -           -       -          -       292y
+T  PODNAME  CONTAINER    STATE       REASON  EXIT-CODE  SIGNAL  TIMESTAMP            AGE    MESSAGE
+S  web-pod  app-broken   Terminated  Error   1          0       2022-06-28 19:33:52  2m24s  -
+S  web-pod  app-watcher  -           -       -          -       -                    292y   -
+S  web-pod  myapp        -           -       -          -       -                    292y   -
+I  web-pod  app-init     -           -       -          -       -                    292y   -
 
 ```
 ### Advanced labels
@@ -175,22 +175,22 @@ return memory requests size and limits of each container where the pods have an 
 ``` shell
 $ kubectl-ice cpu -l "app in (useoddcpu)" -c web-frontend
 PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
-demo-odd-cpu-5f947f9db4-258br  web-frontend  2m    1m       1000m  181.14    0.18
-demo-odd-cpu-5f947f9db4-542ql  web-frontend  126m  1m       1000m  12549.38  12.55
-demo-odd-cpu-5f947f9db4-68qxt  web-frontend  2m    1m       1000m  167.06    0.17
-demo-odd-cpu-5f947f9db4-czkzk  web-frontend  3m    1m       1000m  201.11    0.20
-demo-odd-cpu-5f947f9db4-f77vp  web-frontend  2m    1m       1000m  189.62    0.19
-demo-odd-cpu-5f947f9db4-frt4z  web-frontend  2m    1m       1000m  168.54    0.17
-demo-odd-cpu-5f947f9db4-g84q7  web-frontend  3m    1m       1000m  233.97    0.23
-demo-odd-cpu-5f947f9db4-mkmvb  web-frontend  3m    1m       1000m  215.99    0.22
-demo-odd-cpu-5f947f9db4-p6jk5  web-frontend  2m    1m       1000m  192.40    0.19
-demo-odd-cpu-5f947f9db4-r2rzr  web-frontend  129m  1m       1000m  12890.36  12.89
-demo-odd-cpu-5f947f9db4-t2bj8  web-frontend  2m    1m       1000m  175.11    0.18
-demo-odd-cpu-5f947f9db4-t8nrf  web-frontend  2m    1m       1000m  178.12    0.18
-demo-odd-cpu-5f947f9db4-v2cvs  web-frontend  3m    1m       1000m  227.29    0.23
-demo-odd-cpu-5f947f9db4-vhgk5  web-frontend  3m    1m       1000m  201.97    0.20
-demo-odd-cpu-5f947f9db4-xshls  web-frontend  117m  1m       1000m  11644.62  11.64
-demo-odd-cpu-5f947f9db4-zvp5z  web-frontend  2m    1m       1000m  181.60    0.18
+demo-odd-cpu-5f947f9db4-5cjv6  web-frontend  135m  1m       1000m  13433.33  13.43
+demo-odd-cpu-5f947f9db4-7bmkw  web-frontend  3m    1m       1000m  209.55    0.21
+demo-odd-cpu-5f947f9db4-bb2d5  web-frontend  3m    1m       1000m  267.87    0.27
+demo-odd-cpu-5f947f9db4-bp9qm  web-frontend  3m    1m       1000m  220.67    0.22
+demo-odd-cpu-5f947f9db4-dgxj6  web-frontend  3m    1m       1000m  212.91    0.21
+demo-odd-cpu-5f947f9db4-f4vf5  web-frontend  135m  1m       1000m  13449.89  13.45
+demo-odd-cpu-5f947f9db4-gb4xf  web-frontend  3m    1m       1000m  272.25    0.27
+demo-odd-cpu-5f947f9db4-hxdfq  web-frontend  2m    1m       1000m  190.80    0.19
+demo-odd-cpu-5f947f9db4-j5lrb  web-frontend  126m  1m       1000m  12534.64  12.53
+demo-odd-cpu-5f947f9db4-k25kl  web-frontend  3m    1m       1000m  241.68    0.24
+demo-odd-cpu-5f947f9db4-prxrf  web-frontend  2m    1m       1000m  187.68    0.19
+demo-odd-cpu-5f947f9db4-tvrx4  web-frontend  2m    1m       1000m  188.06    0.19
+demo-odd-cpu-5f947f9db4-v77vj  web-frontend  3m    1m       1000m  262.66    0.26
+demo-odd-cpu-5f947f9db4-wqgqz  web-frontend  3m    1m       1000m  229.98    0.23
+demo-odd-cpu-5f947f9db4-xf298  web-frontend  2m    1m       1000m  179.28    0.18
+demo-odd-cpu-5f947f9db4-zjvxk  web-frontend  3m    1m       1000m  219.51    0.22
 
 ```
 ### Odditites and sorting
@@ -198,9 +198,9 @@ given the listed output above the optional --oddities flag picks out the contain
 ``` shell
 $ kubectl-ice cpu -l "app in (useoddcpu)" -c web-frontend --oddities --sort '!%REQ'
 PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
-demo-odd-cpu-5f947f9db4-r2rzr  web-frontend  129m  1m       1000m  12890.36  12.89
-demo-odd-cpu-5f947f9db4-542ql  web-frontend  126m  1m       1000m  12549.38  12.55
-demo-odd-cpu-5f947f9db4-xshls  web-frontend  117m  1m       1000m  11644.62  11.64
+demo-odd-cpu-5f947f9db4-f4vf5  web-frontend  135m  1m       1000m  13449.89  13.45
+demo-odd-cpu-5f947f9db4-5cjv6  web-frontend  135m  1m       1000m  13433.33  13.43
+demo-odd-cpu-5f947f9db4-j5lrb  web-frontend  126m  1m       1000m  12534.64  12.53
 
 ```
 ### Pod volumes
@@ -208,19 +208,23 @@ list all container volumes with mount points
 ``` shell
 $ kubectl-ice volumes web-pod
 CONTAINER    VOLUME                 TYPE       BACKING           SIZE  RO    MOUNT-POINT
-app-init     kube-api-access-f5kt6  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
-app-watcher  kube-api-access-f5kt6  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
-app-broken   kube-api-access-f5kt6  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-init     kube-api-access-g8487  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-watcher  app                    ConfigMap  app.py            -     false /myapp/
+app-watcher  kube-api-access-g8487  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+app-broken   kube-api-access-g8487  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
 myapp        app                    ConfigMap  app.py            -     false /myapp/
-myapp        kube-api-access-f5kt6  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
+myapp        kube-api-access-g8487  Projected  kube-root-ca.crt  -     true  /var/run/secrets/kubernetes.io/serviceaccount
 
 ```
 
 
 ## Contributing
 
-All feedback and contributions are welcome, if you want to raise an issue or help with fixes or features please [raise an issue to discuss](https://github.com/NimbleArchitect/kubectl-ice/issues)
 
+If you like my work or find this program useful and want to say thanks you can reach me on twitter [@NimbleArchitect](https://twitter.com/nimblearchitect) or you can [Buy Me A Coffee](https://www.buymeacoffee.com/NimbleArchitect)
+
+
+All feedback and contributions are welcome, if you want to raise an issue or help with fixes or features please [raise an issue to discuss](https://github.com/NimbleArchitect/kubectl-ice/issues)
 
 ## License
 Licensed under Apache 2.0 see [LICENSE](https://github.com/NimbleArchitect/kubectl-pod/blob/main/LICENSE)
