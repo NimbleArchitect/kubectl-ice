@@ -223,6 +223,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	cmdMemory.Flags().BoolP("oddities", "", false, odditiesShort)
 	cmdMemory.Flags().BoolP("raw", "r", false, "show raw values")
 	cmdMemory.Flags().String("size", "Mi", sizeShort)
+	cmdMemory.Flags().StringP("node-label", "", "", nodeLabelShort)
+	cmdMemory.Flags().StringP("pod-label", "", "", podLabelShort)
 	cmdMemory.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdMemory)
 	rootCmd.AddCommand(cmdMemory)
@@ -269,7 +271,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	KubernetesConfigFlags.AddFlags(cmdProbes.Flags())
 	cmdProbes.Flags().StringP("node-label", "", "", nodeLabelShort)
 	cmdProbes.Flags().StringP("pod-label", "", "", podLabelShort)
-	cmdProbes.Flags().BoolP("tree", "t", false, treeShort)
+	// cmdProbes.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdProbes)
 	rootCmd.AddCommand(cmdProbes)
 
