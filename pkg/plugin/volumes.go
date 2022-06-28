@@ -50,6 +50,8 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	var podname []string
 	var showPodName bool = true
 	var showVolumeDevice bool
+	var nodeLabels map[string]map[string]string
+	var podLabels map[string]map[string]string
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -79,11 +81,30 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 		showVolumeDevice = true
 	}
 
+	if cmd.Flag("node-label").Value.String() != "" {
+		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
+		nodeLabels, err = connect.GetNodeLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	if cmd.Flag("pod-label").Value.String() != "" {
+		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
+		podLabels, err = connect.GetPodLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
 	table := Table{}
+	columnInfo.treeView = commonFlagList.showTreeView
+
+	tblHead = columnInfo.GetDefaultHead()
 	if !showVolumeDevice {
-		tblHead = append(columnInfo.GetDefaultHead(), "VOLUME", "TYPE", "BACKING", "SIZE", "RO", "MOUNT-POINT")
+		tblHead = append(tblHead, "VOLUME", "TYPE", "BACKING", "SIZE", "RO", "MOUNT-POINT")
 	} else {
-		tblHead = append(columnInfo.GetDefaultHead(), "PVC_NAME", "DEVICE_PATH")
+		tblHead = append(tblHead, "PVC_NAME", "DEVICE_PATH")
 	}
 	table.SetHeader(tblHead...)
 	table.HideColumn(0)
@@ -101,7 +122,14 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	for _, pod := range podList {
 		columnInfo.LoadFromPod(pod)
 
-		if !showPodName {
+		if columnInfo.labelNodeName != "" {
+			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
+		}
+		if columnInfo.labelPodName != "" {
+			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
+		}
+
+		if !showVolumeDevice {
 			podVolumes := createVolumeMap(pod.Spec.Volumes)
 
 			containerList := append(pod.Spec.InitContainers, pod.Spec.Containers...)

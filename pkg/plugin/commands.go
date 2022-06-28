@@ -1,9 +1,11 @@
 package plugin
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
@@ -52,6 +54,8 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	var tblHead []string
 	var podname []string
 	var showPodName bool = true
+	var nodeLabels map[string]map[string]string
+	var podLabels map[string]map[string]string
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -76,8 +80,33 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 		return err
 	}
 
+	if cmd.Flag("node-label").Value.String() != "" {
+		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
+		nodeLabels, err = connect.GetNodeLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	if cmd.Flag("pod-label").Value.String() != "" {
+		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
+		podLabels, err = connect.GetPodLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
 	table := Table{}
-	tblHead = append(columnInfo.GetDefaultHead(), "COMMAND", "ARGUMENTS")
+	columnInfo.treeView = commonFlagList.showTreeView
+
+	tblHead = columnInfo.GetDefaultHead()
+	if commonFlagList.showTreeView {
+		// we have to control the name when displaying a tree view as the table
+		//  object dosent have the extra info to be able to process it
+		tblHead = append(tblHead, "NAME")
+	}
+
+	tblHead = append(tblHead, "COMMAND", "ARGUMENTS")
 	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -92,6 +121,19 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	for _, pod := range podList {
 		columnInfo.LoadFromPod(pod)
+
+		if columnInfo.labelNodeName != "" {
+			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
+		}
+		if columnInfo.labelPodName != "" {
+			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
+		}
+
+		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+		if columnInfo.treeView {
+			tblOut := podCommandsBuildRow(pod, columnInfo)
+			columnInfo.ApplyRow(&table, tblOut)
+		}
 
 		columnInfo.containerType = "S"
 		for _, container := range pod.Spec.Containers {
@@ -139,8 +181,9 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 				args: container.Args,
 			}
 			tblOut := commandsBuildRow(cmdLine, columnInfo)
-			tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			table.AddRow(tblFullRow...)
+			columnInfo.ApplyRow(&table, tblOut)
+			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+			// table.AddRow(tblFullRow...)
 		}
 	}
 
@@ -153,9 +196,26 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 }
 
-func commandsBuildRow(cmdLine commandLine, info containerInfomation) []Cell {
+func podCommandsBuildRow(pod v1.Pod, info containerInfomation) []Cell {
+
 	return []Cell{
+		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
+		NewCellText(""),
+		NewCellText(""),
+	}
+}
+
+func commandsBuildRow(cmdLine commandLine, info containerInfomation) []Cell {
+	var cellList []Cell
+
+	if info.treeView {
+		cellList = buildTreeCell(info, cellList)
+	}
+
+	cellList = append(cellList,
 		NewCellText(strings.Join(cmdLine.cmd, " ")),
 		NewCellText(strings.Join(cmdLine.args, " ")),
-	}
+	)
+
+	return cellList
 }

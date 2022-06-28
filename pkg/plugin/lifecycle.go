@@ -52,6 +52,8 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	var tblHead []string
 	var podname []string
 	var showPodName bool = true
+	var nodeLabels map[string]map[string]string
+	var podLabels map[string]map[string]string
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -76,8 +78,33 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		return err
 	}
 
+	if cmd.Flag("node-label").Value.String() != "" {
+		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
+		nodeLabels, err = connect.GetNodeLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	if cmd.Flag("pod-label").Value.String() != "" {
+		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
+		podLabels, err = connect.GetPodLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
 	table := Table{}
-	tblHead = append(columnInfo.GetDefaultHead(), "LIFECYCLE", "HANDLER", "ACTION")
+	columnInfo.treeView = commonFlagList.showTreeView
+
+	tblHead = columnInfo.GetDefaultHead()
+	if commonFlagList.showTreeView {
+		// we have to control the name when displaying a tree view as the table
+		//  object dosent have the extra info to be able to process it
+		tblHead = append(tblHead, "NAME")
+	}
+
+	tblHead = append(tblHead, "LIFECYCLE", "HANDLER", "ACTION")
 	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -92,6 +119,13 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	for _, pod := range podList {
 		columnInfo.LoadFromPod(pod)
+
+		if columnInfo.labelNodeName != "" {
+			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
+		}
+		if columnInfo.labelPodName != "" {
+			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
+		}
 
 		columnInfo.containerType = "S"
 		for _, container := range pod.Spec.Containers {
@@ -149,15 +183,6 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
 	}
-
-	// // do we need to find the outliers, we have enough data to compute a range
-	// if commonFlagList.showOddities {
-	// 	row2Remove, err := table.ListOutOfRange(3, table.GetRows()) //3 = lifecycle column
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	table.HideRows(row2Remove)
-	// }
 
 	outputTableAs(table, commonFlagList.outputAs)
 	return nil

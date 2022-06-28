@@ -48,6 +48,8 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	var tblHead []string
 	var podname []string
 	var showPodName bool = true
+	var nodeLabels map[string]map[string]string
+	var podLabels map[string]map[string]string
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -72,8 +74,33 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 		return err
 	}
 
+	if cmd.Flag("node-label").Value.String() != "" {
+		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
+		nodeLabels, err = connect.GetNodeLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	if cmd.Flag("pod-label").Value.String() != "" {
+		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
+		podLabels, err = connect.GetPodLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
 	table := Table{}
-	tblHead = append(columnInfo.GetDefaultHead(), "PORTNAME", "PORT", "PROTO", "HOSTPORT")
+	columnInfo.treeView = commonFlagList.showTreeView
+
+	tblHead = columnInfo.GetDefaultHead()
+	if commonFlagList.showTreeView {
+		// we have to control the name when displaying a tree view as the table
+		//  object dosent have the extra info to be able to process it
+		tblHead = append(tblHead, "NAME")
+	}
+
+	tblHead = append(tblHead, "PORTNAME", "PORT", "PROTO", "HOSTPORT")
 	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -88,6 +115,19 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 	for _, pod := range podList {
 		columnInfo.LoadFromPod(pod)
+
+		if columnInfo.labelNodeName != "" {
+			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
+		}
+		if columnInfo.labelPodName != "" {
+			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
+		}
+
+		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+		if columnInfo.treeView {
+			tblOut := podPortsBuildRow(pod, columnInfo)
+			columnInfo.ApplyRow(&table, tblOut)
+		}
 
 		columnInfo.containerType = "S"
 		for _, container := range pod.Spec.Containers {
@@ -144,7 +184,20 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 }
 
+func podPortsBuildRow(pod v1.Pod, info containerInfomation) []Cell {
+
+	return []Cell{
+		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+	}
+}
+
 func portsBuildRow(info containerInfomation, port v1.ContainerPort) []Cell {
+	var cellList []Cell
+
 	hostPort := Cell{}
 
 	if port.HostPort > 0 {
@@ -153,10 +206,15 @@ func portsBuildRow(info containerInfomation, port v1.ContainerPort) []Cell {
 		hostPort = NewCellText("")
 	}
 
-	return []Cell{
+	if info.treeView {
+		cellList = buildTreeCell(info, cellList)
+	}
+
+	cellList = append(cellList,
 		NewCellText(port.Name),
 		NewCellInt(fmt.Sprintf("%d", port.ContainerPort), int64(port.ContainerPort)),
 		NewCellText(string(port.Protocol)),
 		hostPort,
-	}
+	)
+	return cellList
 }

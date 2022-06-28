@@ -56,6 +56,8 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	var tblHead []string
 	var podname []string
 	var showPodName bool = true
+	var nodeLabels map[string]map[string]string
+	var podLabels map[string]map[string]string
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -80,8 +82,33 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		return err
 	}
 
+	if cmd.Flag("node-label").Value.String() != "" {
+		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
+		nodeLabels, err = connect.GetNodeLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	if cmd.Flag("pod-label").Value.String() != "" {
+		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
+		podLabels, err = connect.GetPodLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
 	table := Table{}
-	tblHead = append(columnInfo.GetDefaultHead(), "PROBE", "DELAY", "PERIOD", "TIMEOUT", "SUCCESS", "FAILURE", "CHECK", "ACTION")
+	columnInfo.treeView = commonFlagList.showTreeView
+
+	tblHead = columnInfo.GetDefaultHead()
+	if commonFlagList.showTreeView {
+		// we have to control the name when displaying a tree view as the table
+		//  object dosent have the extra info to be able to process it
+		tblHead = append(tblHead, "NAME")
+	}
+
+	tblHead = append(tblHead, "PROBE", "DELAY", "PERIOD", "TIMEOUT", "SUCCESS", "FAILURE", "CHECK", "ACTION")
 	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -91,14 +118,27 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		}
 	}
 
-	// always hide the container type column as probes can only be set in standard conatiners
-	table.HideColumn(0)
-
 	commonFlagList.showPodName = showPodName
 	columnInfo.SetVisibleColumns(table, commonFlagList)
 
 	for _, pod := range podList {
 		columnInfo.LoadFromPod(pod)
+
+		if columnInfo.labelNodeName != "" {
+			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
+		}
+		if columnInfo.labelPodName != "" {
+			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
+		}
+
+		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+		if columnInfo.treeView {
+			tblOut := podProbesBuildRow(pod, columnInfo)
+			columnInfo.ApplyRow(&table, tblOut)
+		} else {
+			// we force hide the container type column as probes can only be set in standard conatiners
+			table.HideColumn(0)
+		}
 
 		columnInfo.containerType = "S"
 		for _, container := range pod.Spec.Containers {
@@ -130,9 +170,29 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 }
 
-func probesBuildRow(info containerInfomation, action probeAction) []Cell {
+func podProbesBuildRow(pod v1.Pod, info containerInfomation) []Cell {
 
 	return []Cell{
+		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+	}
+}
+
+func probesBuildRow(info containerInfomation, action probeAction) []Cell {
+	var cellList []Cell
+
+	if info.treeView {
+		cellList = buildTreeCell(info, cellList)
+	}
+
+	cellList = append(cellList,
 		NewCellText(action.probeName),
 		NewCellInt(fmt.Sprintf("%d", action.probe.InitialDelaySeconds), int64(action.probe.InitialDelaySeconds)),
 		NewCellInt(fmt.Sprintf("%d", action.probe.PeriodSeconds), int64(action.probe.PeriodSeconds)),
@@ -141,7 +201,9 @@ func probesBuildRow(info containerInfomation, action probeAction) []Cell {
 		NewCellInt(fmt.Sprintf("%d", action.probe.FailureThreshold), int64(action.probe.FailureThreshold)),
 		NewCellText(action.actionName),
 		NewCellText(action.action),
-	}
+	)
+
+	return cellList
 }
 
 //check each type of probe and return a list

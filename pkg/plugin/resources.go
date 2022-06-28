@@ -61,6 +61,8 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	var podname []string
 	var showPodName bool = true
 	var showRaw bool
+	var nodeLabels map[string]map[string]string
+	var podLabels map[string]map[string]string
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -97,8 +99,33 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		showRaw = true
 	}
 
+	if cmd.Flag("node-label").Value.String() != "" {
+		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
+		nodeLabels, err = connect.GetNodeLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	if cmd.Flag("pod-label").Value.String() != "" {
+		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
+		podLabels, err = connect.GetPodLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
 	table := Table{}
-	tblHead = append(columnInfo.GetDefaultHead(), "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT")
+	columnInfo.treeView = commonFlagList.showTreeView
+
+	tblHead = columnInfo.GetDefaultHead()
+	if commonFlagList.showTreeView {
+		// we have to control the name when displaying a tree view as the table
+		//  object dosent have the extra info to be able to process it
+		tblHead = append(tblHead, "NAME")
+	}
+
+	tblHead = append(tblHead, "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT")
 	table.SetHeader(tblHead...)
 
 	if len(commonFlagList.filterList) >= 1 {
@@ -115,6 +142,19 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	for _, pod := range podList {
 		columnInfo.LoadFromPod(pod)
 
+		if columnInfo.labelNodeName != "" {
+			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
+		}
+		if columnInfo.labelPodName != "" {
+			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
+		}
+
+		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+		if columnInfo.treeView {
+			tblOut := podStatsProcessBuildRow(pod, columnInfo)
+			columnInfo.ApplyRow(&table, tblOut)
+		}
+
 		if commonFlagList.showInitContainers {
 			// process init containers
 			columnInfo.containerType = "I"
@@ -126,12 +166,12 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 				columnInfo.containerName = container.Name
 				tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
 				columnInfo.ApplyRow(&table, tblOut)
-				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				// table.AddRow(tblFullRow...)
 			}
 		} else {
 			// hide the container type column as its only needed when the init containers are being shown
-			table.HideColumn(0)
+			if !columnInfo.treeView {
+				table.HideColumn(0)
+			}
 		}
 
 		// process standard containers
@@ -144,8 +184,6 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			columnInfo.containerName = container.Name
 			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
 			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
 		}
 
 		columnInfo.containerType = "E"
@@ -157,8 +195,6 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 			columnInfo.containerName = container.Name
 			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
 			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
 		}
 	}
 
@@ -181,7 +217,20 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	return nil
 }
 
+func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
+
+	return []Cell{
+		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+	}
+}
+
 func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, info containerInfomation, resource string, showRaw bool, bytesAs string) []Cell {
+	var cellList []Cell
 	var displayValue, request, limit, percentLimit, percentRequest string
 	var rawRequest, rawLimit, rawValue int64
 	var rawPercentRequest, rawPercentLimit float64
@@ -269,13 +318,19 @@ func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, 
 		}
 	}
 
-	return []Cell{
+	if info.treeView {
+		cellList = buildTreeCell(info, cellList)
+	}
+
+	cellList = append(cellList,
 		NewCellInt(displayValue, rawValue),
 		NewCellInt(request, rawRequest),
 		NewCellInt(limit, rawLimit),
 		NewCellFloat(percentRequest, rawPercentRequest),
 		NewCellFloat(percentLimit, rawPercentLimit),
-	}
+	)
+
+	return cellList
 }
 
 func podMetrics2Hashtable(stateList []v1beta1.PodMetrics) map[string]map[string]v1.ResourceList {

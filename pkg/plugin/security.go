@@ -48,6 +48,8 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	var podname []string
 	var showPodName bool = true
 	var showSELinuxOptions bool
+	var nodeLabels map[string]map[string]string
+	var podLabels map[string]map[string]string
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -72,13 +74,37 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 		return err
 	}
 
+	if cmd.Flag("node-label").Value.String() != "" {
+		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
+		nodeLabels, err = connect.GetNodeLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	if cmd.Flag("pod-label").Value.String() != "" {
+		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
+		podLabels, err = connect.GetPodLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
 	table := Table{}
+	columnInfo.treeView = commonFlagList.showTreeView
+
+	tblHead = columnInfo.GetDefaultHead()
+	if commonFlagList.showTreeView {
+		// we have to control the name when displaying a tree view as the table
+		//  object dosent have the extra info to be able to process it
+		tblHead = append(tblHead, "NAME")
+	}
 
 	if cmd.Flag("selinux").Value.String() == "true" {
 		showSELinuxOptions = true
-		tblHead = append(columnInfo.GetDefaultHead(), "USER", "ROLE", "TYPE", "LEVEL")
+		tblHead = append(tblHead, "USER", "ROLE", "TYPE", "LEVEL")
 	} else {
-		tblHead = append(columnInfo.GetDefaultHead(), "ALLOW_PRIVILEGE_ESCALATION", "PRIVILEGED", "RO_ROOT_FS", "RUN_AS_NON_ROOT", "RUN_AS_USER", "RUN_AS_GROUP")
+		tblHead = append(tblHead, "ALLOW_PRIVILEGE_ESCALATION", "PRIVILEGED", "RO_ROOT_FS", "RUN_AS_NON_ROOT", "RUN_AS_USER", "RUN_AS_GROUP")
 	}
 	table.SetHeader(tblHead...)
 
@@ -94,6 +120,19 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	for _, pod := range podList {
 		columnInfo.LoadFromPod(pod)
+
+		if columnInfo.labelNodeName != "" {
+			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
+		}
+		if columnInfo.labelPodName != "" {
+			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
+		}
+
+		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+		if columnInfo.treeView {
+			tblOut := podSecurityBuildRow(pod, columnInfo, showSELinuxOptions)
+			columnInfo.ApplyRow(&table, tblOut)
+		}
 
 		columnInfo.containerType = "S"
 		for _, container := range pod.Spec.Containers {
@@ -141,8 +180,30 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 }
 
-func securityBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
+func podSecurityBuildRow(pod v1.Pod, info containerInfomation, showSELinuxOptions bool) []Cell {
+	if showSELinuxOptions {
+		return []Cell{
+			NewCellText(fmt.Sprint("Pod/", info.podName)), //name
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+		}
+	} else {
+		return []Cell{
+			NewCellText(fmt.Sprint("Pod/", info.podName)), //name
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+		}
+	}
+}
 
+func securityBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
+	var cellList []Cell
 	ape := Cell{}
 	p := Cell{}
 	rorfs := Cell{}
@@ -190,18 +251,25 @@ func securityBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1
 		}
 	}
 
-	return []Cell{
+	if info.treeView {
+		cellList = buildTreeCell(info, cellList)
+	}
+
+	cellList = append(cellList,
 		ape,
 		p,
 		rorfs,
 		ranr,
 		rau,
 		rag,
-	}
+	)
+
+	return cellList
+
 }
 
 func seLinuxBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
-
+	var cellList []Cell
 	seLevel := Cell{}
 	seRole := Cell{}
 	seType := Cell{}
@@ -249,10 +317,16 @@ func seLinuxBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1.
 		}
 	}
 
-	return []Cell{
+	if info.treeView {
+		cellList = buildTreeCell(info, cellList)
+	}
+
+	cellList = append(cellList,
 		seUser,
 		seRole,
 		seType,
 		seLevel,
-	}
+	)
+
+	return cellList
 }
