@@ -119,6 +119,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	columnInfo.treeView = commonFlagList.showTreeView
 
 	tblHead = columnInfo.GetDefaultHead()
+	defaultHeaderLen := len(tblHead)
 	if commonFlagList.showTreeView {
 		// we have to control the name when displaying a tree view as the table
 		//  object dosent have the extra info to be able to process it
@@ -206,7 +207,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	// do we need to find the outliers, we have enough data to compute a range
 	if commonFlagList.showOddities {
-		row2Remove, err := table.ListOutOfRange(5, table.GetRows()) //3 = used column
+		row2Remove, err := table.ListOutOfRange(defaultHeaderLen+0, table.GetRows()) //1 = used column
 		if err != nil {
 			return err
 		}
