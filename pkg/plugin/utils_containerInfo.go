@@ -90,7 +90,11 @@ func (ci *containerInfomation) LoadFromPod(pod v1.Pod) {
 // SetVisibleColumns: sets the visable columns based on properties from flags
 func (ci *containerInfomation) SetVisibleColumns(table Table, flags commonFlags) {
 	if ci.treeView {
-		//only hide the nodename as namespace and podname are always show in tree view
+		//only hide the nodename and namespace, podname is always show in tree view
+		if !flags.showNamespaceName {
+			table.HideColumn(0)
+		}
+
 		if !flags.showNodeName {
 			table.HideColumn(1)
 		}
