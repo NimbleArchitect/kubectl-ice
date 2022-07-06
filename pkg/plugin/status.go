@@ -120,8 +120,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		if commonFlagList.showDetails {
 			hideColumns = append(hideColumns, 9)
 		} else {
-			hideColumns = append(hideColumns, 8)
-			hideColumns = append(hideColumns, 10)
+			hideColumns = append(hideColumns, 8, 10)
 		}
 	} else {
 		//default column ids to hide
@@ -132,14 +131,11 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 	if showPrevious {
 		// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
-		hideColumns = append(hideColumns, 0)
-		hideColumns = append(hideColumns, 1)
-		hideColumns = append(hideColumns, 2)
+		hideColumns = append(hideColumns, 0, 1, 2)
 	}
 
 	if len(hideColumns) == 0 {
-		hideColumns = append(hideColumns, 7)
-		hideColumns = append(hideColumns, 9)
+		hideColumns = append(hideColumns, 7, 9)
 	}
 
 	tblHead = append(tblHead, "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "AGE", "MESSAGE")
