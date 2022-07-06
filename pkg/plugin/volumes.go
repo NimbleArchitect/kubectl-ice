@@ -248,6 +248,17 @@ func decodeVolumeType(volType string, volume v1.VolumeSource) map[string]Cell {
 	case "ConfigMap":
 		outMap["backing"] = NewCellText(volume.ConfigMap.Name)
 
+	case "DownwardAPI":
+		str := ""
+		sep := ""
+		for i, value := range volume.DownwardAPI.Items {
+			str += sep + value.Path
+			if i == 0 {
+				sep = ","
+			}
+		}
+		outMap["backing"] = NewCellText(str)
+
 	case "EmptyDir":
 		if volume.EmptyDir.SizeLimit != nil {
 			outMap["size"] = NewCellInt(volume.EmptyDir.SizeLimit.String(), volume.EmptyDir.SizeLimit.Value())
