@@ -24,6 +24,7 @@ type Connector struct {
 	metricFlags    *genericclioptions.ConfigFlags
 	configMapArray map[string]map[string]string
 	setNameSpace   string
+	podList        []v1.Pod
 }
 
 //load config for the k8s endpoint
@@ -65,49 +66,31 @@ func (c *Connector) LoadMetricConfig(configFlags *genericclioptions.ConfigFlags)
 
 // returns a list of pods or a list with one pod when given a pod name
 func (c *Connector) GetPods(podNameList []string) ([]v1.Pod, error) {
-	podList := []v1.Pod{}
-	selector := metav1.ListOptions{}
-
-	namespace := c.GetNamespace(c.Flags.allNamespaces)
+	if len(c.podList) == 0 {
+		err := c.LoadPods(podNameList)
+		return c.podList, err
+	}
 
 	if len(podNameList) > 0 {
-		if len(c.Flags.labels) > 0 {
-			return []v1.Pod{}, fmt.Errorf("error: you cannot specify a pod name and a selector together")
-		}
-
-		// single pod
-		for _, podname := range podNameList {
-			pod, err := c.clientSet.CoreV1().Pods(namespace).Get(context.TODO(), podname, metav1.GetOptions{})
-			if err == nil {
-				podList = append(podList, []v1.Pod{*pod}...)
-			} else {
-				return []v1.Pod{}, fmt.Errorf("failed to retrieve pod from server: %w", err)
-			}
-		}
-
-		return podList, nil
+		err := c.LoadPods(podNameList)
+		return c.podList, err
 	}
 
-	// multi pods
-	if len(c.Flags.labels) > 0 {
-		selector.LabelSelector = c.Flags.labels
+	return c.podList, nil
+
+}
+
+func (c *Connector) GetPodAnnotations(podList []v1.Pod) (map[string]map[string]string, error) {
+	//
+	annotationsMap := make(map[string]map[string]string)
+
+	for _, pod := range podList {
+		podName := pod.Name
+		annotations := pod.Annotations
+		annotationsMap[podName] = annotations
 	}
 
-	pods, err := c.clientSet.CoreV1().Pods(namespace).List(context.TODO(), selector)
-	if err == nil {
-		if len(pods.Items) == 0 {
-			return []v1.Pod{}, errors.New("no pods found in default namespace")
-		} else {
-			if len(c.Flags.matchSpecList) > 0 {
-				return c.SelectMatchinghPodSpec(pods.Items)
-			} else {
-				return pods.Items, nil
-			}
-		}
-	} else {
-		return []v1.Pod{}, fmt.Errorf("failed to retrieve pod list from server: %w", err)
-	}
-
+	return annotationsMap, nil
 }
 
 func (c *Connector) GetPodLabels(podList []v1.Pod) (map[string]map[string]string, error) {
@@ -411,4 +394,56 @@ func convertToString(field reflect.Value, value interface{}) string {
 	}
 
 	return fmt.Sprint(value)
+}
+
+func (c *Connector) LoadPods(podNameList []string) error {
+	podList := []v1.Pod{}
+	selector := metav1.ListOptions{}
+
+	namespace := c.GetNamespace(c.Flags.allNamespaces)
+
+	if len(podNameList) > 0 {
+		if len(c.Flags.labels) > 0 {
+			c.podList = []v1.Pod{}
+			return fmt.Errorf("error: you cannot specify a pod name and a selector together")
+		}
+
+		// single pod
+		for _, podname := range podNameList {
+			pod, err := c.clientSet.CoreV1().Pods(namespace).Get(context.TODO(), podname, metav1.GetOptions{})
+			if err == nil {
+				podList = append(podList, []v1.Pod{*pod}...)
+			} else {
+				c.podList = []v1.Pod{}
+				return fmt.Errorf("failed to retrieve pod from server: %w", err)
+			}
+		}
+
+		c.podList = podList
+		return nil
+	}
+
+	// multi pods
+	if len(c.Flags.labels) > 0 {
+		selector.LabelSelector = c.Flags.labels
+	}
+
+	pods, err := c.clientSet.CoreV1().Pods(namespace).List(context.TODO(), selector)
+	if err == nil {
+		if len(pods.Items) == 0 {
+			c.podList = []v1.Pod{}
+			return errors.New("no pods found in default namespace")
+		} else {
+			if len(c.Flags.matchSpecList) > 0 {
+				c.podList, err = c.SelectMatchinghPodSpec(pods.Items)
+				return err
+			} else {
+				c.podList = pods.Items
+				return nil
+			}
+		}
+	} else {
+		c.podList = []v1.Pod{}
+		return fmt.Errorf("failed to retrieve pod list from server: %w", err)
+	}
 }
