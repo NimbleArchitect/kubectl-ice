@@ -6,16 +6,37 @@ import (
 
 // holds a set of columns that are common to every subcommand
 type containerInfomation struct {
-	labelNodeName  string
-	labelNodeValue string
-	labelPodName   string
-	labelPodValue  string
-	containerName  string
-	containerType  string
-	namespace      string
-	nodeName       string
-	podName        string
-	treeView       bool
+	table              *Table
+	labelNodeName      string
+	labelNodeValue     string
+	labelPodName       string
+	labelPodValue      string
+	annotationPodName  string
+	annotationPodValue string
+	containerName      string
+	containerType      string
+	namespace          string
+	nodeName           string
+	podName            string
+	treeView           bool
+}
+
+func (ci *containerInfomation) AddRow(cellList ...[]Cell) []Cell {
+	rowList := ci.GetDefaultCells()
+
+	if ci.labelNodeName != "" {
+		rowList = append(rowList, NewCellText(ci.labelNodeValue))
+	}
+
+	if ci.labelPodName != "" {
+		rowList = append(rowList, NewCellText(ci.labelPodValue))
+	}
+
+	for _, c := range cellList {
+		rowList = append(rowList, c...)
+	}
+
+	return rowList
 }
 
 func (ci *containerInfomation) ApplyRow(table *Table, cellList ...[]Cell) {

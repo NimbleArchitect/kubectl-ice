@@ -23,6 +23,9 @@ type Connector struct {
 	configFlags    *genericclioptions.ConfigFlags
 	metricFlags    *genericclioptions.ConfigFlags
 	configMapArray map[string]map[string]string
+	nodeLabels     map[string]map[string]string
+	podLabels      map[string]map[string]string
+	podAnnotations map[string]map[string]string
 	setNameSpace   string
 	podList        []v1.Pod
 }
@@ -84,7 +87,7 @@ func (c *Connector) GetPodAnnotations(podList []v1.Pod) (map[string]map[string]s
 	//
 	annotationsMap := make(map[string]map[string]string)
 
-	for _, pod := range podList {
+	for _, pod := range c.podList {
 		podName := pod.Name
 		annotations := pod.Annotations
 		annotationsMap[podName] = annotations
@@ -97,7 +100,7 @@ func (c *Connector) GetPodLabels(podList []v1.Pod) (map[string]map[string]string
 	//
 	labelMap := make(map[string]map[string]string)
 
-	for _, pod := range podList {
+	for _, pod := range c.podList {
 		podName := pod.Name
 		labels := pod.Labels
 		labelMap[podName] = labels
@@ -113,7 +116,7 @@ func (c *Connector) GetNodeLabels(podList []v1.Pod) (map[string]map[string]strin
 	labelMap := make(map[string]map[string]string)
 	nodeNames := make(map[string]int)
 
-	for _, pod := range podList {
+	for _, pod := range c.podList {
 		nodeName := pod.Spec.NodeName
 		if _, ok := nodeNames[nodeName]; !ok {
 			nodeNames[nodeName] = 1
