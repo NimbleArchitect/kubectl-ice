@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"fmt"
+
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -74,6 +76,7 @@ func (ci *containerInfomation) GetDefaultHead() []string {
 	}
 
 	if ci.labelNodeName != "" {
+		fmt.Println("***")
 		headList = append(headList, ci.labelNodeName)
 	}
 

@@ -54,21 +54,27 @@ var statusExample = `  # List individual container status from pods
 
 func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var columnInfo containerInfomation
-	var tblHead []string
+	//var tblHead []string
 	var podname []string
-	var showPodName bool = true
-	var hideColumns []int
+	// var showPodName bool = true
+	//var hideColumns []int
 
+	log := logger{location: "Status"}
+	log.Debug("Start")
+
+	builder := RowBuilder{}
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
 	}
 
 	// if a single pod is selected we dont need to show its name
+	log.Debug("len(args) =", len(args))
 	if len(args) >= 1 {
 		podname = args
 		if len(podname[0]) >= 1 {
-			showPodName = false
+			log.Debug("builder.ShowPodName = false")
+			builder.ShowPodName = false
 		}
 	}
 	commonFlagList, err := processCommonFlags(cmd)
@@ -76,98 +82,97 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		return err
 	}
 	connect.Flags = commonFlagList
-
-	// podList, err := connect.GetPods(podname)
-	// if err != nil {
-	// 	return err
-	// }
+	builder.CommonFlags = commonFlagList
 
 	loopinfo := status{}
-	builder := RowBuilder{}
 	builder.Connection = &connect
 	// builder.ColumnInfo = &columnInfo
-	builder.CommonFlags = &commonFlagList
 
 	if cmd.Flag("previous").Value.String() == "true" {
-		loopinfo.showPrevious = true
+		log.Debug("loopinfo.ShowPrevious = true")
+		loopinfo.ShowPrevious = true
 	}
 
 	if cmd.Flag("details").Value.String() == "true" {
-		commonFlagList.showDetails = true
+		log.Debug("loopinfo.ShowPrevious = true")
+		loopinfo.ShowDetails = true
 	}
 
 	if cmd.Flag("node-label").Value.String() != "" {
-		builder.LabelNodeName = cmd.Flag("node-label").Value.String()
+		label := cmd.Flag("node-label").Value.String()
+		log.Debug("builder.LabelNodeName =", label)
+		builder.LabelNodeName = label
 	}
 
 	if cmd.Flag("pod-label").Value.String() != "" {
-		builder.LabelPodName = cmd.Flag("pod-label").Value.String()
+		label := cmd.Flag("pod-label").Value.String()
+		log.Debug("builder.LabelPodName =", label)
+		builder.LabelPodName = label
 	}
 
 	// if cmd.Flag("pod-annotation").Value.String() != "" {
-	// 	columnInfo.annotationPodName = cmd.Flag("pod-annotation").Value.String()
+	// 	builder.AnnotationPodName = cmd.Flag("pod-annotation").Value.String()
 	// }
 
 	table := Table{}
-	loopinfo.table = &table
+	builder.Table = &table
 	columnInfo.table = &table
-	columnInfo.treeView = commonFlagList.showTreeView
+	builder.ShowTreeView = commonFlagList.showTreeView
+	// tblHead = builder.GetDefaultHead()
+	// defaultHeaderLen := len(tblHead)
+	// if commonFlagList.showTreeView {
+	// 	//NAMESPACE NODE NAME READY STARTED RESTARTS STATE REASON AGE
+	// 	tblHead = append(tblHead, "NAME")
+	// 	if commonFlagList.showDetails {
+	// 		hideColumns = append(hideColumns, 9)
+	// 	} else {
+	// 		hideColumns = append(hideColumns, 8, 10)
+	// 	}
+	// } else {
+	// 	//default column ids to hide
+	// 	if commonFlagList.showDetails {
+	// 		hideColumns = append(hideColumns, 8)
+	// 	}
+	// }
 
-	tblHead = columnInfo.GetDefaultHead()
-	defaultHeaderLen := len(tblHead)
-	if commonFlagList.showTreeView {
-		//NAMESPACE NODE NAME READY STARTED RESTARTS STATE REASON AGE
-		tblHead = append(tblHead, "NAME")
-		if commonFlagList.showDetails {
-			hideColumns = append(hideColumns, 9)
-		} else {
-			hideColumns = append(hideColumns, 8, 10)
-		}
-	} else {
-		//default column ids to hide
-		if commonFlagList.showDetails {
-			hideColumns = append(hideColumns, 8)
-		}
-	}
+	// if loopinfo.showPrevious {
+	// 	// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
+	// 	hideColumns = append(hideColumns, 0, 1, 2)
+	// }
 
-	if loopinfo.showPrevious {
-		// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
-		hideColumns = append(hideColumns, 0, 1, 2)
-	}
+	// if len(hideColumns) == 0 {
+	// 	hideColumns = append(hideColumns, 7, 9)
+	// }
 
-	if len(hideColumns) == 0 {
-		hideColumns = append(hideColumns, 7, 9)
-	}
+	// tblHead = append(tblHead, "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "AGE", "MESSAGE")
+	// table.SetHeader(tblHead...)
 
-	tblHead = append(tblHead, "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "AGE", "MESSAGE")
-	table.SetHeader(tblHead...)
+	// if len(commonFlagList.filterList) >= 1 {
+	// 	err = table.SetFilter(commonFlagList.filterList)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	if len(commonFlagList.filterList) >= 1 {
-		err = table.SetFilter(commonFlagList.filterList)
-		if err != nil {
-			return err
-		}
-	}
+	// commonFlagList.showPodName = showPodName
+	// columnInfo.SetVisibleColumns(table, commonFlagList)
 
-	commonFlagList.showPodName = showPodName
-	columnInfo.SetVisibleColumns(table, commonFlagList)
+	// for _, id := range hideColumns {
+	// 	table.HideColumn(defaultHeaderLen + id)
+	// }
 
-	for _, id := range hideColumns {
-		table.HideColumn(defaultHeaderLen + id)
-	}
-
-	builder.PodLoop(loopinfo)
+	builder.BuildRows(loopinfo)
 
 	// sorting by column breaks the tree view also previous is not valid so we sliently skip those actions
-	if !commonFlagList.showTreeView {
+	if !builder.ShowTreeView {
 		if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 			return err
 		}
 
-		if !loopinfo.showPrevious { // restart count dosent show up when using previous flag
+		if !loopinfo.ShowPrevious { // restart count dosent show up when using previous flag
 			// do we need to find the outliers, we have enough data to compute a range
 			if commonFlagList.showOddities {
-				row2Remove, err := table.ListOutOfRange(defaultHeaderLen+2, table.GetRows()) //3 = restarts column
+				row2Remove, err := table.ListOutOfRange(builder.DefaultHeaderLen+2, table.GetRows()) //3 = restarts column
 				if err != nil {
 					return err
 				}
@@ -183,13 +188,56 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 type status struct {
 	// columnInfo   containerInfomation
-	showPrevious bool
+	ShowPrevious bool
+	ShowDetails  bool
 	table        *Table
 }
 
-func (s status) Apply(row []Cell) {
-	fmt.Println(row)
-	s.table.AddRow(row...)
+func (s status) Headers() []string {
+
+	return []string{
+		"READY",
+		"STARTED",
+		"RESTARTS",
+		"STATE",
+		"REASON",
+		"EXIT-CODE",
+		"SIGNAL",
+		"TIMESTAMP",
+		"AGE",
+		"MESSAGE",
+	}
+}
+
+func (s status) HideColumnsTree() []int {
+	var hideColumns []int
+
+	if s.ShowDetails {
+		hideColumns = append(hideColumns, 9)
+	} else {
+		hideColumns = append(hideColumns, 8, 10)
+	}
+
+	if s.ShowPrevious {
+		// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
+		hideColumns = append(hideColumns, 0, 1, 2)
+	}
+	return hideColumns
+
+}
+
+func (s status) HideColumns() []int {
+	var hideColumns []int
+
+	if s.ShowDetails {
+		hideColumns = append(hideColumns, 8)
+	}
+
+	if s.ShowPrevious {
+		// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
+		hideColumns = append(hideColumns, 0, 1, 2)
+	}
+	return hideColumns
 }
 
 func (s status) BuildEphemeralContainerStatus(container v1.ContainerStatus, columnInfo BuilderInformation) ([]Cell, error) {
@@ -239,7 +287,10 @@ func (s status) BuildContainerStatus(container v1.ContainerStatus, info BuilderI
 	var state v1.ContainerState
 	var rawExitCode, rawSignal, rawRestarts int64
 
-	if s.showPrevious {
+	log := logger{location: "Status:BuildContainerStatus"}
+	log.Debug("Start")
+
+	if s.ShowPrevious {
 		state = container.LastTerminationState
 	} else {
 		state = container.State
@@ -307,6 +358,7 @@ func (s status) BuildContainerStatus(container v1.ContainerStatus, info BuilderI
 		NewCellText(message),
 	)
 
+	log.Debug("len(cellList) =", len(cellList))
 	return cellList, nil
 }
 

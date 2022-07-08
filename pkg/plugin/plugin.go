@@ -42,6 +42,9 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	var sizeShort string = "allows conversion to the selected size rather then the default megabyte output"
 	var treeShort string = "Display tree like view instead of the standard list"
 
+	log := logger{location: "InitSubCommands"}
+	log.Debug("Start")
+
 	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
 	rootCmd.SetHelpTemplate(helpTemplate)
 
