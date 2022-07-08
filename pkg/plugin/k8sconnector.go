@@ -23,9 +23,6 @@ type Connector struct {
 	configFlags    *genericclioptions.ConfigFlags
 	metricFlags    *genericclioptions.ConfigFlags
 	configMapArray map[string]map[string]string
-	nodeLabels     map[string]map[string]string
-	podLabels      map[string]map[string]string
-	podAnnotations map[string]map[string]string
 	setNameSpace   string
 	podList        []v1.Pod
 }
@@ -184,7 +181,7 @@ func (c *Connector) GetNodes(nodeNameList []string) ([]v1.Node, error) {
 	return nodes.Items, nil
 }
 
-// SelectMatchingPodSpec select pods to inclue or eclude based on the field in v1.Pods.Spec an operator (!=, ==, =) and a string value to match with
+// SelectMatchingPodSpec select pods to inclue or exclude based on the field in v1.Pods.Spec an operator (!=, ==, =) and a string value to match with
 func (c *Connector) SelectMatchinghPodSpec(pods []v1.Pod) ([]v1.Pod, error) {
 	var newPodList []v1.Pod
 

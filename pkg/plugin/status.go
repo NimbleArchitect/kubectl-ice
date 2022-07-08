@@ -57,10 +57,6 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	var tblHead []string
 	var podname []string
 	var showPodName bool = true
-	var showPrevious bool
-	// var nodeLabels map[string]map[string]string
-	// var podLabels map[string]map[string]string
-	// var podAnnotations map[string]map[string]string
 	var hideColumns []int
 
 	connect := Connector{}
@@ -86,8 +82,14 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	// 	return err
 	// }
 
+	loopinfo := status{}
+	builder := RowBuilder{}
+	builder.Connection = &connect
+	// builder.ColumnInfo = &columnInfo
+	builder.CommonFlags = &commonFlagList
+
 	if cmd.Flag("previous").Value.String() == "true" {
-		showPrevious = true
+		loopinfo.showPrevious = true
 	}
 
 	if cmd.Flag("details").Value.String() == "true" {
@@ -95,11 +97,11 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	}
 
 	if cmd.Flag("node-label").Value.String() != "" {
-		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
+		builder.LabelNodeName = cmd.Flag("node-label").Value.String()
 	}
 
 	if cmd.Flag("pod-label").Value.String() != "" {
-		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
+		builder.LabelPodName = cmd.Flag("pod-label").Value.String()
 	}
 
 	// if cmd.Flag("pod-annotation").Value.String() != "" {
@@ -107,6 +109,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	// }
 
 	table := Table{}
+	loopinfo.table = &table
 	columnInfo.table = &table
 	columnInfo.treeView = commonFlagList.showTreeView
 
@@ -127,7 +130,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		}
 	}
 
-	if showPrevious {
+	if loopinfo.showPrevious {
 		// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
 		hideColumns = append(hideColumns, 0, 1, 2)
 	}
@@ -152,78 +155,8 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	for _, id := range hideColumns {
 		table.HideColumn(defaultHeaderLen + id)
 	}
-	fmt.Println(table.headCount)
 
-	loopinfo := status{}
-	loopinfo.showPrevious = showPrevious
-
-	builder := RowBuilder{}
-	builder.connection = &connect
-	builder.table = &table
-	builder.columnInfo = &columnInfo
-	builder.commonFlags = &commonFlagList
 	builder.PodLoop(loopinfo)
-	// for _, pod := range podList {
-	// 	// p := pod.GetOwnerReferences()
-	// 	// for i, a := range p {
-	// 	// 	fmt.Println("index:", i)
-	// 	// 	fmt.Println("** name:", a.Name)
-	// 	// 	fmt.Println("** kind:", a.Kind)
-	// 	// }
-
-	// 	columnInfo.LoadFromPod(pod)
-
-	// 	//check if we have any labels that need to be shown as columns
-	// 	if columnInfo.labelNodeName != "" {
-	// 		columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-	// 	}
-	// 	if columnInfo.labelPodName != "" {
-	// 		columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-	// 	}
-	// 	if columnInfo.annotationPodName != "" {
-	// 		columnInfo.annotationPodName = podAnnotations[pod.Name][columnInfo.annotationPodName]
-	// 	}
-
-	// 	//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-	// 	if columnInfo.treeView {
-	// 		tblOut := podStatusBuildRow(pod, columnInfo, showPrevious)
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 	}
-
-	// 	//now show the container line
-	// 	columnInfo.containerType = "S"
-	// 	for _, container := range pod.Status.ContainerStatuses {
-	// 		// should the container be processed
-	// 		if skipContainerName(commonFlagList, container.Name) {
-	// 			continue
-	// 		}
-	// 		columnInfo.containerName = container.Name
-	// 		tblOut := statusBuildRow(container, columnInfo, showPrevious)
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 	}
-
-	// 	columnInfo.containerType = "I"
-	// 	for _, container := range pod.Status.InitContainerStatuses {
-	// 		// should the container be processed
-	// 		if skipContainerName(commonFlagList, container.Name) {
-	// 			continue
-	// 		}
-	// 		columnInfo.containerName = container.Name
-	// 		tblOut := statusBuildRow(container, columnInfo, showPrevious)
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 	}
-
-	// 	columnInfo.containerType = "E"
-	// 	for _, container := range pod.Status.EphemeralContainerStatuses {
-	// 		// should the container be processed
-	// 		if skipContainerName(commonFlagList, container.Name) {
-	// 			continue
-	// 		}
-	// 		columnInfo.containerName = container.Name
-	// 		tblOut := statusBuildRow(container, columnInfo, showPrevious)
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 	}
-	// }
 
 	// sorting by column breaks the tree view also previous is not valid so we sliently skip those actions
 	if !commonFlagList.showTreeView {
@@ -231,7 +164,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 			return err
 		}
 
-		if !showPrevious { // restart count dosent show up when using previous flag
+		if !loopinfo.showPrevious { // restart count dosent show up when using previous flag
 			// do we need to find the outliers, we have enough data to compute a range
 			if commonFlagList.showOddities {
 				row2Remove, err := table.ListOutOfRange(defaultHeaderLen+2, table.GetRows()) //3 = restarts column
@@ -249,21 +182,22 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 }
 
 type status struct {
-	columnInfo   containerInfomation
+	// columnInfo   containerInfomation
 	showPrevious bool
+	table        *Table
 }
 
 func (s status) Apply(row []Cell) {
 	fmt.Println(row)
-	s.columnInfo.ApplyRow(s.columnInfo.table, row)
+	s.table.AddRow(row...)
 }
 
-func (s status) BuildEphemeralContainerStatus(container v1.ContainerStatus, columnInfo *containerInfomation) ([]Cell, error) {
+func (s status) BuildEphemeralContainerStatus(container v1.ContainerStatus, columnInfo BuilderInformation) ([]Cell, error) {
 	// s.columnInfo.AddRow(row)
 	return []Cell{}, nil
 }
 
-func (s status) BuildPod(pod v1.Pod, info *containerInfomation) ([]Cell, error) {
+func (s status) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	var age string
 	var timestamp string
 
@@ -276,7 +210,7 @@ func (s status) BuildPod(pod v1.Pod, info *containerInfomation) ([]Cell, error) 
 	}
 
 	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
+		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 		NewCellText(""),                       //ready
 		NewCellText(""),                       //started
 		NewCellInt("0", 0),                    //restarts
@@ -290,7 +224,7 @@ func (s status) BuildPod(pod v1.Pod, info *containerInfomation) ([]Cell, error) 
 	}, nil
 }
 
-func (s status) BuildContainerStatus(container v1.ContainerStatus, info *containerInfomation) ([]Cell, error) {
+func (s status) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([]Cell, error) {
 	var cellList []Cell
 	var reason string
 	var exitCode string
@@ -345,7 +279,7 @@ func (s status) BuildContainerStatus(container v1.ContainerStatus, info *contain
 	restarts := fmt.Sprintf("%d", container.RestartCount)
 	rawRestarts = int64(container.RestartCount)
 	// remove pod and container name from the message string
-	message = trimStatusMessage(message, info.podName, info.containerName)
+	message = trimStatusMessage(message, info.PodName, info.ContainerName)
 
 	//we can only show the age if we have a start time some states dont have said starttime so we have to skip them
 	if skipAgeCalculation {
@@ -355,8 +289,8 @@ func (s status) BuildContainerStatus(container v1.ContainerStatus, info *contain
 		age = duration.HumanDuration(rawAge)
 	}
 
-	if info.treeView {
-		cellList = buildTreeCell(*info, cellList)
+	if info.TreeView {
+		cellList = info.BuildTreeCell(cellList)
 	}
 
 	// READY STARTED RESTARTS STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
