@@ -74,6 +74,13 @@ func (t *Table) SetHeader(headItem ...string) {
 
 // Adds a new row to the end of the table, accepts an array of strings
 func (t *Table) AddRow(row ...Cell) {
+	log := logger{location: "Table:AddRow"}
+	log.Debug("Start")
+
+	if t.headCount > len(row) {
+		panic("not enough columns in provided row")
+	}
+
 	for i := 0; i < t.headCount; i++ {
 		strLen := len([]rune(row[i].text))
 		if strLen >= t.head[i].columnLength {
@@ -127,7 +134,7 @@ func (t *Table) HideColumn(columnNumber int) {
 	log := logger{location: "Table:HideColumn"}
 	log.Debug("Start")
 
-	log.Debug("columnNumber =", columnNumber)
+	log.Debug("columnNumber =", columnNumber, "["+t.head[columnNumber].title+"]")
 	log.Debug("len(t.head) =", len(t.head))
 	if len(t.head) > columnNumber {
 		t.head[columnNumber].hidden = true

@@ -117,6 +117,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	table := Table{}
 	builder.Table = &table
 	columnInfo.table = &table
+	log.Debug("commonFlagList.showTreeView =", commonFlagList.showTreeView)
 	builder.ShowTreeView = commonFlagList.showTreeView
 	// tblHead = builder.GetDefaultHead()
 	// defaultHeaderLen := len(tblHead)

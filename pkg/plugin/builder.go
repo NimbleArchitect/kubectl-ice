@@ -49,6 +49,11 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 	log := logger{location: "RowBuilder:BuildRows"}
 	log.Debug("Start")
 
+	if b.ShowTreeView {
+		log.Debug("b.info.TreeView = true")
+		b.info.TreeView = true
+	}
+
 	err := b.LoadHeaders(loop)
 	if err != nil {
 		return err
@@ -69,10 +74,8 @@ func (b *RowBuilder) LoadHeaders(loop Looper) error {
 	log.Debug("len(defaultHeaderLen) =", defaultHeaderLen)
 
 	b.DefaultHeaderLen = defaultHeaderLen
-	log.Debug("ShowTreeView =", b.ShowTreeView)
-
-	if b.ShowTreeView {
-		b.info.TreeView = true
+	log.Debug("b.info.TreeView =", b.info.TreeView)
+	if b.info.TreeView {
 		tblHead = append(tblHead, "NAME")
 		hideColumns = loop.HideColumnsTree()
 	} else {
@@ -152,6 +155,7 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 	}
 
 	if b.LabelNodeName != "" {
+		log.Debug("b.LabelNodeName", b.LabelNodeName)
 		// columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
 		nodeLabels, err = b.Connection.GetNodeLabels(podList)
 		if err != nil {
@@ -160,6 +164,7 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 	}
 
 	if b.LabelPodName != "" {
+		log.Debug("b.LabelPodName", b.LabelPodName)
 		// columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
 		podLabels, err = b.Connection.GetPodLabels(podList)
 		if err != nil {
@@ -168,6 +173,7 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 	}
 
 	if b.AnnotationPodName != "" {
+		log.Debug("b.AnnotationPodName", b.AnnotationPodName)
 		// columnInfo.annotationPodName = cmd.Flag("pod-annotation").Value.String()
 		podAnnotations, err = b.Connection.GetPodAnnotations(podList)
 		if err != nil {
@@ -199,16 +205,20 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 		}
 
 		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+		log.Debug("b.info.TreeView", b.info.TreeView)
 		if b.info.TreeView {
 			tblOut, err := loop.BuildPod(pod, b.info)
 			if err != nil {
 
 			}
+			log.Debug("len(tblOut)", len(tblOut))
 			rowsOut := b.MakeRow(b.info, tblOut)
+			log.Debug("rowsOut =", rowsOut)
 			b.Table.AddRow(rowsOut...)
 		}
 
 		//now show the container line
+		log.Debug("loop standard ContainerStatuses")
 		b.info.ContainerType = "S"
 		for _, container := range pod.Status.ContainerStatuses {
 			// should the container be processed
@@ -224,6 +234,7 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 			b.Table.AddRow(rowsOut...)
 		}
 
+		log.Debug("loop init ContainerStatuses")
 		b.info.ContainerType = "I"
 		for _, container := range pod.Status.InitContainerStatuses {
 			// should the container be processed
@@ -239,6 +250,7 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 			b.Table.AddRow(rowsOut...)
 		}
 
+		log.Debug("loop ephemeral ContainerStatuses")
 		b.info.ContainerType = "E"
 		for _, container := range pod.Status.EphemeralContainerStatuses {
 			// should the container be processed
@@ -261,7 +273,7 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 // MakeRow adds the listed columns to the default columns, outputs
 //  the complete row as a list of columns
 func (b *RowBuilder) MakeRow(info BuilderInformation, columns ...[]Cell) []Cell {
-	log := logger{location: "RowBuilder:MakeRows"}
+	log := logger{location: "RowBuilder:MakeRow"}
 	log.Debug("Start")
 
 	rowList := b.GetDefaultCells()
@@ -289,7 +301,7 @@ func (b *RowBuilder) GetDefaultHead() []string {
 
 	var headList []string
 
-	log.Debug("treeview =", b.info.TreeView)
+	log.Debug("b.info.TreeView =", b.info.TreeView)
 	if b.info.TreeView {
 		//in tree view we only create the namespace and nodename columns, the name colume is created outside of this
 		// function so we have full control over its contents
