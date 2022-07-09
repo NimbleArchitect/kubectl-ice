@@ -9,6 +9,8 @@ import (
 type Looper interface {
 	// Build(container v1.ContainerStatus, columnInfo container) ([]Cell, error)
 	BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error)
+	BuildContainerSpec(container v1.Container, info BuilderInformation) ([]Cell, error)
+	BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([]Cell, error)
 	BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([]Cell, error)
 	BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([]Cell, error)
 	Headers() []string
@@ -21,6 +23,8 @@ type RowBuilder struct {
 	Table      *Table
 	// ColumnInfo         *containerInfomation
 	CommonFlags        commonFlags
+	LoopStatus         bool
+	LoopSpec           bool
 	LabelNodeName      string
 	labelNodeValue     string
 	LabelPodName       string
@@ -29,6 +33,7 @@ type RowBuilder struct {
 	annotationPodValue string
 	ShowTreeView       bool
 	ShowPodName        bool
+	ShowInitContainers bool
 	// ShowNamespaceName  bool
 	// ShowNodeName       bool
 	FilterList       map[string]matchValue // used to filter out rows form the table during Print function
@@ -59,7 +64,19 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 		return err
 	}
 
-	return b.PodLoop(loop)
+	err = b.PodLoop(loop)
+	if err != nil {
+		return err
+	}
+
+	// sorting by column breaks the tree view also previous is not valid so we sliently skip those actions
+	if !b.ShowTreeView {
+		if err := b.Table.SortByNames(b.CommonFlags.sortList...); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (b *RowBuilder) LoadHeaders(loop Looper) error {
@@ -81,10 +98,6 @@ func (b *RowBuilder) LoadHeaders(loop Looper) error {
 	} else {
 		//default column ids to hide
 		hideColumns = loop.HideColumns()
-	}
-
-	if len(hideColumns) == 0 {
-		hideColumns = append(hideColumns, 7, 9)
 	}
 
 	tblHead = append(tblHead, loop.Headers()...)
@@ -211,59 +224,125 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 			if err != nil {
 
 			}
-			log.Debug("len(tblOut)", len(tblOut))
+			// log.Debug("len(tblOut)", len(tblOut))
 			rowsOut := b.MakeRow(b.info, tblOut)
 			log.Debug("rowsOut =", rowsOut)
 			b.Table.AddRow(rowsOut...)
 		}
 
+		if b.ShowInitContainers {
+			log.Debug("loop init ContainerStatuses")
+			b.info.ContainerType = "I"
+			if b.LoopStatus {
+				for _, container := range pod.Status.InitContainerStatuses {
+					// should the container be processed
+					log.Debug("processing -", container.Name)
+					if skipContainerName(b.CommonFlags, container.Name) {
+						continue
+					}
+					b.info.ContainerName = container.Name
+					tblOut, err := loop.BuildContainerStatus(container, b.info)
+					if err != nil {
+
+					}
+					rowsOut := b.MakeRow(b.info, tblOut)
+					b.Table.AddRow(rowsOut...)
+				}
+			}
+
+			if b.LoopSpec {
+				for _, container := range pod.Spec.InitContainers {
+					// should the container be processed
+					log.Debug("processing -", container.Name)
+					if skipContainerName(b.CommonFlags, container.Name) {
+						continue
+					}
+					b.info.ContainerName = container.Name
+					tblOut, err := loop.BuildContainerSpec(container, b.info)
+					if err != nil {
+
+					}
+					rowsOut := b.MakeRow(b.info, tblOut)
+					b.Table.AddRow(rowsOut...)
+
+					// tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
+					// columnInfo.ApplyRow(&table, tblOut)
+				}
+			}
+		}
+
 		//now show the container line
 		log.Debug("loop standard ContainerStatuses")
 		b.info.ContainerType = "S"
-		for _, container := range pod.Status.ContainerStatuses {
-			// should the container be processed
-			if skipContainerName(b.CommonFlags, container.Name) {
-				continue
-			}
-			b.info.ContainerName = container.Name
-			tblOut, err := loop.BuildContainerStatus(container, b.info)
-			if err != nil {
+		if b.LoopStatus {
+			for _, container := range pod.Status.ContainerStatuses {
+				// should the container be processed
+				if skipContainerName(b.CommonFlags, container.Name) {
+					continue
+				}
+				log.Debug("processing -", container.Name)
+				b.info.ContainerName = container.Name
+				tblOut, err := loop.BuildContainerStatus(container, b.info)
+				if err != nil {
 
+				}
+				rowsOut := b.MakeRow(b.info, tblOut)
+				b.Table.AddRow(rowsOut...)
 			}
-			rowsOut := b.MakeRow(b.info, tblOut)
-			b.Table.AddRow(rowsOut...)
 		}
 
-		log.Debug("loop init ContainerStatuses")
-		b.info.ContainerType = "I"
-		for _, container := range pod.Status.InitContainerStatuses {
-			// should the container be processed
-			if skipContainerName(b.CommonFlags, container.Name) {
-				continue
-			}
-			b.info.ContainerName = container.Name
-			tblOut, err := loop.BuildContainerStatus(container, b.info)
-			if err != nil {
+		if b.LoopSpec {
+			for _, container := range pod.Spec.Containers {
+				// should the container be processed
+				if skipContainerName(b.CommonFlags, container.Name) {
+					continue
+				}
+				log.Debug("processing -", container.Name)
+				b.info.ContainerName = container.Name
+				tblOut, err := loop.BuildContainerSpec(container, b.info)
+				if err != nil {
 
+				}
+				rowsOut := b.MakeRow(b.info, tblOut)
+				b.Table.AddRow(rowsOut...)
 			}
-			rowsOut := b.MakeRow(b.info, tblOut)
-			b.Table.AddRow(rowsOut...)
 		}
 
 		log.Debug("loop ephemeral ContainerStatuses")
 		b.info.ContainerType = "E"
-		for _, container := range pod.Status.EphemeralContainerStatuses {
-			// should the container be processed
-			if skipContainerName(b.CommonFlags, container.Name) {
-				continue
-			}
-			b.info.ContainerName = container.Name
-			tblOut, err := loop.BuildEphemeralContainerStatus(container, b.info)
-			if err != nil {
 
+		if b.LoopStatus {
+			for _, container := range pod.Status.EphemeralContainerStatuses {
+				// should the container be processed
+				if skipContainerName(b.CommonFlags, container.Name) {
+					continue
+				}
+				log.Debug("processing -", container.Name)
+				b.info.ContainerName = container.Name
+				tblOut, err := loop.BuildEphemeralContainerStatus(container, b.info)
+				if err != nil {
+
+				}
+				rowsOut := b.MakeRow(b.info, tblOut)
+				b.Table.AddRow(rowsOut...)
 			}
-			rowsOut := b.MakeRow(b.info, tblOut)
-			b.Table.AddRow(rowsOut...)
+		}
+
+		if b.LoopSpec {
+			for _, container := range pod.Spec.EphemeralContainers {
+				// should the container be processed
+				if skipContainerName(b.CommonFlags, container.Name) {
+					continue
+				}
+				log.Debug("processing -", container.Name)
+				b.info.ContainerName = container.Name
+				tblOut, err := loop.BuildEphemeralContainerSpec(container, b.info)
+				if err != nil {
+
+				}
+				rowsOut := b.MakeRow(b.info, tblOut)
+				b.Table.AddRow(rowsOut...)
+			}
 		}
 	}
 

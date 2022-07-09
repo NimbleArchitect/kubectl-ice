@@ -11,6 +11,9 @@ import (
 // always returns false if the flagList.container is empty as we expect to show all containers
 // returns true if we dont have a match
 func skipContainerName(flagList commonFlags, containerName string) bool {
+	log := logger{location: "Resource"}
+	log.Debug("Start")
+
 	if len(flagList.container) == 0 {
 		return false
 	}
@@ -19,6 +22,7 @@ func skipContainerName(flagList commonFlags, containerName string) bool {
 		return false
 	}
 
+	log.Debug("skipping -", containerName)
 	return true
 
 }

@@ -63,6 +63,10 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	log.Debug("Start")
 
 	builder := RowBuilder{}
+	builder.LoopStatus = true
+	builder.ShowPodName = true
+	builder.ShowInitContainers = true
+
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
@@ -119,57 +123,11 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	columnInfo.table = &table
 	log.Debug("commonFlagList.showTreeView =", commonFlagList.showTreeView)
 	builder.ShowTreeView = commonFlagList.showTreeView
-	// tblHead = builder.GetDefaultHead()
-	// defaultHeaderLen := len(tblHead)
-	// if commonFlagList.showTreeView {
-	// 	//NAMESPACE NODE NAME READY STARTED RESTARTS STATE REASON AGE
-	// 	tblHead = append(tblHead, "NAME")
-	// 	if commonFlagList.showDetails {
-	// 		hideColumns = append(hideColumns, 9)
-	// 	} else {
-	// 		hideColumns = append(hideColumns, 8, 10)
-	// 	}
-	// } else {
-	// 	//default column ids to hide
-	// 	if commonFlagList.showDetails {
-	// 		hideColumns = append(hideColumns, 8)
-	// 	}
-	// }
-
-	// if loopinfo.showPrevious {
-	// 	// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
-	// 	hideColumns = append(hideColumns, 0, 1, 2)
-	// }
-
-	// if len(hideColumns) == 0 {
-	// 	hideColumns = append(hideColumns, 7, 9)
-	// }
-
-	// tblHead = append(tblHead, "READY", "STARTED", "RESTARTS", "STATE", "REASON", "EXIT-CODE", "SIGNAL", "TIMESTAMP", "AGE", "MESSAGE")
-	// table.SetHeader(tblHead...)
-
-	// if len(commonFlagList.filterList) >= 1 {
-	// 	err = table.SetFilter(commonFlagList.filterList)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	// commonFlagList.showPodName = showPodName
-	// columnInfo.SetVisibleColumns(table, commonFlagList)
-
-	// for _, id := range hideColumns {
-	// 	table.HideColumn(defaultHeaderLen + id)
-	// }
 
 	builder.BuildRows(loopinfo)
 
 	// sorting by column breaks the tree view also previous is not valid so we sliently skip those actions
 	if !builder.ShowTreeView {
-		if err := table.SortByNames(commonFlagList.sortList...); err != nil {
-			return err
-		}
-
 		if !loopinfo.ShowPrevious { // restart count dosent show up when using previous flag
 			// do we need to find the outliers, we have enough data to compute a range
 			if commonFlagList.showOddities {
@@ -191,7 +149,6 @@ type status struct {
 	// columnInfo   containerInfomation
 	ShowPrevious bool
 	ShowDetails  bool
-	table        *Table
 }
 
 func (s status) Headers() []string {
@@ -208,6 +165,13 @@ func (s status) Headers() []string {
 		"AGE",
 		"MESSAGE",
 	}
+}
+
+func (s status) BuildContainerSpec(container v1.Container, info BuilderInformation) ([]Cell, error) {
+	return []Cell{}, nil
+}
+func (s status) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([]Cell, error) {
+	return []Cell{}, nil
 }
 
 func (s status) HideColumnsTree() []int {
@@ -228,6 +192,7 @@ func (s status) HideColumnsTree() []int {
 }
 
 func (s status) HideColumns() []int {
+	//"READY","STARTED","RESTARTS","STATE","REASON","EXIT-CODE","SIGNAL","TIMESTAMP","AGE","MESSAGE",
 	var hideColumns []int
 
 	if s.ShowDetails {
@@ -238,6 +203,11 @@ func (s status) HideColumns() []int {
 		// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
 		hideColumns = append(hideColumns, 0, 1, 2)
 	}
+
+	if len(hideColumns) == 0 {
+		hideColumns = append(hideColumns, 7, 9)
+	}
+
 	return hideColumns
 }
 

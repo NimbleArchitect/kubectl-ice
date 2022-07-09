@@ -134,9 +134,10 @@ func (t *Table) HideColumn(columnNumber int) {
 	log := logger{location: "Table:HideColumn"}
 	log.Debug("Start")
 
-	log.Debug("columnNumber =", columnNumber, "["+t.head[columnNumber].title+"]")
+	log.Debug("columnNumber =", columnNumber)
 	log.Debug("len(t.head) =", len(t.head))
 	if len(t.head) > columnNumber {
+		log.Debug("hide =", t.head[columnNumber].title)
 		t.head[columnNumber].hidden = true
 	} else {
 		panic(fmt.Sprintln("invalid column number", columnNumber))

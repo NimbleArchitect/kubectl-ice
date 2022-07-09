@@ -57,12 +57,20 @@ func resourceExample(r string) string {
 
 func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string, resourceType string) error {
 	var columnInfo containerInfomation
-	var tblHead []string
+	// var tblHead []string
 	var podname []string
-	var showPodName bool = true
-	var showRaw bool
-	var nodeLabels map[string]map[string]string
-	var podLabels map[string]map[string]string
+	// var showPodName bool = true
+	// var showRaw bool
+	// var nodeLabels map[string]map[string]string
+	// var podLabels map[string]map[string]string
+
+	log := logger{location: "Resource"}
+	log.Debug("Start", resourceType)
+
+	builder := RowBuilder{}
+	builder.LoopSpec = true
+	builder.ShowPodName = true
+	builder.ShowInitContainers = true
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -73,7 +81,8 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	if len(args) >= 1 {
 		podname = args
 		if len(podname[0]) >= 1 {
-			showPodName = false
+			log.Debug("builder.ShowPodName = false")
+			builder.ShowPodName = false
 		}
 	}
 	commonFlagList, err := processCommonFlags(cmd)
@@ -81,11 +90,17 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		return err
 	}
 	connect.Flags = commonFlagList
+	builder.CommonFlags = commonFlagList
 
-	podList, err := connect.GetPods(podname)
-	if err != nil {
-		return err
-	}
+	loopinfo := resource{}
+	builder.Connection = &connect
+
+	loopinfo.ResourceType = resourceType
+
+	// podList, err := connect.GetPods(podname)
+	// if err != nil {
+	// 	return err
+	// }
 
 	if err := connect.LoadMetricConfig(kubeFlags); err != nil {
 		return err
@@ -96,108 +111,110 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	}
 
 	if cmd.Flag("raw").Value.String() == "true" {
-		showRaw = true
+		loopinfo.ShowRaw = true
 	}
 
 	if cmd.Flag("node-label").Value.String() != "" {
-		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
-		nodeLabels, err = connect.GetNodeLabels(podList)
-		if err != nil {
-			return err
-		}
+		label := cmd.Flag("node-label").Value.String()
+		log.Debug("builder.LabelNodeName =", label)
+		builder.LabelNodeName = label
 	}
 
 	if cmd.Flag("pod-label").Value.String() != "" {
-		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
-		podLabels, err = connect.GetPodLabels(podList)
-		if err != nil {
-			return err
-		}
+		label := cmd.Flag("pod-label").Value.String()
+		log.Debug("builder.LabelPodName =", label)
+		builder.LabelPodName = label
 	}
 
 	table := Table{}
-	columnInfo.treeView = commonFlagList.showTreeView
+	builder.Table = &table
+	columnInfo.table = &table
+	log.Debug("commonFlagList.showTreeView =", commonFlagList.showTreeView)
+	// columnInfo.treeView = commonFlagList.showTreeView
+	builder.ShowTreeView = commonFlagList.showTreeView
 
-	tblHead = columnInfo.GetDefaultHead()
-	defaultHeaderLen := len(tblHead)
-	if commonFlagList.showTreeView {
-		// we have to control the name when displaying a tree view as the table
-		//  object dosent have the extra info to be able to process it
-		tblHead = append(tblHead, "NAME")
-	}
+	// tblHead = columnInfo.GetDefaultHead()
+	// defaultHeaderLen := len(tblHead)
+	// if commonFlagList.showTreeView {
+	// 	// we have to control the name when displaying a tree view as the table
+	// 	//  object dosent have the extra info to be able to process it
+	// 	tblHead = append(tblHead, "NAME")
+	// }
 
-	tblHead = append(tblHead, "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT")
-	table.SetHeader(tblHead...)
+	// tblHead = append(tblHead, "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT")
+	// table.SetHeader(tblHead...)
 
-	if len(commonFlagList.filterList) >= 1 {
-		err = table.SetFilter(commonFlagList.filterList)
-		if err != nil {
-			return err
-		}
-	}
+	// if len(commonFlagList.filterList) >= 1 {
+	// 	err = table.SetFilter(commonFlagList.filterList)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	commonFlagList.showPodName = showPodName
-	columnInfo.SetVisibleColumns(table, commonFlagList)
+	// commonFlagList.showPodName = showPodName
+	// columnInfo.SetVisibleColumns(table, commonFlagList)
 
-	podState := podMetrics2Hashtable(podStateList)
-	for _, pod := range podList {
-		columnInfo.LoadFromPod(pod)
+	loopinfo.MetricsResource = podMetrics2Hashtable(podStateList)
 
-		if columnInfo.labelNodeName != "" {
-			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-		}
-		if columnInfo.labelPodName != "" {
-			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-		}
+	builder.BuildRows(loopinfo)
+	// for _, pod := range podList {
+	// 	columnInfo.LoadFromPod(pod)
 
-		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-		if columnInfo.treeView {
-			tblOut := podStatsProcessBuildRow(pod, columnInfo)
-			columnInfo.ApplyRow(&table, tblOut)
-		}
+	// 	if columnInfo.labelNodeName != "" {
+	// 		columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
+	// 	}
+	// 	if columnInfo.labelPodName != "" {
+	// 		columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
+	// 	}
 
-		if commonFlagList.showInitContainers {
-			// process init containers
-			columnInfo.containerType = "I"
-			for _, container := range pod.Spec.InitContainers {
-				// should the container be processed
-				if skipContainerName(commonFlagList, container.Name) {
-					continue
-				}
-				columnInfo.containerName = container.Name
-				tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
-				columnInfo.ApplyRow(&table, tblOut)
-			}
-		} else {
-			// hide the container type column as its only needed when the init containers are being shown
-			if !columnInfo.treeView {
-				table.HideColumn(0)
-			}
-		}
+	// 	//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+	// 	if columnInfo.treeView {
+	// 		tblOut := podStatsProcessBuildRow(pod, columnInfo)
+	// 		columnInfo.ApplyRow(&table, tblOut)
+	// 	}
 
-		// process standard containers
-		columnInfo.containerType = "S"
-		for _, container := range pod.Spec.Containers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
-			columnInfo.ApplyRow(&table, tblOut)
-		}
+	// 	if commonFlagList.showInitContainers {
+	// 		// process init containers
+	// 		columnInfo.containerType = "I"
+	// 		for _, container := range pod.Spec.InitContainers {
+	// 			// should the container be processed
+	// 			if skipContainerName(commonFlagList, container.Name) {
+	// 				continue
+	// 			}
+	// 			columnInfo.containerName = container.Name
+	// 			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
+	// 			columnInfo.ApplyRow(&table, tblOut)
+	// 		}
+	// 	} else {
+	// 		// hide the container type column as its only needed when the init containers are being shown
+	// 		if !columnInfo.treeView {
+	// 			table.HideColumn(0)
+	// 		}
+	// 	}
 
-		columnInfo.containerType = "E"
-		for _, container := range pod.Spec.EphemeralContainers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
-			columnInfo.ApplyRow(&table, tblOut)
-		}
-	}
+	// 	// process standard containers
+	// 	columnInfo.containerType = "S"
+	// 	for _, container := range pod.Spec.Containers {
+	// 		// should the container be processed
+	// 		if skipContainerName(commonFlagList, container.Name) {
+	// 			continue
+	// 		}
+	// 		columnInfo.containerName = container.Name
+	// 		tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
+	// 		columnInfo.ApplyRow(&table, tblOut)
+	// 	}
+
+	// 	columnInfo.containerType = "E"
+	// 	for _, container := range pod.Spec.EphemeralContainers {
+	// 		// should the container be processed
+	// 		if skipContainerName(commonFlagList, container.Name) {
+	// 			continue
+	// 		}
+	// 		columnInfo.containerName = container.Name
+	// 		tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
+	// 		columnInfo.ApplyRow(&table, tblOut)
+	// 	}
+	// }
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -207,7 +224,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	// do we need to find the outliers, we have enough data to compute a range
 	if commonFlagList.showOddities {
-		row2Remove, err := table.ListOutOfRange(defaultHeaderLen+0, table.GetRows()) //1 = used column
+		row2Remove, err := table.ListOutOfRange(builder.DefaultHeaderLen+0, table.GetRows()) //1 = used column
 		if err != nil {
 			return err
 		}
@@ -218,23 +235,65 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	return nil
 }
 
-func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
+type resource struct {
+	// columnInfo   containerInfomation
+	MetricsResource map[string]map[string]v1.ResourceList
+	ResourceType    string
+	BytesAs         string
+	ShowRaw         bool
+	ShowPrevious    bool
+	ShowDetails     bool
+}
 
-	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
+func (s resource) Headers() []string {
+	return []string{
+		"USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
 	}
 }
 
-func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, info containerInfomation, resource string, showRaw bool, bytesAs string) []Cell {
+func (s resource) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([]Cell, error) {
+	return []Cell{}, nil
+}
+func (s resource) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([]Cell, error) {
+	return []Cell{}, nil
+}
+func (s resource) HideColumns() []int {
+	return []int{}
+}
+func (s resource) HideColumnsTree() []int {
+	return []int{}
+}
+
+// func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
+func (s resource) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+	return []Cell{
+		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+	}, nil
+}
+
+func (s resource) BuildContainerSpec(container v1.Container, info BuilderInformation) ([]Cell, error) {
+	metrics := s.MetricsResource[info.PodName][info.ContainerName]
+	return statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs), nil
+}
+
+func (s resource) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([]Cell, error) {
+	metrics := s.MetricsResource[info.PodName][info.ContainerName]
+	return statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs), nil
+}
+
+func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, info BuilderInformation, resource string, showRaw bool, bytesAs string) []Cell {
 	var cellList []Cell
 	var displayValue, request, limit, percentLimit, percentRequest string
 	var rawRequest, rawLimit, rawValue int64
 	var rawPercentRequest, rawPercentLimit float64
+
+	log := logger{location: "resources:statsProcessTableRow"}
+	log.Debug("Start")
 
 	floatfmt := "%.6f"
 
@@ -319,9 +378,9 @@ func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, 
 		}
 	}
 
-	if info.treeView {
-		cellList = buildTreeCell(info, cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = buildTreeCell(info, cellList)
+	// }
 
 	cellList = append(cellList,
 		NewCellInt(displayValue, rawValue),
@@ -331,6 +390,7 @@ func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, 
 		NewCellFloat(percentLimit, rawPercentLimit),
 	)
 
+	log.Debug("cellList", cellList)
 	return cellList
 }
 
