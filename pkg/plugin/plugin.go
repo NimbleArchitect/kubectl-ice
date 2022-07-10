@@ -31,7 +31,7 @@ type commonFlags struct {
 var helpTemplate = `
 {{if or .Runnable .HasSubCommands}}{{.UsageString}}{{end}}
 
-More information at: https://github.com/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 `
 
 func InitSubCommands(rootCmd *cobra.Command) {
