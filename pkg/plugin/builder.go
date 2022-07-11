@@ -274,8 +274,6 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 						rowsOut := b.MakeRow(b.info, row)
 						b.Table.AddRow(rowsOut...)
 					}
-					// tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
-					// columnInfo.ApplyRow(&table, tblOut)
 				}
 			}
 		}

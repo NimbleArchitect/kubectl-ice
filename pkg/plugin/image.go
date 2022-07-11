@@ -45,11 +45,20 @@ var imageExample = `  # List containers image info from pods
 
 func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var columnInfo containerInfomation
-	var tblHead []string
+	// var tblHead []string
 	var podname []string
-	var showPodName bool = true
-	var nodeLabels map[string]map[string]string
-	var podLabels map[string]map[string]string
+	// var showPodName bool = true
+	// var nodeLabels map[string]map[string]string
+	// var podLabels map[string]map[string]string
+
+	log := logger{location: "Commands"}
+	log.Debug("Start")
+
+	loopinfo := image{}
+	builder := RowBuilder{}
+	builder.LoopSpec = true
+	builder.ShowPodName = true
+	builder.ShowInitContainers = true
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -60,7 +69,8 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	if len(args) >= 1 {
 		podname = args
 		if len(podname[0]) >= 1 {
-			showPodName = false
+			log.Debug("builder.ShowPodName = false")
+			builder.ShowPodName = false
 		}
 	}
 	commonFlagList, err := processCommonFlags(cmd)
@@ -69,105 +79,25 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	}
 	connect.Flags = commonFlagList
 
-	podList, err := connect.GetPods(podname)
-	if err != nil {
-		return err
-	}
-
 	if cmd.Flag("node-label").Value.String() != "" {
-		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
-		nodeLabels, err = connect.GetNodeLabels(podList)
-		if err != nil {
-			return err
-		}
+		label := cmd.Flag("node-label").Value.String()
+		log.Debug("builder.LabelNodeName =", label)
+		builder.LabelNodeName = label
 	}
 
 	if cmd.Flag("pod-label").Value.String() != "" {
-		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
-		podLabels, err = connect.GetPodLabels(podList)
-		if err != nil {
-			return err
-		}
+		label := cmd.Flag("pod-label").Value.String()
+		log.Debug("builder.LabelPodName =", label)
+		builder.LabelPodName = label
 	}
 
 	table := Table{}
-	columnInfo.treeView = commonFlagList.showTreeView
-
-	tblHead = columnInfo.GetDefaultHead()
-	if commonFlagList.showTreeView {
-		// we have to control the name when displaying a tree view as the table
-		//  object dosent have the extra info to be able to process it
-		tblHead = append(tblHead, "NAME")
-	}
-
-	tblHead = append(tblHead, "PULL", "IMAGE")
-	table.SetHeader(tblHead...)
-
-	if len(commonFlagList.filterList) >= 1 {
-		err = table.SetFilter(commonFlagList.filterList)
-		if err != nil {
-			return err
-		}
-	}
-
-	commonFlagList.showPodName = showPodName
-	columnInfo.SetVisibleColumns(table, commonFlagList)
-
-	for _, pod := range podList {
-		columnInfo.LoadFromPod(pod)
-
-		if columnInfo.labelNodeName != "" {
-			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-		}
-		if columnInfo.labelPodName != "" {
-			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-		}
-
-		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-		if columnInfo.treeView {
-			tblOut := podImageBuildRow(pod, columnInfo)
-			columnInfo.ApplyRow(&table, tblOut)
-		}
-
-		columnInfo.containerType = "S"
-		for _, container := range pod.Spec.Containers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			tblOut := imageBuildRow(columnInfo, container.Image, string(container.ImagePullPolicy))
-			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
-		}
-
-		columnInfo.containerType = "I"
-		for _, container := range pod.Spec.InitContainers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			tblOut := imageBuildRow(columnInfo, container.Image, string(container.ImagePullPolicy))
-			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
-		}
-
-		columnInfo.containerType = "E"
-		for _, container := range pod.Spec.EphemeralContainers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			tblOut := imageBuildRow(columnInfo, container.Image, string(container.ImagePullPolicy))
-			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
-		}
-	}
+	columnInfo.table = &table
+	builder.CommonFlags = commonFlagList
+	builder.Connection = &connect
+	builder.Table = &table
+	builder.ShowTreeView = commonFlagList.showTreeView
+	builder.BuildRows(loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -178,18 +108,52 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 }
 
-func podImageBuildRow(pod v1.Pod, info containerInfomation) []Cell {
-	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
-		NewCellText(""),
-		NewCellText(""),
+type image struct {
+}
+
+func (s image) Headers() []string {
+	return []string{
+		"PULL", "IMAGE",
 	}
 }
 
-func imageBuildRow(info containerInfomation, imageName string, pullPolicy string) []Cell {
+func (s image) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
+
+func (s image) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
+
+func (s image) HideColumns(info BuilderInformation) []int {
+	return []int{}
+}
+
+func (s image) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+	return []Cell{
+		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
+		NewCellText(""),
+		NewCellText(""),
+	}, nil
+}
+
+func (s image) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+	out := make([][]Cell, 1)
+	out[0] = imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
+	return out, nil
+}
+
+func (s image) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+	out := make([][]Cell, 1)
+	out[0] = imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
+	return out, nil
+}
+
+func imageBuildRow(info BuilderInformation, imageName string, pullPolicy string) []Cell {
 	var cellList []Cell
-	if info.treeView {
-		cellList = buildTreeCell(info, cellList)
+
+	if info.TreeView {
+		cellList = info.BuildTreeCell(cellList)
 	}
 
 	cellList = append(cellList,

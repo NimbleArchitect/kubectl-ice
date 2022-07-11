@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -43,10 +45,19 @@ var environmentExample = `  # List containers env info from pods
 
 func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var columnInfo containerInfomation
-	var tblHead []string
+	// var tblHead []string
 	var podname []string
-	var showPodName bool = true
-	var translateConfigMap bool
+	// var showPodName bool = true
+	// var translateConfigMap bool
+
+	log := logger{location: "Commands"}
+	log.Debug("Start")
+
+	loopinfo := env{}
+	builder := RowBuilder{}
+	builder.LoopSpec = true
+	builder.ShowPodName = true
+	builder.ShowInitContainers = true
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -57,7 +68,8 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	if len(args) >= 1 {
 		podname = args
 		if len(podname[0]) >= 1 {
-			showPodName = false
+			log.Debug("builder.ShowPodName = false")
+			builder.ShowPodName = false
 		}
 	}
 	commonFlagList, err := processCommonFlags(cmd)
@@ -65,83 +77,92 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 		return err
 	}
 	connect.Flags = commonFlagList
+	builder.CommonFlags = commonFlagList
 
-	podList, err := connect.GetPods(podname)
-	if err != nil {
-		return err
-	}
+	builder.Connection = &connect
+	loopinfo.Connection = &connect
+
+	// podList, err := connect.GetPods(podname)
+	// if err != nil {
+	// 	return err
+	// }
 
 	if cmd.Flag("translate").Value.String() == "true" {
-		translateConfigMap = true
+		loopinfo.TranslateConfigMap = true
 	}
 
 	table := Table{}
-	tblHead = append(columnInfo.GetDefaultHead(), "NAME", "VALUE")
-	table.SetHeader(tblHead...)
+	builder.Table = &table
+	columnInfo.table = &table
+	// tblHead = append(columnInfo.GetDefaultHead(), "NAME", "VALUE")
+	builder.ShowTreeView = commonFlagList.showTreeView
 
-	if len(commonFlagList.filterList) >= 1 {
-		err = table.SetFilter(commonFlagList.filterList)
-		if err != nil {
-			return err
-		}
-	}
+	// table.SetHeader(tblHead...)
+	// if len(commonFlagList.filterList) >= 1 {
+	// 	err = table.SetFilter(commonFlagList.filterList)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	commonFlagList.showPodName = showPodName
-	columnInfo.SetVisibleColumns(table, commonFlagList)
+	// commonFlagList.showPodName = showPodName
+	// columnInfo.SetVisibleColumns(table, commonFlagList)
 
-	for _, pod := range podList {
-		columnInfo.LoadFromPod(pod)
+	builder.BuildRows(loopinfo)
 
-		connect.SetNamespace(pod.Namespace)
-		columnInfo.containerType = "S"
-		for _, container := range pod.Spec.Containers {
+	// for _, pod := range podList {
+	// 	columnInfo.LoadFromPod(pod)
 
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			allRows := buildEnvFromContainer(container)
-			for _, envRow := range allRows {
-				tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
-				columnInfo.ApplyRow(&table, tblOut)
-				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				// table.AddRow(tblFullRow...)
-			}
-		}
+	// 	connect.SetNamespace(pod.Namespace)
+	// 	columnInfo.containerType = "S"
+	// 	for _, container := range pod.Spec.Containers {
 
-		columnInfo.containerType = "I"
-		for _, container := range pod.Spec.InitContainers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			allRows := buildEnvFromContainer(container)
-			for _, envRow := range allRows {
-				tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
-				columnInfo.ApplyRow(&table, tblOut)
-				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				// table.AddRow(tblFullRow...)
-			}
-		}
+	// 		// should the container be processed
+	// 		if skipContainerName(commonFlagList, container.Name) {
+	// 			continue
+	// 		}
+	// 		columnInfo.containerName = container.Name
+	// 		allRows := buildEnvFromContainer(container)
+	// 		for _, envRow := range allRows {
+	// 			tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
+	// 			columnInfo.ApplyRow(&table, tblOut)
+	// 			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+	// 			// table.AddRow(tblFullRow...)
+	// 		}
+	// 	}
 
-		columnInfo.containerType = "E"
-		for _, container := range pod.Spec.EphemeralContainers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			allRows := buildEnvFromEphemeral(container)
-			for _, envRow := range allRows {
-				tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
-				columnInfo.ApplyRow(&table, tblOut)
-				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				// table.AddRow(tblFullRow...)
-			}
-		}
-	}
+	// 	columnInfo.containerType = "I"
+	// 	for _, container := range pod.Spec.InitContainers {
+	// 		// should the container be processed
+	// 		if skipContainerName(commonFlagList, container.Name) {
+	// 			continue
+	// 		}
+	// 		columnInfo.containerName = container.Name
+	// 		allRows := buildEnvFromContainer(container)
+	// 		for _, envRow := range allRows {
+	// 			tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
+	// 			columnInfo.ApplyRow(&table, tblOut)
+	// 			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+	// 			// table.AddRow(tblFullRow...)
+	// 		}
+	// 	}
+
+	// 	columnInfo.containerType = "E"
+	// 	for _, container := range pod.Spec.EphemeralContainers {
+	// 		// should the container be processed
+	// 		if skipContainerName(commonFlagList, container.Name) {
+	// 			continue
+	// 		}
+	// 		columnInfo.containerName = container.Name
+	// 		allRows := buildEnvFromEphemeral(container)
+	// 		for _, envRow := range allRows {
+	// 			tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
+	// 			columnInfo.ApplyRow(&table, tblOut)
+	// 			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+	// 			// table.AddRow(tblFullRow...)
+	// 		}
+	// 	}
+	// }
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -152,7 +173,57 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 
 }
 
-func envBuildRow(info containerInfomation, env v1.EnvVar, connect Connector, translate bool) []Cell {
+type env struct {
+	Connection         *Connector
+	TranslateConfigMap bool
+}
+
+func (s env) Headers() []string {
+	return []string{
+		"NAME", "VALUE",
+	}
+}
+
+func (s env) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
+
+func (s env) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
+
+func (s env) HideColumns(info BuilderInformation) []int {
+	return []int{}
+}
+
+// func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
+func (s env) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+	return []Cell{
+		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
+		NewCellText(""),
+	}, nil
+}
+
+func (s env) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+	out := [][]Cell{}
+	allRows := buildEnvFromContainer(container)
+	for _, envRow := range allRows {
+		out = append(out, envBuildRow(info, envRow, s.Connection, s.TranslateConfigMap))
+	}
+	fmt.Println(out)
+	return out, nil
+}
+
+func (s env) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+	out := [][]Cell{}
+	allRows := buildEnvFromEphemeral(container)
+	for _, envRow := range allRows {
+		out = append(out, envBuildRow(info, envRow, s.Connection, s.TranslateConfigMap))
+	}
+	return out, nil
+}
+
+func envBuildRow(info BuilderInformation, env v1.EnvVar, connect *Connector, translate bool) []Cell {
 	var envKey, envValue string
 	var configName string
 	var key string
