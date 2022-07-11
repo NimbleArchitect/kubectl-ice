@@ -251,16 +251,11 @@ func (s resource) Headers() []string {
 	}
 }
 
-func (s resource) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([]Cell, error) {
-	return []Cell{}, nil
+func (s resource) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
 }
-func (s resource) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([]Cell, error) {
-	return []Cell{}, nil
-}
-func (s resource) HideColumns() []int {
-	return []int{}
-}
-func (s resource) HideColumnsTree() []int {
+
+func (s resource) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
@@ -276,14 +271,18 @@ func (s resource) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) 
 	}, nil
 }
 
-func (s resource) BuildContainerSpec(container v1.Container, info BuilderInformation) ([]Cell, error) {
+func (s resource) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	metrics := s.MetricsResource[info.PodName][info.ContainerName]
-	return statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs), nil
+	out := make([][]Cell, 1)
+	out[0] = statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs)
+	return out, nil
 }
 
-func (s resource) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([]Cell, error) {
+func (s resource) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	metrics := s.MetricsResource[info.PodName][info.ContainerName]
-	return statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs), nil
+	out := make([][]Cell, 1)
+	out[0] = statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs)
+	return out, nil
 }
 
 func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, info BuilderInformation, resource string, showRaw bool, bytesAs string) []Cell {

@@ -167,53 +167,45 @@ func (s status) Headers() []string {
 	}
 }
 
-func (s status) BuildContainerSpec(container v1.Container, info BuilderInformation) ([]Cell, error) {
-	return []Cell{}, nil
+func (s status) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
 }
-func (s status) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([]Cell, error) {
-	return []Cell{}, nil
-}
-
-func (s status) HideColumnsTree() []int {
-	var hideColumns []int
-
-	if s.ShowDetails {
-		hideColumns = append(hideColumns, 9)
-	} else {
-		hideColumns = append(hideColumns, 8, 10)
-	}
-
-	if s.ShowPrevious {
-		// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
-		hideColumns = append(hideColumns, 0, 1, 2)
-	}
-	return hideColumns
-
+func (s status) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
 }
 
-func (s status) HideColumns() []int {
+func (s status) HideColumns(info BuilderInformation) []int {
 	//"READY","STARTED","RESTARTS","STATE","REASON","EXIT-CODE","SIGNAL","TIMESTAMP","AGE","MESSAGE",
 	var hideColumns []int
 
-	if s.ShowDetails {
-		hideColumns = append(hideColumns, 8)
-	}
+	if info.TreeView {
+		// tree view is too wide when all columns are shown so hide the non important
+		if s.ShowDetails {
+			hideColumns = append(hideColumns, 9)
+		} else {
+			hideColumns = append(hideColumns, 8, 10)
+		}
 
-	if s.ShowPrevious {
-		// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
-		hideColumns = append(hideColumns, 0, 1, 2)
-	}
+		if s.ShowPrevious {
+			// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
+			hideColumns = append(hideColumns, 0, 1, 2)
+		}
+	} else {
+		if s.ShowDetails {
+			hideColumns = append(hideColumns, 8)
+		}
 
-	if len(hideColumns) == 0 {
-		hideColumns = append(hideColumns, 7, 9)
-	}
+		if s.ShowPrevious {
+			// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
+			hideColumns = append(hideColumns, 0, 1, 2)
+		}
 
+		if len(hideColumns) == 0 {
+			hideColumns = append(hideColumns, 7, 9)
+		}
+
+	}
 	return hideColumns
-}
-
-func (s status) BuildEphemeralContainerStatus(container v1.ContainerStatus, columnInfo BuilderInformation) ([]Cell, error) {
-	// s.columnInfo.AddRow(row)
-	return []Cell{}, nil
 }
 
 func (s status) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
@@ -243,7 +235,7 @@ func (s status) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	}, nil
 }
 
-func (s status) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([]Cell, error) {
+func (s status) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	var cellList []Cell
 	var reason string
 	var exitCode string
@@ -330,7 +322,10 @@ func (s status) BuildContainerStatus(container v1.ContainerStatus, info BuilderI
 	)
 
 	log.Debug("len(cellList) =", len(cellList))
-	return cellList, nil
+
+	out := make([][]Cell, 1)
+	out[0] = cellList
+	return out, nil
 }
 
 // Removes the pod name and container name from the status message as its already in the output table

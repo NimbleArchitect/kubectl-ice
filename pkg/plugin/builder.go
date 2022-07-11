@@ -9,13 +9,11 @@ import (
 type Looper interface {
 	// Build(container v1.ContainerStatus, columnInfo container) ([]Cell, error)
 	BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error)
-	BuildContainerSpec(container v1.Container, info BuilderInformation) ([]Cell, error)
-	BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([]Cell, error)
-	BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([]Cell, error)
-	BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([]Cell, error)
+	BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error)
+	BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error)
+	BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error)
 	Headers() []string
-	HideColumns() []int
-	HideColumnsTree() []int
+	HideColumns(info BuilderInformation) []int
 }
 
 type RowBuilder struct {
@@ -100,11 +98,8 @@ func (b *RowBuilder) LoadHeaders(loop Looper) error {
 	log.Debug("b.info.TreeView =", b.info.TreeView)
 	if b.info.TreeView {
 		tblHead = append(tblHead, "NAME")
-		hideColumns = loop.HideColumnsTree()
-	} else {
-		//default column ids to hide
-		hideColumns = loop.HideColumns()
 	}
+	hideColumns = loop.HideColumns(b.info)
 
 	tblHead = append(tblHead, loop.Headers()...)
 	log.Debug("len(tblHead) =", len(tblHead))
@@ -252,12 +247,14 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 						continue
 					}
 					b.info.ContainerName = container.Name
-					tblOut, err := loop.BuildContainerStatus(container, b.info)
+					allRows, err := loop.BuildContainerStatus(container, b.info)
 					if err != nil {
 
 					}
-					rowsOut := b.MakeRow(b.info, tblOut)
-					b.Table.AddRow(rowsOut...)
+					for _, row := range allRows {
+						rowsOut := b.MakeRow(b.info, row)
+						b.Table.AddRow(rowsOut...)
+					}
 				}
 			}
 
@@ -269,13 +266,14 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 						continue
 					}
 					b.info.ContainerName = container.Name
-					tblOut, err := loop.BuildContainerSpec(container, b.info)
+					allRows, err := loop.BuildContainerSpec(container, b.info)
 					if err != nil {
 
 					}
-					rowsOut := b.MakeRow(b.info, tblOut)
-					b.Table.AddRow(rowsOut...)
-
+					for _, row := range allRows {
+						rowsOut := b.MakeRow(b.info, row)
+						b.Table.AddRow(rowsOut...)
+					}
 					// tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
 					// columnInfo.ApplyRow(&table, tblOut)
 				}
@@ -293,12 +291,14 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 				}
 				log.Debug("processing -", container.Name)
 				b.info.ContainerName = container.Name
-				tblOut, err := loop.BuildContainerStatus(container, b.info)
+				allRows, err := loop.BuildContainerStatus(container, b.info)
 				if err != nil {
 
 				}
-				rowsOut := b.MakeRow(b.info, tblOut)
-				b.Table.AddRow(rowsOut...)
+				for _, row := range allRows {
+					rowsOut := b.MakeRow(b.info, row)
+					b.Table.AddRow(rowsOut...)
+				}
 			}
 		}
 
@@ -310,12 +310,14 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 				}
 				log.Debug("processing -", container.Name)
 				b.info.ContainerName = container.Name
-				tblOut, err := loop.BuildContainerSpec(container, b.info)
+				allRows, err := loop.BuildContainerSpec(container, b.info)
 				if err != nil {
 
 				}
-				rowsOut := b.MakeRow(b.info, tblOut)
-				b.Table.AddRow(rowsOut...)
+				for _, row := range allRows {
+					rowsOut := b.MakeRow(b.info, row)
+					b.Table.AddRow(rowsOut...)
+				}
 			}
 		}
 
@@ -330,12 +332,14 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 				}
 				log.Debug("processing -", container.Name)
 				b.info.ContainerName = container.Name
-				tblOut, err := loop.BuildEphemeralContainerStatus(container, b.info)
+				allRows, err := loop.BuildContainerStatus(container, b.info)
 				if err != nil {
 
 				}
-				rowsOut := b.MakeRow(b.info, tblOut)
-				b.Table.AddRow(rowsOut...)
+				for _, row := range allRows {
+					rowsOut := b.MakeRow(b.info, row)
+					b.Table.AddRow(rowsOut...)
+				}
 			}
 		}
 
@@ -347,12 +351,14 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 				}
 				log.Debug("processing -", container.Name)
 				b.info.ContainerName = container.Name
-				tblOut, err := loop.BuildEphemeralContainerSpec(container, b.info)
+				allRows, err := loop.BuildEphemeralContainerSpec(container, b.info)
 				if err != nil {
 
 				}
-				rowsOut := b.MakeRow(b.info, tblOut)
-				b.Table.AddRow(rowsOut...)
+				for _, row := range allRows {
+					rowsOut := b.MakeRow(b.info, row)
+					b.Table.AddRow(rowsOut...)
+				}
 			}
 		}
 	}
