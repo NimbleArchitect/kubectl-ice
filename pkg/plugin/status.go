@@ -54,10 +54,7 @@ var statusExample = `  # List individual container status from pods
 
 func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var columnInfo containerInfomation
-	//var tblHead []string
 	var podname []string
-	// var showPodName bool = true
-	//var hideColumns []int
 
 	log := logger{location: "Status"}
 	log.Debug("Start")
@@ -90,17 +87,11 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 	loopinfo := status{}
 	builder.Connection = &connect
-	// builder.ColumnInfo = &columnInfo
 
 	if cmd.Flag("previous").Value.String() == "true" {
 		log.Debug("loopinfo.ShowPrevious = true")
 		loopinfo.ShowPrevious = true
 	}
-
-	// if cmd.Flag("details").Value.String() == "true" {
-	// 	log.Debug("loopinfo.ShowPrevious = true")
-	// 	loopinfo.ShowDetails = true
-	// }
 
 	if cmd.Flag("node-label").Value.String() != "" {
 		label := cmd.Flag("node-label").Value.String()
@@ -293,7 +284,7 @@ func (s status) BuildContainerStatus(container v1.ContainerStatus, info BuilderI
 	restarts := fmt.Sprintf("%d", container.RestartCount)
 	rawRestarts = int64(container.RestartCount)
 	// remove pod and container name from the message string
-	message = trimStatusMessage(message, info.PodName, info.ContainerName)
+	message = s.trimStatusMessage(message, info.PodName, info.ContainerName)
 
 	//we can only show the age if we have a start time some states dont have said starttime so we have to skip them
 	if skipAgeCalculation {
@@ -329,7 +320,7 @@ func (s status) BuildContainerStatus(container v1.ContainerStatus, info BuilderI
 }
 
 // Removes the pod name and container name from the status message as its already in the output table
-func trimStatusMessage(message string, podName string, containerName string) string {
+func (s status) trimStatusMessage(message string, podName string, containerName string) string {
 
 	if len(message) <= 0 {
 		return ""

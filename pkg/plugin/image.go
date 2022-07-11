@@ -45,13 +45,9 @@ var imageExample = `  # List containers image info from pods
 
 func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var columnInfo containerInfomation
-	// var tblHead []string
 	var podname []string
-	// var showPodName bool = true
-	// var nodeLabels map[string]map[string]string
-	// var podLabels map[string]map[string]string
 
-	log := logger{location: "Commands"}
+	log := logger{location: "Image"}
 	log.Debug("Start")
 
 	loopinfo := image{}

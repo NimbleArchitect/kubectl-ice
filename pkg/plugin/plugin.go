@@ -11,11 +11,11 @@ import (
 )
 
 type commonFlags struct {
-	allNamespaces      bool                  // should we search all namespaces
-	container          string                // name of the container to search for
-	filterList         map[string]matchValue // used to filter out rows form the table during Print function
-	labels             string                // k8s pod labels
-	showDetail         bool                  // shows extra the timestamp instead of the age column along with a few extra columns
+	allNamespaces bool                  // should we search all namespaces
+	container     string                // name of the container to search for
+	filterList    map[string]matchValue // used to filter out rows form the table during Print function
+	labels        string                // k8s pod labels
+	// showDetail         bool                  // shows extra the timestamp instead of the age column along with a few extra columns
 	showInitContainers bool                  //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
 	showOddities       bool                  // this isnt really common but it does show up across 3+ commands and im lazy
 	showNamespaceName  bool                  // shows the namespace name of each pod

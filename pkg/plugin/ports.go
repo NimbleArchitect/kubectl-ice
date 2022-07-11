@@ -45,13 +45,9 @@ var portsExample = `  # List containers port info from pods
 
 func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var columnInfo containerInfomation
-	// var tblHead []string
 	var podname []string
-	// var showPodName bool = true
-	// var nodeLabels map[string]map[string]string
-	// var podLabels map[string]map[string]string
 
-	log := logger{location: "Capabilities"}
+	log := logger{location: "Ports"}
 	log.Debug("Start")
 
 	loopinfo := ports{}
@@ -81,11 +77,6 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	builder.CommonFlags = commonFlagList
 	builder.Connection = &connect
 
-	// podList, err := connect.GetPods(podname)
-	// if err != nil {
-	// 	return err
-	// }
-
 	if cmd.Flag("node-label").Value.String() != "" {
 		label := cmd.Flag("node-label").Value.String()
 		log.Debug("builder.LabelNodeName =", label)
@@ -103,89 +94,7 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	// tblHead = columnInfo.GetDefaultHead()
-	// if commonFlagList.showTreeView {
-	// 	// we have to control the name when displaying a tree view as the table
-	// 	//  object dosent have the extra info to be able to process it
-	// 	tblHead = append(tblHead, "NAME")
-	// }
-
-	// tblHead = append(tblHead, "PORTNAME", "PORT", "PROTO", "HOSTPORT")
-	// table.SetHeader(tblHead...)
-
-	// if len(commonFlagList.filterList) >= 1 {
-	// 	err = table.SetFilter(commonFlagList.filterList)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	// commonFlagList.showPodName = showPodName
-	// columnInfo.SetVisibleColumns(table, commonFlagList)
-
 	builder.BuildRows(loopinfo)
-
-	// for _, pod := range podList {
-	// 	columnInfo.LoadFromPod(pod)
-
-	// 	if columnInfo.labelNodeName != "" {
-	// 		columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-	// 	}
-	// 	if columnInfo.labelPodName != "" {
-	// 		columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-	// 	}
-
-	// 	//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-	// 	if columnInfo.treeView {
-	// 		tblOut := podPortsBuildRow(pod, columnInfo)
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 	}
-
-	// 	columnInfo.containerType = "S"
-	// 	for _, container := range pod.Spec.Containers {
-	// 		for _, port := range container.Ports {
-	// 			// should the container be processed
-	// 			if skipContainerName(commonFlagList, container.Name) {
-	// 				continue
-	// 			}
-	// 			columnInfo.containerName = container.Name
-	// 			tblOut := portsBuildRow(columnInfo, port)
-	// 			columnInfo.ApplyRow(&table, tblOut)
-	// 			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 			// table.AddRow(tblFullRow...)
-	// 		}
-	// 	}
-
-	// 	columnInfo.containerType = "I"
-	// 	for _, container := range pod.Spec.InitContainers {
-	// 		for _, port := range container.Ports {
-	// 			// should the container be processed
-	// 			if skipContainerName(commonFlagList, container.Name) {
-	// 				continue
-	// 			}
-	// 			columnInfo.containerName = container.Name
-	// 			tblOut := portsBuildRow(columnInfo, port)
-	// 			columnInfo.ApplyRow(&table, tblOut)
-	// 			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 			// table.AddRow(tblFullRow...)
-	// 		}
-	// 	}
-
-	// 	columnInfo.containerType = "E"
-	// 	for _, container := range pod.Spec.EphemeralContainers {
-	// 		for _, port := range container.Ports {
-	// 			// should the container be processed
-	// 			if skipContainerName(commonFlagList, container.Name) {
-	// 				continue
-	// 			}
-	// 			columnInfo.containerName = container.Name
-	// 			tblOut := portsBuildRow(columnInfo, port)
-	// 			columnInfo.ApplyRow(&table, tblOut)
-	// 			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 			// table.AddRow(tblFullRow...)
-	// 		}
-	// 	}
-	// }
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err

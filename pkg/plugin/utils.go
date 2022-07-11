@@ -122,21 +122,21 @@ func portAsString(port intstr.IntOrString) string {
 	return ""
 }
 
-func buildTreeCell(info containerInfomation, cellList []Cell) []Cell {
-	var namePrefix string
+// func buildTreeCell(info containerInfomation, cellList []Cell) []Cell {
+// 	var namePrefix string
 
-	if info.containerType == "S" {
-		namePrefix = "Container/"
-	}
-	if info.containerType == "I" {
-		namePrefix = "InitContainer/"
-	}
-	if info.containerType == "E" {
-		namePrefix = "EphemeralContainer/"
-	}
+// 	if info.containerType == "S" {
+// 		namePrefix = "Container/"
+// 	}
+// 	if info.containerType == "I" {
+// 		namePrefix = "InitContainer/"
+// 	}
+// 	if info.containerType == "E" {
+// 		namePrefix = "EphemeralContainer/"
+// 	}
 
-	cellList = append(cellList,
-		NewCellText(fmt.Sprint("└─", namePrefix, info.containerName)),
-	)
-	return cellList
-}
+// 	cellList = append(cellList,
+// 		NewCellText(fmt.Sprint("└─", namePrefix, info.containerName)),
+// 	)
+// 	return cellList
+// }

@@ -44,12 +44,7 @@ var securityExample = `  # List container security info from pods
 //list details of configured liveness readiness and startup security
 func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var columnInfo containerInfomation
-	// var tblHead []string
 	var podname []string
-	// var showPodName bool = true
-	// var SELinuxOptions bool
-	// var nodeLabels map[string]map[string]string
-	// var podLabels map[string]map[string]string
 
 	log := logger{location: "Security"}
 	log.Debug("Start")
@@ -81,11 +76,6 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	builder.CommonFlags = commonFlagList
 	builder.Connection = &connect
 
-	// podList, err := connect.GetPods(podname)
-	// if err != nil {
-	// 	return err
-	// }
-
 	if cmd.Flag("node-label").Value.String() != "" {
 		label := cmd.Flag("node-label").Value.String()
 		log.Debug("builder.LabelNodeName =", label)
@@ -102,89 +92,12 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	// tblHead = columnInfo.GetDefaultHead()
-	// if commonFlagList.showTreeView {
-	// 	// we have to control the name when displaying a tree view as the table
-	// 	//  object dosent have the extra info to be able to process it
-	// 	tblHead = append(tblHead, "NAME")
-	// }
 	if cmd.Flag("selinux").Value.String() == "true" {
 		log.Debug("loopinfo.ShowSELinuxOptions = true")
 		loopinfo.ShowSELinuxOptions = true
 	}
 
-	// if cmd.Flag("selinux").Value.String() == "true" {
-	// 	showSELinuxOptions = true
-	// 	tblHead = append(tblHead, "USER", "ROLE", "TYPE", "LEVEL")
-	// } else {
-	// 	tblHead = append(tblHead, "ALLOW_PRIVILEGE_ESCALATION", "PRIVILEGED", "RO_ROOT_FS", "RUN_AS_NON_ROOT", "RUN_AS_USER", "RUN_AS_GROUP")
-	// }
-	// table.SetHeader(tblHead...)
-
-	// if len(commonFlagList.filterList) >= 1 {
-	// 	err = table.SetFilter(commonFlagList.filterList)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	// commonFlagList.showPodName = showPodName
-	// columnInfo.SetVisibleColumns(table, commonFlagList)
-
 	builder.BuildRows(loopinfo)
-
-	// for _, pod := range podList {
-	// 	columnInfo.LoadFromPod(pod)
-
-	// 	if columnInfo.labelNodeName != "" {
-	// 		columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-	// 	}
-	// 	if columnInfo.labelPodName != "" {
-	// 		columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-	// 	}
-
-	// 	//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-	// 	if columnInfo.treeView {
-	// 		tblOut := podSecurityBuildRow(pod, columnInfo, showSELinuxOptions)
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 	}
-
-	// 	columnInfo.containerType = "S"
-	// 	for _, container := range pod.Spec.Containers {
-	// 		var tblOut []Cell
-	// 		// should the container be processed
-	// 		if skipContainerName(commonFlagList, container.Name) {
-	// 			continue
-	// 		}
-	// 		columnInfo.containerName = container.Name
-	// 		if showSELinuxOptions {
-	// 			tblOut = seLinuxBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
-	// 		} else {
-	// 			tblOut = securityBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
-	// 		}
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 		// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 		// table.AddRow(tblFullRow...)
-	// 	}
-
-	// 	columnInfo.containerType = "I"
-	// 	for _, container := range pod.Spec.InitContainers {
-	// 		var tblOut []Cell
-	// 		// should the container be processed
-	// 		if skipContainerName(commonFlagList, container.Name) {
-	// 			continue
-	// 		}
-	// 		columnInfo.containerName = container.Name
-	// 		if showSELinuxOptions {
-	// 			tblOut = seLinuxBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
-	// 		} else {
-	// 			tblOut = securityBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
-	// 		}
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 		// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 		// table.AddRow(tblFullRow...)
-	// 	}
-	// }
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -256,9 +169,9 @@ func (s security) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) 
 func (s security) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	out := make([][]Cell, 1)
 	if s.ShowSELinuxOptions {
-		out[0] = seLinuxBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
+		out[0] = s.seLinuxBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
 	} else {
-		out[0] = securityBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
+		out[0] = s.securityBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
 	}
 	return out, nil
 }
@@ -266,36 +179,14 @@ func (s security) BuildContainerSpec(container v1.Container, info BuilderInforma
 func (s security) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := make([][]Cell, 1)
 	if s.ShowSELinuxOptions {
-		out[0] = seLinuxBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
+		out[0] = s.seLinuxBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
 	} else {
-		out[0] = securityBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
+		out[0] = s.securityBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
 	}
 	return out, nil
 }
 
-func podSecurityBuildRow(pod v1.Pod, info containerInfomation, showSELinuxOptions bool) []Cell {
-	if showSELinuxOptions {
-		return []Cell{
-			NewCellText(fmt.Sprint("Pod/", info.podName)), //name
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-		}
-	} else {
-		return []Cell{
-			NewCellText(fmt.Sprint("Pod/", info.podName)), //name
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-		}
-	}
-}
-
-func securityBuildRow(info BuilderInformation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
+func (s security) securityBuildRow(info BuilderInformation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
 	var cellList []Cell
 	ape := Cell{}
 	p := Cell{}
@@ -361,7 +252,7 @@ func securityBuildRow(info BuilderInformation, csc *v1.SecurityContext, psc *v1.
 
 }
 
-func seLinuxBuildRow(info BuilderInformation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
+func (s security) seLinuxBuildRow(info BuilderInformation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
 	var cellList []Cell
 	seLevel := Cell{}
 	seRole := Cell{}

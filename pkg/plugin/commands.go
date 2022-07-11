@@ -51,11 +51,7 @@ type commandLine struct {
 
 func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var columnInfo containerInfomation
-	// var tblHead []string
 	var podname []string
-	// var showPodName bool = true
-	// var nodeLabels map[string]map[string]string
-	// var podLabels map[string]map[string]string
 
 	log := logger{location: "Commands"}
 	log.Debug("Start")
@@ -85,13 +81,7 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	}
 	connect.Flags = commonFlagList
 	builder.CommonFlags = commonFlagList
-
 	builder.Connection = &connect
-
-	// podList, err := connect.GetPods(podname)
-	// if err != nil {
-	// 	return err
-	// }
 
 	if cmd.Flag("node-label").Value.String() != "" {
 		label := cmd.Flag("node-label").Value.String()
@@ -108,98 +98,9 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	table := Table{}
 	builder.Table = &table
 	columnInfo.table = &table
-	// columnInfo.treeView = commonFlagList.showTreeView
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	// tblHead = columnInfo.GetDefaultHead()
-	// if commonFlagList.showTreeView {
-	// 	// we have to control the name when displaying a tree view as the table
-	// 	//  object dosent have the extra info to be able to process it
-	// 	tblHead = append(tblHead, "NAME")
-	// }
-
-	// tblHead = append(tblHead, "COMMAND", "ARGUMENTS")
-	// table.SetHeader(tblHead...)
-
-	// if len(commonFlagList.filterList) >= 1 {
-	// 	err = table.SetFilter(commonFlagList.filterList)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	// commonFlagList.showPodName = showPodName
-	// columnInfo.SetVisibleColumns(table, commonFlagList)
-
 	builder.BuildRows(loopinfo)
-
-	// for _, pod := range podList {
-	// 	columnInfo.LoadFromPod(pod)
-
-	// 	if columnInfo.labelNodeName != "" {
-	// 		columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-	// 	}
-	// 	if columnInfo.labelPodName != "" {
-	// 		columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-	// 	}
-
-	// 	//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-	// 	if columnInfo.treeView {
-	// 		tblOut := podCommandsBuildRow(pod, columnInfo)
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 	}
-
-	// 	columnInfo.containerType = "S"
-	// 	for _, container := range pod.Spec.Containers {
-	// 		// should the container be processed
-	// 		if skipContainerName(commonFlagList, container.Name) {
-	// 			continue
-	// 		}
-	// 		columnInfo.containerName = container.Name
-	// 		cmdLine := commandLine{
-	// 			cmd:  container.Command,
-	// 			args: container.Args,
-	// 		}
-	// 		tblOut := commandsBuildRow(cmdLine, columnInfo)
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 		// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 		// table.AddRow(tblFullRow...)
-	// 	}
-
-	// 	columnInfo.containerType = "I"
-	// 	for _, container := range pod.Spec.InitContainers {
-	// 		// should the container be processed
-	// 		if skipContainerName(commonFlagList, container.Name) {
-	// 			continue
-	// 		}
-	// 		columnInfo.containerName = container.Name
-	// 		cmdLine := commandLine{
-	// 			cmd:  container.Command,
-	// 			args: container.Args,
-	// 		}
-	// 		tblOut := commandsBuildRow(cmdLine, columnInfo)
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 		// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 		// table.AddRow(tblFullRow...)
-	// 	}
-
-	// 	columnInfo.containerType = "E"
-	// 	for _, container := range pod.Spec.EphemeralContainers {
-	// 		// should the container be processed
-	// 		if skipContainerName(commonFlagList, container.Name) {
-	// 			continue
-	// 		}
-	// 		columnInfo.containerName = container.Name
-	// 		cmdLine := commandLine{
-	// 			cmd:  container.Command,
-	// 			args: container.Args,
-	// 		}
-	// 		tblOut := commandsBuildRow(cmdLine, columnInfo)
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 		// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 		// table.AddRow(tblFullRow...)
-	// 	}
-	// }
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err

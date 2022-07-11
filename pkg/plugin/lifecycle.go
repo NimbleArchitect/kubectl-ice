@@ -50,13 +50,9 @@ type lifecycleAction struct {
 
 func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var columnInfo containerInfomation
-	// var tblHead []string
 	var podname []string
-	// var showPodName bool = true
-	// var nodeLabels map[string]map[string]string
-	// var podLabels map[string]map[string]string
 
-	log := logger{location: "Capabilities"}
+	log := logger{location: "LifeCycle"}
 	log.Debug("Start")
 
 	loopinfo := lifecycle{}
@@ -86,11 +82,6 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	builder.CommonFlags = commonFlagList
 	builder.Connection = &connect
 
-	// podList, err := connect.GetPods(podname)
-	// if err != nil {
-	// 	return err
-	// }
-
 	if cmd.Flag("node-label").Value.String() != "" {
 		label := cmd.Flag("node-label").Value.String()
 		log.Debug("builder.LabelNodeName =", label)
@@ -108,90 +99,7 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	// tblHead = columnInfo.GetDefaultHead()
-	// if commonFlagList.showTreeView {
-	// 	// we have to control the name when displaying a tree view as the table
-	// 	//  object dosent have the extra info to be able to process it
-	// 	tblHead = append(tblHead, "NAME")
-	// }
-
-	// tblHead = append(tblHead, "LIFECYCLE", "HANDLER", "ACTION")
-	// table.SetHeader(tblHead...)
-
-	// if len(commonFlagList.filterList) >= 1 {
-	// 	err = table.SetFilter(commonFlagList.filterList)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	// commonFlagList.showPodName = showPodName
-	// columnInfo.SetVisibleColumns(table, commonFlagList)
-
 	builder.BuildRows(loopinfo)
-
-	// for _, pod := range podList {
-	// 	columnInfo.LoadFromPod(pod)
-
-	// 	if columnInfo.labelNodeName != "" {
-	// 		columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-	// 	}
-	// 	if columnInfo.labelPodName != "" {
-	// 		columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-	// 	}
-
-	// 	columnInfo.containerType = "S"
-	// 	for _, container := range pod.Spec.Containers {
-	// 		// should the container be processed
-	// 		if skipContainerName(commonFlagList, container.Name) {
-	// 			continue
-	// 		}
-	// 		columnInfo.containerName = container.Name
-	// 		// add the probes to our map (if defined) so we can loop through each
-	// 		lifecycleList := buildLifecycleList(container.Lifecycle)
-	// 		// loop over all probes build the output table and add the podname if multipule pods will be output
-	// 		for name, action := range lifecycleList {
-	// 			tblOut := lifecycleBuildRow(columnInfo, name, action)
-	// 			columnInfo.ApplyRow(&table, tblOut)
-	// 			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 			// table.AddRow(tblFullRow...)
-	// 		}
-	// 	}
-
-	// 	columnInfo.containerType = "I"
-	// 	for _, container := range pod.Spec.InitContainers {
-	// 		// should the container be processed
-	// 		if skipContainerName(commonFlagList, container.Name) {
-	// 			continue
-	// 		}
-	// 		columnInfo.containerName = container.Name
-	// 		lifecycleList := buildLifecycleList(container.Lifecycle)
-	// 		// loop over all probes build the output table and add the podname if multipule pods will be output
-	// 		for name, action := range lifecycleList {
-	// 			tblOut := lifecycleBuildRow(columnInfo, name, action)
-	// 			columnInfo.ApplyRow(&table, tblOut)
-	// 			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 			// table.AddRow(tblFullRow...)
-	// 		}
-	// 	}
-
-	// 	columnInfo.containerType = "E"
-	// 	for _, container := range pod.Spec.EphemeralContainers {
-	// 		// should the container be processed
-	// 		if skipContainerName(commonFlagList, container.Name) {
-	// 			continue
-	// 		}
-	// 		columnInfo.containerName = container.Name
-	// 		lifecycleList := buildLifecycleList(container.Lifecycle)
-	// 		// loop over all probes build the output table and add the podname if multipule pods will be output
-	// 		for name, action := range lifecycleList {
-	// 			tblOut := lifecycleBuildRow(columnInfo, name, action)
-	// 			columnInfo.ApplyRow(&table, tblOut)
-	// 			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 			// table.AddRow(tblFullRow...)
-	// 		}
-	// 	}
-	// }
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -227,6 +135,14 @@ func (s lifecycle) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error)
 	return []Cell{
 		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		// NewCellText(""),
+		// NewCellText(""),
+		// NewCellText(""),
+		// NewCellText(""),
+		// NewCellText(""),
+		// NewCellText(""),
 	}, nil
 }
 

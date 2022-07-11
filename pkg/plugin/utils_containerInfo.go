@@ -8,19 +8,19 @@ import (
 
 // holds a set of columns that are common to every subcommand
 type containerInfomation struct {
-	table              *Table
-	labelNodeName      string
-	labelNodeValue     string
-	labelPodName       string
-	labelPodValue      string
-	annotationPodName  string
-	annotationPodValue string
-	containerName      string
-	containerType      string
-	namespace          string
-	nodeName           string
-	podName            string
-	treeView           bool
+	table          *Table
+	labelNodeName  string
+	labelNodeValue string
+	labelPodName   string
+	labelPodValue  string
+	// annotationPodName  string
+	// annotationPodValue string
+	containerName string
+	containerType string
+	namespace     string
+	nodeName      string
+	podName       string
+	treeView      bool
 }
 
 func (ci *containerInfomation) AddRow(cellList ...[]Cell) []Cell {

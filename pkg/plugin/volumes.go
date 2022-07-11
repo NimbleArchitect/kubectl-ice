@@ -46,12 +46,7 @@ var volumesExample = `  # List volumes from containers inside pods from current 
 
 func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var columnInfo containerInfomation
-	// var tblHead []string
 	var podname []string
-	// var showPodName bool = true
-	// var showVolumeDevice bool
-	// var nodeLabels map[string]map[string]string
-	// var podLabels map[string]map[string]string
 
 	log := logger{location: "Volumes"}
 	log.Debug("Start")
@@ -84,11 +79,6 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	builder.CommonFlags = commonFlagList
 	builder.Connection = &connect
 
-	// podList, err := connect.GetPods(podname)
-	// if err != nil {
-	// 	return err
-	// }
-
 	if cmd.Flag("device").Value.String() == "true" {
 		loopinfo.ShowVolumeDevice = true
 	}
@@ -109,103 +99,8 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	builder.Table = &table
 	columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
-	// columnInfo.treeView = commonFlagList.showTreeView
-
-	// tblHead = columnInfo.GetDefaultHead()
-	// if !showVolumeDevice {
-	// 	tblHead = append(tblHead, "VOLUME", "TYPE", "BACKING", "SIZE", "RO", "MOUNT-POINT")
-	// } else {
-	// 	tblHead = append(tblHead, "PVC_NAME", "DEVICE_PATH")
-	// }
-	// table.SetHeader(tblHead...)
-	// table.HideColumn(0)
-
-	// if len(commonFlagList.filterList) >= 1 {
-	// 	err = table.SetFilter(commonFlagList.filterList)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	// commonFlagList.showPodName = showPodName
-	// columnInfo.SetVisibleColumns(table, commonFlagList)
 
 	builder.BuildRows(loopinfo)
-
-	// for _, pod := range podList {
-	// 	columnInfo.LoadFromPod(pod)
-
-	// 	if columnInfo.labelNodeName != "" {
-	// 		columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-	// 	}
-	// 	if columnInfo.labelPodName != "" {
-	// 		columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-	// 	}
-
-	// 	if !showVolumeDevice {
-	// 		podVolumes := createVolumeMap(pod.Spec.Volumes)
-
-	// 		containerList := append(pod.Spec.InitContainers, pod.Spec.Containers...)
-	// 		for _, container := range containerList {
-	// 			columnInfo.containerName = container.Name
-	// 			for _, mount := range container.VolumeMounts {
-	// 				// should the container be processed
-	// 				if skipContainerName(commonFlagList, container.Name) {
-	// 					continue
-	// 				}
-	// 				tblOut := volumesBuildRow(columnInfo, podVolumes, mount)
-	// 				columnInfo.ApplyRow(&table, tblOut)
-	// 				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 				// table.AddRow(tblFullRow...)
-	// 			}
-	// 		}
-	// 	} else {
-	// 		columnInfo.containerType = "S"
-	// 		for _, container := range pod.Spec.Containers {
-	// 			// should the container be processed
-	// 			if skipContainerName(commonFlagList, container.Name) {
-	// 				continue
-	// 			}
-	// 			columnInfo.containerName = container.Name
-	// 			for _, mount := range container.VolumeDevices {
-	// 				tblOut := mountsBuildRow(columnInfo, mount)
-	// 				columnInfo.ApplyRow(&table, tblOut)
-	// 				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 				// table.AddRow(tblFullRow...)
-	// 			}
-	// 		}
-
-	// 		columnInfo.containerType = "I"
-	// 		for _, container := range pod.Spec.InitContainers {
-	// 			// should the container be processed
-	// 			if skipContainerName(commonFlagList, container.Name) {
-	// 				continue
-	// 			}
-	// 			columnInfo.containerName = container.Name
-	// 			for _, mount := range container.VolumeDevices {
-	// 				tblOut := mountsBuildRow(columnInfo, mount)
-	// 				columnInfo.ApplyRow(&table, tblOut)
-	// 				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 				// table.AddRow(tblFullRow...)
-	// 			}
-	// 		}
-
-	// 		columnInfo.containerType = "E"
-	// 		for _, container := range pod.Spec.EphemeralContainers {
-	// 			// should the container be processed
-	// 			if skipContainerName(commonFlagList, container.Name) {
-	// 				continue
-	// 			}
-	// 			columnInfo.containerName = container.Name
-	// 			for _, mount := range container.VolumeDevices {
-	// 				tblOut := mountsBuildRow(columnInfo, mount)
-	// 				columnInfo.ApplyRow(&table, tblOut)
-	// 				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-	// 				// table.AddRow(tblFullRow...)
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -251,10 +146,23 @@ func (s volumes) HideColumns(info BuilderInformation) []int {
 }
 
 func (s volumes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
-	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
-		NewCellText(""),
-	}, nil
+	if !s.ShowVolumeDevice {
+		return []Cell{
+			NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+		}, nil
+	} else {
+		return []Cell{
+			NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
+			NewCellText(""),
+			NewCellText(""),
+		}, nil
+	}
 }
 
 func (s volumes) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
@@ -262,7 +170,6 @@ func (s volumes) BuildContainerSpec(container v1.Container, info BuilderInformat
 	if !s.ShowVolumeDevice {
 		podVolumes := s.createVolumeMap(info.Pod.Spec.Volumes)
 		for _, mount := range container.VolumeMounts {
-			fmt.Println(">>", mount.Name)
 			out = append(out, s.volumesBuildRow(info, podVolumes, mount))
 		}
 	} else {
@@ -275,11 +182,9 @@ func (s volumes) BuildContainerSpec(container v1.Container, info BuilderInformat
 
 func (s volumes) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
-	fmt.Println(">>")
 	if !s.ShowVolumeDevice {
 		podVolumes := s.createVolumeMap(info.Pod.Spec.Volumes)
 		for _, mount := range container.VolumeMounts {
-			fmt.Println(">>", mount.Name)
 			out = append(out, s.volumesBuildRow(info, podVolumes, mount))
 		}
 	} else {

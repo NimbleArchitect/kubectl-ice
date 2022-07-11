@@ -57,12 +57,7 @@ func resourceExample(r string) string {
 
 func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string, resourceType string) error {
 	var columnInfo containerInfomation
-	// var tblHead []string
 	var podname []string
-	// var showPodName bool = true
-	// var showRaw bool
-	// var nodeLabels map[string]map[string]string
-	// var podLabels map[string]map[string]string
 
 	log := logger{location: "Resource"}
 	log.Debug("Start", resourceType)
@@ -98,11 +93,6 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	loopinfo.ResourceType = resourceType
 
-	// podList, err := connect.GetPods(podname)
-	// if err != nil {
-	// 	return err
-	// }
-
 	if err := connect.LoadMetricConfig(kubeFlags); err != nil {
 		return err
 	}
@@ -130,97 +120,14 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	table := Table{}
 	builder.Table = &table
 	columnInfo.table = &table
-	// columnInfo.treeView = commonFlagList.showTreeView
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	// tblHead = columnInfo.GetDefaultHead()
-	// defaultHeaderLen := len(tblHead)
-	// if commonFlagList.showTreeView {
-	// 	// we have to control the name when displaying a tree view as the table
-	// 	//  object dosent have the extra info to be able to process it
-	// 	tblHead = append(tblHead, "NAME")
-	// }
-
-	// tblHead = append(tblHead, "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT")
-	// table.SetHeader(tblHead...)
-
-	// if len(commonFlagList.filterList) >= 1 {
-	// 	err = table.SetFilter(commonFlagList.filterList)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	// commonFlagList.showPodName = showPodName
-	// columnInfo.SetVisibleColumns(table, commonFlagList)
-
-	loopinfo.MetricsResource = podMetrics2Hashtable(podStateList)
-
+	loopinfo.MetricsResource = loopinfo.podMetrics2Hashtable(podStateList)
 	builder.BuildRows(loopinfo)
-	// for _, pod := range podList {
-	// 	columnInfo.LoadFromPod(pod)
-
-	// 	if columnInfo.labelNodeName != "" {
-	// 		columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-	// 	}
-	// 	if columnInfo.labelPodName != "" {
-	// 		columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-	// 	}
-
-	// 	//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-	// 	if columnInfo.treeView {
-	// 		tblOut := podStatsProcessBuildRow(pod, columnInfo)
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 	}
-
-	// 	if commonFlagList.showInitContainers {
-	// 		// process init containers
-	// 		columnInfo.containerType = "I"
-	// 		for _, container := range pod.Spec.InitContainers {
-	// 			// should the container be processed
-	// 			if skipContainerName(commonFlagList, container.Name) {
-	// 				continue
-	// 			}
-	// 			columnInfo.containerName = container.Name
-	// 			tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
-	// 			columnInfo.ApplyRow(&table, tblOut)
-	// 		}
-	// 	} else {
-	// 		// hide the container type column as its only needed when the init containers are being shown
-	// 		if !columnInfo.treeView {
-	// 			table.HideColumn(0)
-	// 		}
-	// 	}
-
-	// 	// process standard containers
-	// 	columnInfo.containerType = "S"
-	// 	for _, container := range pod.Spec.Containers {
-	// 		// should the container be processed
-	// 		if skipContainerName(commonFlagList, container.Name) {
-	// 			continue
-	// 		}
-	// 		columnInfo.containerName = container.Name
-	// 		tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 	}
-
-	// 	columnInfo.containerType = "E"
-	// 	for _, container := range pod.Spec.EphemeralContainers {
-	// 		// should the container be processed
-	// 		if skipContainerName(commonFlagList, container.Name) {
-	// 			continue
-	// 		}
-	// 		columnInfo.containerName = container.Name
-	// 		tblOut := statsProcessTableRow(container.Resources, podState[pod.Name][container.Name], columnInfo, resourceType, showRaw, commonFlagList.byteSize)
-	// 		columnInfo.ApplyRow(&table, tblOut)
-	// 	}
-	// }
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
 	}
-
-	// at this point we have data on all containers
 
 	// do we need to find the outliers, we have enough data to compute a range
 	if commonFlagList.showOddities {
@@ -274,18 +181,18 @@ func (s resource) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) 
 func (s resource) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	metrics := s.MetricsResource[info.PodName][info.ContainerName]
 	out := make([][]Cell, 1)
-	out[0] = statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs)
+	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs)
 	return out, nil
 }
 
 func (s resource) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	metrics := s.MetricsResource[info.PodName][info.ContainerName]
 	out := make([][]Cell, 1)
-	out[0] = statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs)
+	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs)
 	return out, nil
 }
 
-func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, info BuilderInformation, resource string, showRaw bool, bytesAs string) []Cell {
+func (s resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, info BuilderInformation, resource string, showRaw bool, bytesAs string) []Cell {
 	var cellList []Cell
 	var displayValue, request, limit, percentLimit, percentRequest string
 	var rawRequest, rawLimit, rawValue int64
@@ -393,7 +300,7 @@ func statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, 
 	return cellList
 }
 
-func podMetrics2Hashtable(stateList []v1beta1.PodMetrics) map[string]map[string]v1.ResourceList {
+func (s resource) podMetrics2Hashtable(stateList []v1beta1.PodMetrics) map[string]map[string]v1.ResourceList {
 	podState := make(map[string]map[string]v1.ResourceList)
 
 	for _, pod := range stateList {

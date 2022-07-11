@@ -68,7 +68,7 @@ func (l *logger) Say(message ...interface{}) {
 
 	msg := fmt.Sprint(message...)
 	//dump the message out to the screen
-	if dontUseColour == true {
+	if dontUseColour {
 		l.showLog("", logPrefix+": ", msg)
 	} else {
 		l.showLog(logColour, msg, "")
@@ -80,7 +80,7 @@ func (l *logger) Sayln(message ...interface{}) {
 
 	msg := fmt.Sprintln(message...)
 	//dump the message out to the screen
-	if dontUseColour == true {
+	if dontUseColour {
 		l.showLog("", logPrefix+": ", msg)
 	} else {
 		l.showLog(logColour, msg, "")
@@ -93,7 +93,7 @@ func (l *logger) Info(message ...interface{}) {
 
 	msg := fmt.Sprintln(message...)
 	//dump the message out to the screen
-	if dontUseColour == true {
+	if dontUseColour {
 		l.showLog("", logPrefix+": ", msg)
 	} else {
 		l.showLog(logColour, msg, "")
@@ -106,7 +106,7 @@ func (l *logger) Error(message ...interface{}) {
 
 	msg := fmt.Sprintln(message...)
 	//dump the message out to the screen
-	if dontUseColour == true {
+	if dontUseColour {
 		l.showLog("", logPrefix+": ", msg)
 	} else {
 		l.showLog(logColour, logPrefix+": ", msg)
@@ -115,7 +115,7 @@ func (l *logger) Error(message ...interface{}) {
 
 func (l *logger) Debug(message ...interface{}) {
 	//need to set colours here
-	if logDebug == true {
+	if logDebug {
 		id := 3
 		logPrefix, logColour := logGetType(id)
 
@@ -123,7 +123,7 @@ func (l *logger) Debug(message ...interface{}) {
 		prefix := logPrefix + ":" + l.location + ": "
 
 		//dump the message out to the screen
-		if dontUseColour == true {
+		if dontUseColour {
 			l.showLog("", prefix, msg)
 		} else {
 			l.showLog(logColour, prefix, msg)
@@ -137,7 +137,7 @@ func (l *logger) Errorf(format string, message ...interface{}) {
 
 	msg := fmt.Sprintf(format, message...)
 	//dump the message out to the screen
-	if dontUseColour == true {
+	if dontUseColour {
 		l.showLog("", logPrefix+": ", msg)
 	} else {
 		l.showLog(logColour, logPrefix+": ", msg)
