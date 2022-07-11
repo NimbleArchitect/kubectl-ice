@@ -46,10 +46,6 @@ func logGetType(logType int) (string, string) {
 		return "INFO", InfoColour
 	case 3: //debug
 		return "DEBUG", DebugColour
-	case 4: //say
-		return "SAY", SayColour
-	case 5: //ask
-		return "ASK", AskColour
 	case 6: //stdin
 		return "STDIN", StdinColour
 	case 7: //stdout
@@ -60,44 +56,6 @@ func logGetType(logType int) (string, string) {
 
 	//default catch-all
 	return "UNKNOWN", NoColour
-}
-
-func (l *logger) Say(message ...interface{}) {
-	id := 4
-	logPrefix, logColour := logGetType(id)
-
-	msg := fmt.Sprint(message...)
-	//dump the message out to the screen
-	if dontUseColour {
-		l.showLog("", logPrefix+": ", msg)
-	} else {
-		l.showLog(logColour, msg, "")
-	}
-}
-func (l *logger) Sayln(message ...interface{}) {
-	id := 4
-	logPrefix, logColour := logGetType(id)
-
-	msg := fmt.Sprintln(message...)
-	//dump the message out to the screen
-	if dontUseColour {
-		l.showLog("", logPrefix+": ", msg)
-	} else {
-		l.showLog(logColour, msg, "")
-	}
-}
-
-func (l *logger) Info(message ...interface{}) {
-	id := 2
-	logPrefix, logColour := logGetType(id)
-
-	msg := fmt.Sprintln(message...)
-	//dump the message out to the screen
-	if dontUseColour {
-		l.showLog("", logPrefix+": ", msg)
-	} else {
-		l.showLog(logColour, msg, "")
-	}
 }
 
 func (l *logger) Error(message ...interface{}) {
@@ -131,19 +89,6 @@ func (l *logger) Debug(message ...interface{}) {
 	}
 }
 
-func (l *logger) Errorf(format string, message ...interface{}) {
-	id := 1
-	logPrefix, logColour := logGetType(id)
-
-	msg := fmt.Sprintf(format, message...)
-	//dump the message out to the screen
-	if dontUseColour {
-		l.showLog("", logPrefix+": ", msg)
-	} else {
-		l.showLog(logColour, logPrefix+": ", msg)
-	}
-}
-
 //print the log to stdout
 func (l *logger) showLog(format string, prefix string, message string) {
 	if len(format) == 0 {
@@ -151,6 +96,8 @@ func (l *logger) showLog(format string, prefix string, message string) {
 	}
 
 	colourMsg := fmt.Sprintf(format, prefix, message)
-	fmt.Fprintf(os.Stdout, colourMsg)
+	fmt.Fprint(os.Stdout, colourMsg)
+	fmt.Print(colourMsg)
+	// fmt.Fprintf(os.Stdout, colourMsg)
 
 }

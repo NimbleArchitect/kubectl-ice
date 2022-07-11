@@ -43,7 +43,7 @@ var restartsExample = `  # List individual container restart count from pods
   %[1]s restarts -l "app in (web,mail)"`
 
 func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	var columnInfo containerInfomation
+	// var columnInfo containerInfomation
 	var podname []string
 
 	log := logger{location: "Restarts"}
@@ -90,7 +90,7 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	table := Table{}
 	builder.Table = &table
-	columnInfo.table = &table
+	// columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	builder.BuildRows(loopinfo)

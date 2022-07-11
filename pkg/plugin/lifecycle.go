@@ -49,7 +49,7 @@ type lifecycleAction struct {
 }
 
 func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	var columnInfo containerInfomation
+	// var columnInfo containerInfomation
 	var podname []string
 
 	log := logger{location: "LifeCycle"}
@@ -96,7 +96,7 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	table := Table{}
 	builder.Table = &table
-	columnInfo.table = &table
+	// columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	builder.BuildRows(loopinfo)

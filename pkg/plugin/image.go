@@ -44,8 +44,8 @@ var imageExample = `  # List containers image info from pods
   %[1]s image -l "app in (web,mail)"`
 
 func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	var columnInfo containerInfomation
-	var podname []string
+	// var columnInfo containerInfomation
+	// var podname []string
 
 	log := logger{location: "Image"}
 	log.Debug("Start")
@@ -63,36 +63,37 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 	// if a single pod is selected we dont need to show its name
 	if len(args) >= 1 {
-		podname = args
-		if len(podname[0]) >= 1 {
+		if len(args[0]) >= 1 {
 			log.Debug("builder.ShowPodName = false")
 			builder.ShowPodName = false
+			builder.PodName = args
 		}
 	}
+
 	commonFlagList, err := processCommonFlags(cmd)
 	if err != nil {
 		return err
 	}
 	connect.Flags = commonFlagList
+	builder.SetFlagsFrom(commonFlagList)
 
-	if cmd.Flag("node-label").Value.String() != "" {
-		label := cmd.Flag("node-label").Value.String()
-		log.Debug("builder.LabelNodeName =", label)
-		builder.LabelNodeName = label
-	}
+	// if cmd.Flag("node-label").Value.String() != "" {
+	// 	label := cmd.Flag("node-label").Value.String()
+	// 	log.Debug("builder.LabelNodeName =", label)
+	// 	builder.LabelNodeName = label
+	// }
 
-	if cmd.Flag("pod-label").Value.String() != "" {
-		label := cmd.Flag("pod-label").Value.String()
-		log.Debug("builder.LabelPodName =", label)
-		builder.LabelPodName = label
-	}
+	// if cmd.Flag("pod-label").Value.String() != "" {
+	// 	label := cmd.Flag("pod-label").Value.String()
+	// 	log.Debug("builder.LabelPodName =", label)
+	// 	builder.LabelPodName = label
+	// }
 
 	table := Table{}
-	columnInfo.table = &table
 	builder.CommonFlags = commonFlagList
 	builder.Connection = &connect
 	builder.Table = &table
-	builder.ShowTreeView = commonFlagList.showTreeView
+	// builder.ShowTreeView = commonFlagList.showTreeView
 	builder.BuildRows(loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {

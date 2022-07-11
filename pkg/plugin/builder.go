@@ -21,6 +21,7 @@ type RowBuilder struct {
 	Table      *Table
 	// ColumnInfo         *containerInfomation
 	CommonFlags        commonFlags
+	PodName            []string
 	LoopStatus         bool
 	LoopSpec           bool
 	LabelNodeName      string
@@ -49,6 +50,15 @@ type BuilderInformation struct {
 	NodeName      string
 	PodName       string
 	TreeView      bool
+}
+
+func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
+	b.CommonFlags = commonFlagList
+
+	b.ShowTreeView = commonFlagList.showTreeView
+	b.LabelNodeName = commonFlagList.labelNodeName
+	b.LabelPodName = commonFlagList.labelPodName
+	b.ShowPodName = commonFlagList.showPodName
 }
 
 func (b *RowBuilder) BuildRows(loop Looper) error {

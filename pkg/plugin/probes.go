@@ -52,7 +52,7 @@ type probeAction struct {
 
 //list details of configured liveness readiness and startup probes
 func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	var columnInfo containerInfomation
+	// var columnInfo containerInfomation
 	var podname []string
 
 	log := logger{location: "Probes"}
@@ -100,7 +100,7 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 	table := Table{}
 	builder.Table = &table
-	columnInfo.table = &table
+	// columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	builder.BuildRows(loopinfo)

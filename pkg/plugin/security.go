@@ -43,7 +43,7 @@ var securityExample = `  # List container security info from pods
 
 //list details of configured liveness readiness and startup security
 func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	var columnInfo containerInfomation
+	// var columnInfo containerInfomation
 	var podname []string
 
 	log := logger{location: "Security"}
@@ -89,7 +89,7 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	}
 	table := Table{}
 	builder.Table = &table
-	columnInfo.table = &table
+	// columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	if cmd.Flag("selinux").Value.String() == "true" {

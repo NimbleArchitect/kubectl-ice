@@ -44,7 +44,7 @@ var environmentExample = `  # List containers env info from pods
   %[1]s env -l "app in (web,mail)"`
 
 func Environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	var columnInfo containerInfomation
+	// var columnInfo containerInfomation
 	var podname []string
 
 	log := logger{location: "Environment"}
@@ -84,7 +84,7 @@ func Environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	}
 
 	table := Table{}
-	columnInfo.table = &table
+	// columnInfo.table = &table
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 	builder.BuildRows(loopinfo)

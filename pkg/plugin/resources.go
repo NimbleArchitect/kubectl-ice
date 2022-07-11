@@ -56,7 +56,7 @@ func resourceExample(r string) string {
 }
 
 func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string, resourceType string) error {
-	var columnInfo containerInfomation
+	// var columnInfo containerInfomation
 	var podname []string
 
 	log := logger{location: "Resource"}
@@ -119,7 +119,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	table := Table{}
 	builder.Table = &table
-	columnInfo.table = &table
+	// columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	loopinfo.MetricsResource = loopinfo.podMetrics2Hashtable(podStateList)

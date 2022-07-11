@@ -42,7 +42,7 @@ var capabilitiesExample = `  # List container capabilities from pods
 
 //list details of configured liveness readiness and startup capabilities
 func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	var columnInfo containerInfomation
+	// var columnInfo containerInfomation
 	var podname []string
 
 	log := logger{location: "Capabilities"}
@@ -94,7 +94,7 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 
 	table := Table{}
 	builder.Table = &table
-	columnInfo.table = &table
+	// columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	builder.BuildRows(loopinfo)

@@ -50,7 +50,7 @@ type commandLine struct {
 }
 
 func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	var columnInfo containerInfomation
+	// var columnInfo containerInfomation
 	var podname []string
 
 	log := logger{location: "Commands"}
@@ -97,7 +97,7 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	table := Table{}
 	builder.Table = &table
-	columnInfo.table = &table
+	// columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	builder.BuildRows(loopinfo)
