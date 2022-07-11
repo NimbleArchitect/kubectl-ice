@@ -77,7 +77,6 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 	}
 	connect.Flags = commonFlagList
 	builder.CommonFlags = commonFlagList
-
 	builder.Connection = &connect
 
 	// podList, err := connect.GetPods(podname)
@@ -100,8 +99,8 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 	table := Table{}
 	builder.Table = &table
 	columnInfo.table = &table
-	// columnInfo.treeView = commonFlagList.showTreeView
 	builder.ShowTreeView = commonFlagList.showTreeView
+	// columnInfo.treeView = commonFlagList.showTreeView
 
 	// tblHead = columnInfo.GetDefaultHead()
 	// if commonFlagList.showTreeView {
@@ -218,17 +217,17 @@ func (s capabilities) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, err
 
 func (s capabilities) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	out := make([][]Cell, 1)
-	out[0] = capabilitiesBuildRow(container.SecurityContext, info)
+	out[0] = s.capabilitiesBuildRow(container.SecurityContext, info)
 	return out, nil
 }
 
 func (s capabilities) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := make([][]Cell, 1)
-	out[0] = capabilitiesBuildRow(container.SecurityContext, info)
+	out[0] = s.capabilitiesBuildRow(container.SecurityContext, info)
 	return out, nil
 }
 
-func capabilitiesBuildRow(securityContext *v1.SecurityContext, info BuilderInformation) []Cell {
+func (s capabilities) capabilitiesBuildRow(securityContext *v1.SecurityContext, info BuilderInformation) []Cell {
 	// func capabilitiesBuildRow(securityContext *v1.SecurityContext, info containerInfomation) []Cell {
 	var cellList []Cell
 

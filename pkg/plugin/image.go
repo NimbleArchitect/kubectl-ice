@@ -139,17 +139,17 @@ func (s image) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 
 func (s image) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	out := make([][]Cell, 1)
-	out[0] = imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
+	out[0] = s.imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
 	return out, nil
 }
 
 func (s image) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := make([][]Cell, 1)
-	out[0] = imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
+	out[0] = s.imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
 	return out, nil
 }
 
-func imageBuildRow(info BuilderInformation, imageName string, pullPolicy string) []Cell {
+func (s image) imageBuildRow(info BuilderInformation, imageName string, pullPolicy string) []Cell {
 	var cellList []Cell
 
 	if info.TreeView {

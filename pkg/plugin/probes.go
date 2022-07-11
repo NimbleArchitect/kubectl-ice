@@ -53,11 +53,20 @@ type probeAction struct {
 //list details of configured liveness readiness and startup probes
 func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var columnInfo containerInfomation
-	var tblHead []string
+	// var tblHead []string
 	var podname []string
-	var showPodName bool = true
-	var nodeLabels map[string]map[string]string
-	var podLabels map[string]map[string]string
+	// var showPodName bool = true
+	// var nodeLabels map[string]map[string]string
+	// var podLabels map[string]map[string]string
+
+	log := logger{location: "Probes"}
+	log.Debug("Start")
+
+	loopinfo := probes{}
+	builder := RowBuilder{}
+	builder.LoopSpec = true
+	builder.ShowPodName = true
+	builder.ShowInitContainers = true
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -68,7 +77,8 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	if len(args) >= 1 {
 		podname = args
 		if len(podname[0]) >= 1 {
-			showPodName = false
+			log.Debug("builder.ShowPodName = false")
+			builder.ShowPodName = false
 		}
 	}
 	commonFlagList, err := processCommonFlags(cmd)
@@ -76,90 +86,93 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		return err
 	}
 	connect.Flags = commonFlagList
+	builder.CommonFlags = commonFlagList
 
-	podList, err := connect.GetPods(podname)
-	if err != nil {
-		return err
-	}
+	builder.Connection = &connect
+
+	// podList, err := connect.GetPods(podname)
+	// if err != nil {
+	// 	return err
+	// }
 
 	if cmd.Flag("node-label").Value.String() != "" {
-		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
-		nodeLabels, err = connect.GetNodeLabels(podList)
-		if err != nil {
-			return err
-		}
+		label := cmd.Flag("node-label").Value.String()
+		log.Debug("builder.LabelNodeName =", label)
+		builder.LabelNodeName = label
 	}
 
 	if cmd.Flag("pod-label").Value.String() != "" {
-		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
-		podLabels, err = connect.GetPodLabels(podList)
-		if err != nil {
-			return err
-		}
+		label := cmd.Flag("pod-label").Value.String()
+		log.Debug("builder.LabelPodName =", label)
+		builder.LabelPodName = label
 	}
 
 	table := Table{}
-	columnInfo.treeView = commonFlagList.showTreeView
+	builder.Table = &table
+	columnInfo.table = &table
+	builder.ShowTreeView = commonFlagList.showTreeView
 
-	tblHead = columnInfo.GetDefaultHead()
-	if commonFlagList.showTreeView {
-		// we have to control the name when displaying a tree view as the table
-		//  object dosent have the extra info to be able to process it
-		tblHead = append(tblHead, "NAME")
-	}
+	// tblHead = columnInfo.GetDefaultHead()
+	// if commonFlagList.showTreeView {
+	// 	// we have to control the name when displaying a tree view as the table
+	// 	//  object dosent have the extra info to be able to process it
+	// 	tblHead = append(tblHead, "NAME")
+	// }
 
-	tblHead = append(tblHead, "PROBE", "DELAY", "PERIOD", "TIMEOUT", "SUCCESS", "FAILURE", "CHECK", "ACTION")
-	table.SetHeader(tblHead...)
+	// tblHead = append(tblHead, "PROBE", "DELAY", "PERIOD", "TIMEOUT", "SUCCESS", "FAILURE", "CHECK", "ACTION")
+	// table.SetHeader(tblHead...)
 
-	if len(commonFlagList.filterList) >= 1 {
-		err = table.SetFilter(commonFlagList.filterList)
-		if err != nil {
-			return err
-		}
-	}
+	// if len(commonFlagList.filterList) >= 1 {
+	// 	err = table.SetFilter(commonFlagList.filterList)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	commonFlagList.showPodName = showPodName
-	columnInfo.SetVisibleColumns(table, commonFlagList)
+	// commonFlagList.showPodName = showPodName
+	// columnInfo.SetVisibleColumns(table, commonFlagList)
 
-	for _, pod := range podList {
-		columnInfo.LoadFromPod(pod)
+	builder.BuildRows(loopinfo)
 
-		if columnInfo.labelNodeName != "" {
-			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-		}
-		if columnInfo.labelPodName != "" {
-			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-		}
+	// for _, pod := range podList {
+	// 	columnInfo.LoadFromPod(pod)
 
-		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-		if columnInfo.treeView {
-			tblOut := podProbesBuildRow(pod, columnInfo)
-			columnInfo.ApplyRow(&table, tblOut)
-		} else {
-			// we force hide the container type column as probes can only be set in standard conatiners
-			table.HideColumn(0)
-		}
+	// 	if columnInfo.labelNodeName != "" {
+	// 		columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
+	// 	}
+	// 	if columnInfo.labelPodName != "" {
+	// 		columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
+	// 	}
 
-		columnInfo.containerType = "S"
-		for _, container := range pod.Spec.Containers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			// add the probes to our map (if defined) so we can loop through each
-			probeList := buildProbeList(container)
-			// loop over all probes build the output table and add the podname if multipule pods will be output
-			for _, probe := range probeList {
-				for _, action := range probe {
-					tblOut := probesBuildRow(columnInfo, action)
-					columnInfo.ApplyRow(&table, tblOut)
-					// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-					// table.AddRow(tblFullRow...)
-				}
-			}
-		}
-	}
+	// 	//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+	// 	if columnInfo.treeView {
+	// 		tblOut := podProbesBuildRow(pod, columnInfo)
+	// 		columnInfo.ApplyRow(&table, tblOut)
+	// 	} else {
+	// 		// we force hide the container type column as probes can only be set in standard conatiners
+	// 		table.HideColumn(0)
+	// 	}
+
+	// 	columnInfo.containerType = "S"
+	// 	for _, container := range pod.Spec.Containers {
+	// 		// should the container be processed
+	// 		if skipContainerName(commonFlagList, container.Name) {
+	// 			continue
+	// 		}
+	// 		columnInfo.containerName = container.Name
+	// 		// add the probes to our map (if defined) so we can loop through each
+	// 		probeList := buildProbeList(container)
+	// 		// loop over all probes build the output table and add the podname if multipule pods will be output
+	// 		for _, probe := range probeList {
+	// 			for _, action := range probe {
+	// 				tblOut := probesBuildRow(columnInfo, action)
+	// 				columnInfo.ApplyRow(&table, tblOut)
+	// 				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+	// 				// table.AddRow(tblFullRow...)
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -170,7 +183,58 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 }
 
-func podProbesBuildRow(pod v1.Pod, info containerInfomation) []Cell {
+type probes struct {
+}
+
+func (s probes) Headers() []string {
+	return []string{
+		"PROBE",
+		"DELAY",
+		"PERIOD",
+		"TIMEOUT",
+		"SUCCESS",
+		"FAILURE",
+		"CHECK",
+		"ACTION",
+	}
+}
+
+func (s probes) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
+
+func (s probes) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
+
+func (s probes) HideColumns(info BuilderInformation) []int {
+	return []int{}
+}
+
+func (s probes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+	return []Cell{
+		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
+		NewCellText(""),
+	}, nil
+}
+
+func (s probes) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+	out := [][]Cell{}
+	probeList := s.buildProbeList(container)
+	for _, probe := range probeList {
+		for _, action := range probe {
+			out = append(out, s.probesBuildRow(info, action))
+		}
+	}
+	return out, nil
+}
+
+func (s probes) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+	out := [][]Cell{}
+	return out, nil
+}
+
+func (s probes) podProbesBuildRow(pod v1.Pod, info containerInfomation) []Cell {
 
 	return []Cell{
 		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
@@ -181,15 +245,15 @@ func podProbesBuildRow(pod v1.Pod, info containerInfomation) []Cell {
 		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),
-		NewCellText(""),
+		// NewCellText(""),
 	}
 }
 
-func probesBuildRow(info containerInfomation, action probeAction) []Cell {
+func (s probes) probesBuildRow(info BuilderInformation, action probeAction) []Cell {
 	var cellList []Cell
 
-	if info.treeView {
-		cellList = buildTreeCell(info, cellList)
+	if info.TreeView {
+		cellList = info.BuildTreeCell(cellList)
 	}
 
 	cellList = append(cellList,
@@ -207,23 +271,23 @@ func probesBuildRow(info containerInfomation, action probeAction) []Cell {
 }
 
 //check each type of probe and return a list
-func buildProbeList(container v1.Container) map[string][]probeAction {
+func (s probes) buildProbeList(container v1.Container) map[string][]probeAction {
 	probes := make(map[string][]probeAction)
 	if container.LivenessProbe != nil {
-		probes["liveness"] = buildProbeAction("liveness", container.LivenessProbe)
+		probes["liveness"] = s.buildProbeAction("liveness", container.LivenessProbe)
 	}
 	if container.ReadinessProbe != nil {
-		probes["readiness"] = buildProbeAction("readiness", container.ReadinessProbe)
+		probes["readiness"] = s.buildProbeAction("readiness", container.ReadinessProbe)
 	}
 	if container.StartupProbe != nil {
-		probes["startup"] = buildProbeAction("liveness", container.StartupProbe)
+		probes["startup"] = s.buildProbeAction("liveness", container.StartupProbe)
 	}
 
 	return probes
 }
 
 //given a probe return an array of probeAction with the action translated to a string
-func buildProbeAction(name string, probe *v1.Probe) []probeAction {
+func (s probes) buildProbeAction(name string, probe *v1.Probe) []probeAction {
 	probeList := []probeAction{}
 	item := probeAction{
 		probeName: name,

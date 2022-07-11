@@ -45,11 +45,20 @@ var portsExample = `  # List containers port info from pods
 
 func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	var columnInfo containerInfomation
-	var tblHead []string
+	// var tblHead []string
 	var podname []string
-	var showPodName bool = true
-	var nodeLabels map[string]map[string]string
-	var podLabels map[string]map[string]string
+	// var showPodName bool = true
+	// var nodeLabels map[string]map[string]string
+	// var podLabels map[string]map[string]string
+
+	log := logger{location: "Capabilities"}
+	log.Debug("Start")
+
+	loopinfo := ports{}
+	builder := RowBuilder{}
+	builder.LoopSpec = true
+	builder.ShowPodName = true
+	builder.ShowInitContainers = true
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -60,7 +69,8 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	if len(args) >= 1 {
 		podname = args
 		if len(podname[0]) >= 1 {
-			showPodName = false
+			log.Debug("builder.ShowPodName = false")
+			builder.ShowPodName = false
 		}
 	}
 	commonFlagList, err := processCommonFlags(cmd)
@@ -68,112 +78,114 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 		return err
 	}
 	connect.Flags = commonFlagList
+	builder.CommonFlags = commonFlagList
+	builder.Connection = &connect
 
-	podList, err := connect.GetPods(podname)
-	if err != nil {
-		return err
-	}
+	// podList, err := connect.GetPods(podname)
+	// if err != nil {
+	// 	return err
+	// }
 
 	if cmd.Flag("node-label").Value.String() != "" {
-		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
-		nodeLabels, err = connect.GetNodeLabels(podList)
-		if err != nil {
-			return err
-		}
+		label := cmd.Flag("node-label").Value.String()
+		log.Debug("builder.LabelNodeName =", label)
+		builder.LabelNodeName = label
 	}
 
 	if cmd.Flag("pod-label").Value.String() != "" {
-		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
-		podLabels, err = connect.GetPodLabels(podList)
-		if err != nil {
-			return err
-		}
+		label := cmd.Flag("pod-label").Value.String()
+		log.Debug("builder.LabelPodName =", label)
+		builder.LabelPodName = label
 	}
 
 	table := Table{}
-	columnInfo.treeView = commonFlagList.showTreeView
+	builder.Table = &table
+	columnInfo.table = &table
+	builder.ShowTreeView = commonFlagList.showTreeView
 
-	tblHead = columnInfo.GetDefaultHead()
-	if commonFlagList.showTreeView {
-		// we have to control the name when displaying a tree view as the table
-		//  object dosent have the extra info to be able to process it
-		tblHead = append(tblHead, "NAME")
-	}
+	// tblHead = columnInfo.GetDefaultHead()
+	// if commonFlagList.showTreeView {
+	// 	// we have to control the name when displaying a tree view as the table
+	// 	//  object dosent have the extra info to be able to process it
+	// 	tblHead = append(tblHead, "NAME")
+	// }
 
-	tblHead = append(tblHead, "PORTNAME", "PORT", "PROTO", "HOSTPORT")
-	table.SetHeader(tblHead...)
+	// tblHead = append(tblHead, "PORTNAME", "PORT", "PROTO", "HOSTPORT")
+	// table.SetHeader(tblHead...)
 
-	if len(commonFlagList.filterList) >= 1 {
-		err = table.SetFilter(commonFlagList.filterList)
-		if err != nil {
-			return err
-		}
-	}
+	// if len(commonFlagList.filterList) >= 1 {
+	// 	err = table.SetFilter(commonFlagList.filterList)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	commonFlagList.showPodName = showPodName
-	columnInfo.SetVisibleColumns(table, commonFlagList)
+	// commonFlagList.showPodName = showPodName
+	// columnInfo.SetVisibleColumns(table, commonFlagList)
 
-	for _, pod := range podList {
-		columnInfo.LoadFromPod(pod)
+	builder.BuildRows(loopinfo)
 
-		if columnInfo.labelNodeName != "" {
-			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-		}
-		if columnInfo.labelPodName != "" {
-			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-		}
+	// for _, pod := range podList {
+	// 	columnInfo.LoadFromPod(pod)
 
-		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-		if columnInfo.treeView {
-			tblOut := podPortsBuildRow(pod, columnInfo)
-			columnInfo.ApplyRow(&table, tblOut)
-		}
+	// 	if columnInfo.labelNodeName != "" {
+	// 		columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
+	// 	}
+	// 	if columnInfo.labelPodName != "" {
+	// 		columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
+	// 	}
 
-		columnInfo.containerType = "S"
-		for _, container := range pod.Spec.Containers {
-			for _, port := range container.Ports {
-				// should the container be processed
-				if skipContainerName(commonFlagList, container.Name) {
-					continue
-				}
-				columnInfo.containerName = container.Name
-				tblOut := portsBuildRow(columnInfo, port)
-				columnInfo.ApplyRow(&table, tblOut)
-				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				// table.AddRow(tblFullRow...)
-			}
-		}
+	// 	//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+	// 	if columnInfo.treeView {
+	// 		tblOut := podPortsBuildRow(pod, columnInfo)
+	// 		columnInfo.ApplyRow(&table, tblOut)
+	// 	}
 
-		columnInfo.containerType = "I"
-		for _, container := range pod.Spec.InitContainers {
-			for _, port := range container.Ports {
-				// should the container be processed
-				if skipContainerName(commonFlagList, container.Name) {
-					continue
-				}
-				columnInfo.containerName = container.Name
-				tblOut := portsBuildRow(columnInfo, port)
-				columnInfo.ApplyRow(&table, tblOut)
-				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				// table.AddRow(tblFullRow...)
-			}
-		}
+	// 	columnInfo.containerType = "S"
+	// 	for _, container := range pod.Spec.Containers {
+	// 		for _, port := range container.Ports {
+	// 			// should the container be processed
+	// 			if skipContainerName(commonFlagList, container.Name) {
+	// 				continue
+	// 			}
+	// 			columnInfo.containerName = container.Name
+	// 			tblOut := portsBuildRow(columnInfo, port)
+	// 			columnInfo.ApplyRow(&table, tblOut)
+	// 			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+	// 			// table.AddRow(tblFullRow...)
+	// 		}
+	// 	}
 
-		columnInfo.containerType = "E"
-		for _, container := range pod.Spec.EphemeralContainers {
-			for _, port := range container.Ports {
-				// should the container be processed
-				if skipContainerName(commonFlagList, container.Name) {
-					continue
-				}
-				columnInfo.containerName = container.Name
-				tblOut := portsBuildRow(columnInfo, port)
-				columnInfo.ApplyRow(&table, tblOut)
-				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				// table.AddRow(tblFullRow...)
-			}
-		}
-	}
+	// 	columnInfo.containerType = "I"
+	// 	for _, container := range pod.Spec.InitContainers {
+	// 		for _, port := range container.Ports {
+	// 			// should the container be processed
+	// 			if skipContainerName(commonFlagList, container.Name) {
+	// 				continue
+	// 			}
+	// 			columnInfo.containerName = container.Name
+	// 			tblOut := portsBuildRow(columnInfo, port)
+	// 			columnInfo.ApplyRow(&table, tblOut)
+	// 			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+	// 			// table.AddRow(tblFullRow...)
+	// 		}
+	// 	}
+
+	// 	columnInfo.containerType = "E"
+	// 	for _, container := range pod.Spec.EphemeralContainers {
+	// 		for _, port := range container.Ports {
+	// 			// should the container be processed
+	// 			if skipContainerName(commonFlagList, container.Name) {
+	// 				continue
+	// 			}
+	// 			columnInfo.containerName = container.Name
+	// 			tblOut := portsBuildRow(columnInfo, port)
+	// 			columnInfo.ApplyRow(&table, tblOut)
+	// 			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
+	// 			// table.AddRow(tblFullRow...)
+	// 		}
+	// 	}
+	// }
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -184,18 +196,54 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 }
 
-func podPortsBuildRow(pod v1.Pod, info containerInfomation) []Cell {
+type ports struct {
+}
 
-	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
+func (s ports) Headers() []string {
+	return []string{
+		"PORTNAME", "PORT", "PROTO", "HOSTPORT",
 	}
 }
 
-func portsBuildRow(info containerInfomation, port v1.ContainerPort) []Cell {
+func (s ports) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
+
+func (s ports) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
+
+func (s ports) HideColumns(info BuilderInformation) []int {
+	return []int{}
+}
+
+func (s ports) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+	return []Cell{
+		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+	}, nil
+}
+
+func (s ports) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+	out := [][]Cell{}
+	for _, port := range container.Ports {
+		out = append(out, s.portsBuildRow(info, port))
+	}
+	return out, nil
+}
+
+func (s ports) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+	out := [][]Cell{}
+	for _, port := range container.Ports {
+		out = append(out, s.portsBuildRow(info, port))
+	}
+	return out, nil
+}
+
+func (s ports) portsBuildRow(info BuilderInformation, port v1.ContainerPort) []Cell {
 	var cellList []Cell
 
 	hostPort := Cell{}
@@ -206,8 +254,8 @@ func portsBuildRow(info containerInfomation, port v1.ContainerPort) []Cell {
 		hostPort = NewCellText("")
 	}
 
-	if info.treeView {
-		cellList = buildTreeCell(info, cellList)
+	if info.TreeView {
+		cellList = info.BuildTreeCell(cellList)
 	}
 
 	cellList = append(cellList,

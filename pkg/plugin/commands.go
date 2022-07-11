@@ -242,7 +242,7 @@ func (s commands) BuildContainerSpec(container v1.Container, info BuilderInforma
 		args: container.Args,
 	}
 	out := make([][]Cell, 1)
-	out[0] = commandsBuildRow(cmdLine, info)
+	out[0] = s.commandsBuildRow(cmdLine, info)
 	return out, nil
 }
 
@@ -252,11 +252,11 @@ func (s commands) BuildEphemeralContainerSpec(container v1.EphemeralContainer, i
 		args: container.Args,
 	}
 	out := make([][]Cell, 1)
-	out[0] = commandsBuildRow(cmdLine, info)
+	out[0] = s.commandsBuildRow(cmdLine, info)
 	return out, nil
 }
 
-func commandsBuildRow(cmdLine commandLine, info BuilderInformation) []Cell {
+func (s commands) commandsBuildRow(cmdLine commandLine, info BuilderInformation) []Cell {
 	var cellList []Cell
 
 	if info.TreeView {

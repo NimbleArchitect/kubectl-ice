@@ -129,7 +129,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		Aliases: []string{"env", "vars"},
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := environment(cmd, KubernetesConfigFlags, args); err != nil {
+			if err := Environment(cmd, KubernetesConfigFlags, args); err != nil {
 				return err
 			}
 
@@ -202,6 +202,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	KubernetesConfigFlags.AddFlags(cmdLifecycle.Flags())
 	cmdLifecycle.Flags().StringP("node-label", "", "", nodeLabelShort)
 	cmdLifecycle.Flags().StringP("pod-label", "", "", podLabelShort)
+	cmdLifecycle.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdLifecycle)
 	rootCmd.AddCommand(cmdLifecycle)
 
@@ -275,7 +276,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	KubernetesConfigFlags.AddFlags(cmdProbes.Flags())
 	cmdProbes.Flags().StringP("node-label", "", "", nodeLabelShort)
 	cmdProbes.Flags().StringP("pod-label", "", "", podLabelShort)
-	// cmdProbes.Flags().BoolP("tree", "t", false, treeShort)
+	cmdProbes.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdProbes)
 	rootCmd.AddCommand(cmdProbes)
 
@@ -389,7 +390,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	cmdVolume.Flags().BoolP("device", "d", false, "show raw block device mappings within a container")
 	cmdVolume.Flags().StringP("node-label", "", "", nodeLabelShort)
 	cmdVolume.Flags().StringP("pod-label", "", "", podLabelShort)
-	// cmdVolume.Flags().BoolP("tree", "t", false, treeShort)
+	cmdVolume.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdVolume)
 	rootCmd.AddCommand(cmdVolume)
 

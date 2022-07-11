@@ -42,6 +42,7 @@ type RowBuilder struct {
 }
 
 type BuilderInformation struct {
+	Pod           *v1.Pod
 	ContainerName string
 	ContainerType string
 	Namespace     string
@@ -207,6 +208,7 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 		// 	fmt.Println("** kind:", a.Kind)
 		// }
 		log.Debug("pod.Name =", pod.Name)
+		b.info.Pod = &pod
 		b.info.PodName = pod.Name
 		b.info.Namespace = pod.Namespace
 		b.info.NodeName = pod.Spec.NodeName
