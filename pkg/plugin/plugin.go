@@ -15,13 +15,14 @@ type commonFlags struct {
 	container          string                // name of the container to search for
 	filterList         map[string]matchValue // used to filter out rows form the table during Print function
 	labels             string                // k8s pod labels
-	showDetails        bool                  // shows extra the timestamp instead of the age column along with a few extra columns
+	showDetail         bool                  // shows extra the timestamp instead of the age column along with a few extra columns
 	showInitContainers bool                  //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
 	showOddities       bool                  // this isnt really common but it does show up across 3+ commands and im lazy
 	showNamespaceName  bool                  // shows the namespace name of each pod
 	showPodName        bool                  // wether to show the pod name
 	showNodeName       bool                  // do we need to show the node name in the output
 	showTreeView       bool                  // show the table in a tree like view
+	showContainerType  bool                  // show container type column
 	byteSize           string                // sets the bytes conversion for the output size
 	outputAs           string                // how to output the table, currently only accepts json
 	sortList           []string              //column names to sort on when table.Print() is called
@@ -403,8 +404,9 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("output", "o", "", `Output format, currently csv, list, json and yaml are supported`)
 	cmdObj.Flags().StringP("match", "", "", `Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != `)
 	cmdObj.Flags().StringP("select", "", "", `Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != `)
-	cmdObj.Flags().BoolP("show-namespace", "", false, `shows the namespace column`)
-	cmdObj.Flags().BoolP("show-node", "", false, `shows the node name column`)
+	cmdObj.Flags().BoolP("show-namespace", "", false, `Show the namespace column`)
+	cmdObj.Flags().BoolP("show-node", "", false, `Show the node name column`)
+	cmdObj.Flags().BoolP("show-type", "T", false, `Show the container type column`)
 }
 
 func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
@@ -513,6 +515,10 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 
 	if cmd.Flag("show-node").Value.String() == "true" {
 		f.showNodeName = true
+	}
+
+	if cmd.Flag("show-type").Value.String() == "true" {
+		f.showContainerType = true
 	}
 
 	return f, nil

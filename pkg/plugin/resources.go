@@ -71,6 +71,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	builder.LoopSpec = true
 	builder.ShowPodName = true
 	builder.ShowInitContainers = true
+	// builder.ShowDetails = true
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
@@ -129,7 +130,6 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	table := Table{}
 	builder.Table = &table
 	columnInfo.table = &table
-	log.Debug("commonFlagList.showTreeView =", commonFlagList.showTreeView)
 	// columnInfo.treeView = commonFlagList.showTreeView
 	builder.ShowTreeView = commonFlagList.showTreeView
 

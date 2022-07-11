@@ -34,6 +34,8 @@ type RowBuilder struct {
 	ShowTreeView       bool
 	ShowPodName        bool
 	ShowInitContainers bool
+	ShowContainerType  bool
+	// ShowDetail         bool
 	// ShowNamespaceName  bool
 	// ShowNodeName       bool
 	FilterList       map[string]matchValue // used to filter out rows form the table during Print function
@@ -57,6 +59,10 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 	if b.ShowTreeView {
 		log.Debug("b.info.TreeView = true")
 		b.info.TreeView = true
+	}
+
+	if !b.ShowContainerType {
+		b.ShowContainerType = b.CommonFlags.showContainerType
 	}
 
 	err := b.LoadHeaders(loop)
@@ -127,14 +133,18 @@ func (b *RowBuilder) SetVisibleColumns() {
 	log := logger{location: "RowBuilder:SetVisibleColumns"}
 	log.Debug("Start")
 
+	if !b.ShowContainerType {
+		b.Table.HideColumn(0)
+	}
+
 	if b.info.TreeView {
 		//only hide the nodename and namespace, podname is always show in tree view
 		if !b.CommonFlags.showNamespaceName {
-			b.Table.HideColumn(0)
+			b.Table.HideColumn(1)
 		}
 
 		if !b.CommonFlags.showNodeName {
-			b.Table.HideColumn(1)
+			b.Table.HideColumn(2)
 		}
 		return
 	}
@@ -220,6 +230,7 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
 		log.Debug("b.info.TreeView", b.info.TreeView)
 		if b.info.TreeView {
+			b.info.ContainerType = "P"
 			tblOut, err := loop.BuildPod(pod, b.info)
 			if err != nil {
 
@@ -385,7 +396,7 @@ func (b *RowBuilder) GetDefaultHead() []string {
 		//in tree view we only create the namespace and nodename columns, the name colume is created outside of this
 		// function so we have full control over its contents
 		headList = []string{
-			"NAMESPACE", "NODE",
+			"T", "NAMESPACE", "NODE",
 		}
 	} else {
 		headList = []string{
@@ -414,6 +425,7 @@ func (b *RowBuilder) GetDefaultCells() []Cell {
 
 	if b.info.TreeView {
 		return []Cell{
+			NewCellText(b.info.ContainerType),
 			NewCellText(b.info.Namespace),
 			NewCellText(b.info.NodeName),
 		}

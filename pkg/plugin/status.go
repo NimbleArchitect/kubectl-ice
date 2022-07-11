@@ -97,10 +97,10 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		loopinfo.ShowPrevious = true
 	}
 
-	if cmd.Flag("details").Value.String() == "true" {
-		log.Debug("loopinfo.ShowPrevious = true")
-		loopinfo.ShowDetails = true
-	}
+	// if cmd.Flag("details").Value.String() == "true" {
+	// 	log.Debug("loopinfo.ShowPrevious = true")
+	// 	loopinfo.ShowDetails = true
+	// }
 
 	if cmd.Flag("node-label").Value.String() != "" {
 		label := cmd.Flag("node-label").Value.String()
