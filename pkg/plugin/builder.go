@@ -172,7 +172,7 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 				return err
 			}
 
-			//this is a tree view, so we have a name column to deal with 'Pod/myapp'
+			//this is a tree view, so we have a name column to deal with 'Pod/foo-6f67dcc579-znb55'
 			parentType := make([]Cell, 1)
 			parentType[0] = NewCellText(fmt.Sprint(b.info.TypeName, "/", b.info.PodName))
 			tblOut = append(parentType, tblOut...)

@@ -5,7 +5,7 @@ import (
 )
 
 var logDebug bool
-var dontUseColour bool
+var dontUseColour bool = true
 
 type logger struct {
 	location string
