@@ -63,7 +63,6 @@ func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
 	b.LabelNodeName = commonFlagList.labelNodeName
 	b.LabelPodName = commonFlagList.labelPodName
 	b.FilterList = b.CommonFlags.filterList
-	// b.ShowPodName = commonFlagList.showPodName
 
 	// we always show the pod name by default
 	b.ShowPodName = true
@@ -101,7 +100,6 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 		return err
 	}
 
-	//######################################################
 	podList, err := b.Connection.GetPods(b.PodName)
 	if err != nil {
 		return err
@@ -109,7 +107,6 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 
 	if b.LabelNodeName != "" {
 		log.Debug("b.LabelNodeName", b.LabelNodeName)
-		// columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
 		nodeLabels, err = b.Connection.GetNodeLabels(podList)
 		if err != nil {
 			return err
@@ -118,7 +115,6 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 
 	if b.LabelPodName != "" {
 		log.Debug("b.LabelPodName", b.LabelPodName)
-		// columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
 		podLabels, err = b.Connection.GetPodLabels(podList)
 		if err != nil {
 			return err
@@ -127,7 +123,6 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 
 	if b.AnnotationPodName != "" {
 		log.Debug("b.AnnotationPodName", b.AnnotationPodName)
-		// columnInfo.annotationPodName = cmd.Flag("pod-annotation").Value.String()
 		podAnnotations, err = b.Connection.GetPodAnnotations(podList)
 		if err != nil {
 			return err
@@ -149,9 +144,6 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 		b.info.Namespace = pod.Namespace
 		b.info.NodeName = pod.Spec.NodeName
 
-		// //this will get changed so we force it to false for every pod
-		// b.hPodNameAlreadyPrinted = false
-
 		//check if we have any labels that need to be shown as columns
 		if b.LabelNodeName != "" {
 			b.labelNodeValue = nodeLabels[pod.Spec.NodeName][b.LabelNodeName]
@@ -163,7 +155,6 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 			b.annotationPodValue = podAnnotations[pod.Name][b.AnnotationPodName]
 		}
 
-		//######################################################
 		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
 		if b.ShowTreeView {
 			b.info.ContainerType = "P"
@@ -177,9 +168,9 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 			parentType[0] = NewCellText(fmt.Sprint(b.info.TypeName, "/", b.info.PodName))
 			tblOut = append(parentType, tblOut...)
 
-			b.hTreeViewRow = b.makeRow(b.info, tblOut)
 			log.Debug("rowsOut =", b.hTreeViewRow)
-			// b.Table.AddRow(b.hTreeViewRow...)
+			// we save the row rather than add it to the table so we can control the output later on
+			b.hTreeViewRow = b.makeRow(b.info, tblOut)
 		}
 
 		_, err = b.podLoop(loop, pod)
