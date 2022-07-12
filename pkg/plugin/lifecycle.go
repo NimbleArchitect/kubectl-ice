@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -49,8 +48,6 @@ type lifecycleAction struct {
 }
 
 func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	// var columnInfo containerInfomation
-	// var podname []string
 
 	log := logger{location: "LifeCycle"}
 	log.Debug("Start")
@@ -76,7 +73,6 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	table := Table{}
 	builder.Table = &table
-	// columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	builder.BuildRows(loopinfo)
@@ -113,16 +109,9 @@ func (s lifecycle) HideColumns(info BuilderInformation) []int {
 
 func (s lifecycle) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),
-		// NewCellText(""),
-		// NewCellText(""),
-		// NewCellText(""),
-		// NewCellText(""),
-		// NewCellText(""),
-		// NewCellText(""),
 	}, nil
 }
 

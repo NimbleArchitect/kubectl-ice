@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -50,8 +49,6 @@ type commandLine struct {
 }
 
 func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	// var columnInfo containerInfomation
-	// var podname []string
 
 	log := logger{location: "Commands"}
 	log.Debug("Start")
@@ -75,21 +72,8 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	builder.Connection = &connect
 	builder.SetFlagsFrom(commonFlagList)
 
-	// if cmd.Flag("node-label").Value.String() != "" {
-	// 	label := cmd.Flag("node-label").Value.String()
-	// 	log.Debug("builder.LabelNodeName =", label)
-	// 	builder.LabelNodeName = label
-	// }
-
-	// if cmd.Flag("pod-label").Value.String() != "" {
-	// 	label := cmd.Flag("pod-label").Value.String()
-	// 	log.Debug("builder.LabelPodName =", label)
-	// 	builder.LabelPodName = label
-	// }
-
 	table := Table{}
 	builder.Table = &table
-	// columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	builder.BuildRows(loopinfo)
@@ -109,7 +93,6 @@ type commands struct {
 func (s commands) Headers() []string {
 	return []string{
 		"COMMAND", "ARGUMENTS",
-		// "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
 	}
 }
 
@@ -124,7 +107,6 @@ func (s commands) HideColumns(info BuilderInformation) []int {
 // func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
 func (s commands) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 		NewCellText(""),
 		NewCellText(""),
 	}, nil

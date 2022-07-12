@@ -119,7 +119,6 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 }
 
 type resource struct {
-	// columnInfo   containerInfomation
 	MetricsResource map[string]map[string]v1.ResourceList
 	ResourceType    string
 	BytesAs         string
@@ -142,10 +141,8 @@ func (s resource) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-// func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
 func (s resource) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),

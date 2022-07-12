@@ -116,7 +116,6 @@ func (s restarts) HideColumns(info BuilderInformation) []int {
 
 func (s restarts) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 		NewCellText(""),
 	}, nil
 }

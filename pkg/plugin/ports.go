@@ -44,8 +44,6 @@ var portsExample = `  # List containers port info from pods
   %[1]s ports -l "app in (web,mail)"`
 
 func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	// var columnInfo containerInfomation
-	// var podname []string
 
 	log := logger{location: "Ports"}
 	log.Debug("Start")
@@ -71,7 +69,6 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 
 	table := Table{}
 	builder.Table = &table
-	// columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	builder.BuildRows(loopinfo)
@@ -108,7 +105,6 @@ func (s ports) HideColumns(info BuilderInformation) []int {
 
 func (s ports) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),

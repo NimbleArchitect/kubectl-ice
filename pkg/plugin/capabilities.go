@@ -68,18 +68,6 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 	builder.Connection = &connect
 	builder.SetFlagsFrom(commonFlagList)
 
-	// if cmd.Flag("node-label").Value.String() != "" {
-	// 	label := cmd.Flag("node-label").Value.String()
-	// 	log.Debug("builder.LabelNodeName =", label)
-	// 	builder.LabelNodeName = label
-	// }
-
-	// if cmd.Flag("pod-label").Value.String() != "" {
-	// 	label := cmd.Flag("pod-label").Value.String()
-	// 	log.Debug("builder.LabelPodName =", label)
-	// 	builder.LabelPodName = label
-	// }
-
 	table := Table{}
 	builder.Table = &table
 	// columnInfo.table = &table
@@ -116,7 +104,6 @@ func (s capabilities) HideColumns(info BuilderInformation) []int {
 // func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
 func (s capabilities) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 		NewCellText(""),
 		NewCellText(""),
 	}, nil

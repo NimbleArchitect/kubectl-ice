@@ -52,8 +52,6 @@ type probeAction struct {
 
 //list details of configured liveness readiness and startup probes
 func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	// var columnInfo containerInfomation
-	// var podname []string
 
 	log := logger{location: "Probes"}
 	log.Debug("Start")
@@ -123,7 +121,6 @@ func (s probes) HideColumns(info BuilderInformation) []int {
 
 func (s probes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),
@@ -132,12 +129,6 @@ func (s probes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),
-		// NewCellText(""),
-		// NewCellText(""),
-		// NewCellText(""),
-		// NewCellText(""),
-		// NewCellText(""),
-		// NewCellText(""),
 	}, nil
 }
 

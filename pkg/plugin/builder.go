@@ -17,13 +17,12 @@ type Looper interface {
 }
 
 type RowBuilder struct {
-	Connection *Connector
-	Table      *Table
-	// ColumnInfo         *containerInfomation
+	Connection         *Connector
+	Table              *Table
 	CommonFlags        commonFlags
-	PodName            []string
-	LoopStatus         bool
-	LoopSpec           bool
+	PodName            []string //list of pod names to retrieve
+	LoopStatus         bool     //do we need to loop over v1.Pod.Status.ContainerStatus
+	LoopSpec           bool     //should we loop over v1.Pod.Spec.Containers
 	LabelNodeName      string
 	labelNodeValue     string
 	LabelPodName       string
@@ -34,12 +33,11 @@ type RowBuilder struct {
 	ShowPodName        bool
 	ShowInitContainers bool
 	ShowContainerType  bool
-	// ShowDetail         bool
-	// ShowNamespaceName  bool
-	// ShowNodeName       bool
-	FilterList       map[string]matchValue // used to filter out rows form the table during Print function
-	info             BuilderInformation
-	DefaultHeaderLen int
+	FilterList         map[string]matchValue // used to filter out rows form the table during Print function
+	info               BuilderInformation
+	DefaultHeaderLen   int
+
+	hTreeViewRow []Cell
 }
 
 type BuilderInformation struct {
@@ -50,36 +48,33 @@ type BuilderInformation struct {
 	NodeName      string
 	PodName       string
 	TreeView      bool
+	TypeName      string
 }
 
+// SetFlagsFrom sets the common flags to match the values retrieved from the passed object
 func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
+
+	log := logger{location: "RowBuilder:SetFlagsFrom"}
+	log.Debug("Start")
+
 	b.CommonFlags = commonFlagList
 
 	b.ShowTreeView = commonFlagList.showTreeView
 	b.LabelNodeName = commonFlagList.labelNodeName
 	b.LabelPodName = commonFlagList.labelPodName
-	b.ShowPodName = commonFlagList.showPodName
-}
+	b.FilterList = b.CommonFlags.filterList
+	// b.ShowPodName = commonFlagList.showPodName
 
-func (b *RowBuilder) BuildRows(loop Looper) error {
-	// var showPod bool
-
-	log := logger{location: "RowBuilder:BuildRows"}
-	log.Debug("Start")
-
+	// we always show the pod name by default
 	b.ShowPodName = true
+
 	// if a single pod is selected we dont need to show its name
 	if len(b.PodName) == 1 {
 		if len(b.PodName[0]) >= 1 {
 			log.Debug("builder.ShowPodName = false")
-			// showPod = false
 			b.ShowPodName = false
 		}
 	}
-
-	// if showPod {
-	// 	b.ShowPodName = true
-	// }
 
 	if b.ShowTreeView {
 		log.Debug("b.info.TreeView = true")
@@ -90,17 +85,111 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 		b.ShowContainerType = b.CommonFlags.showContainerType
 	}
 
+}
+
+// BuildRows
+func (b *RowBuilder) BuildRows(loop Looper) error {
+	var nodeLabels map[string]map[string]string
+	var podLabels map[string]map[string]string
+	var podAnnotations map[string]map[string]string
+
+	log := logger{location: "RowBuilder:BuildRows"}
+	log.Debug("Start")
+
 	err := b.LoadHeaders(loop)
 	if err != nil {
 		return err
 	}
 
-	err = b.PodLoop(loop)
+	//######################################################
+	podList, err := b.Connection.GetPods(b.PodName)
 	if err != nil {
 		return err
 	}
 
-	// sorting by column breaks the tree view also previous is not valid so we sliently skip those actions
+	if b.LabelNodeName != "" {
+		log.Debug("b.LabelNodeName", b.LabelNodeName)
+		// columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
+		nodeLabels, err = b.Connection.GetNodeLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	if b.LabelPodName != "" {
+		log.Debug("b.LabelPodName", b.LabelPodName)
+		// columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
+		podLabels, err = b.Connection.GetPodLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	if b.AnnotationPodName != "" {
+		log.Debug("b.AnnotationPodName", b.AnnotationPodName)
+		// columnInfo.annotationPodName = cmd.Flag("pod-annotation").Value.String()
+		podAnnotations, err = b.Connection.GetPodAnnotations(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	b.info.TypeName = "Pod"
+	for _, pod := range podList {
+		// p := pod.GetOwnerReferences()
+		// for i, a := range p {
+		// 	fmt.Println("index:", i)
+		// 	fmt.Println("** name:", a.Name)
+		// 	fmt.Println("** kind:", a.Kind)
+		// }
+
+		log.Debug("pod.Name =", pod.Name)
+		b.info.Pod = &pod
+		b.info.PodName = pod.Name
+		b.info.Namespace = pod.Namespace
+		b.info.NodeName = pod.Spec.NodeName
+
+		// //this will get changed so we force it to false for every pod
+		// b.hPodNameAlreadyPrinted = false
+
+		//check if we have any labels that need to be shown as columns
+		if b.LabelNodeName != "" {
+			b.labelNodeValue = nodeLabels[pod.Spec.NodeName][b.LabelNodeName]
+		}
+		if b.LabelPodName != "" {
+			b.labelPodValue = podLabels[pod.Name][b.LabelPodName]
+		}
+		if b.AnnotationPodName != "" {
+			b.annotationPodValue = podAnnotations[pod.Name][b.AnnotationPodName]
+		}
+
+		//######################################################
+		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+		if b.ShowTreeView {
+			b.info.ContainerType = "P"
+			tblOut, err := loop.BuildPod(pod, b.info)
+			if err != nil {
+				return err
+			}
+
+			//this is a tree view, so we have a name column to deal with 'Pod/myapp'
+			parentType := make([]Cell, 1)
+			parentType[0] = NewCellText(fmt.Sprint(b.info.TypeName, "/", b.info.PodName))
+			tblOut = append(parentType, tblOut...)
+
+			b.hTreeViewRow = b.makeRow(b.info, tblOut)
+			log.Debug("rowsOut =", b.hTreeViewRow)
+			// b.Table.AddRow(b.hTreeViewRow...)
+		}
+
+		_, err = b.podLoop(loop, pod)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	// sorting by column breaks the tree view so we sliently skip
 	if !b.ShowTreeView {
 		if err := b.Table.SortByNames(b.CommonFlags.sortList...); err != nil {
 			return err
@@ -110,6 +199,7 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 	return nil
 }
 
+// LoadHeaders sets the default column headers hiding as needed
 func (b *RowBuilder) LoadHeaders(loop Looper) error {
 	var tblHead []string
 	var hideColumns []int
@@ -117,11 +207,13 @@ func (b *RowBuilder) LoadHeaders(loop Looper) error {
 	log := logger{location: "RowBuilder:LoadHeaders"}
 	log.Debug("Start")
 
-	tblHead = b.GetDefaultHead()
+	tblHead = b.getDefaultHead()
 	defaultHeaderLen := len(tblHead)
 	log.Debug("len(defaultHeaderLen) =", defaultHeaderLen)
 
+	// save the default lengh now as we need to use it in other functions
 	b.DefaultHeaderLen = defaultHeaderLen
+
 	log.Debug("b.info.TreeView =", b.info.TreeView)
 	if b.info.TreeView {
 		tblHead = append(tblHead, "NAME")
@@ -141,7 +233,7 @@ func (b *RowBuilder) LoadHeaders(loop Looper) error {
 		}
 	}
 
-	b.SetVisibleColumns()
+	b.setVisibleColumns()
 
 	log.Debug("len(hideColumns) =", len(hideColumns))
 	for _, id := range hideColumns {
@@ -151,7 +243,8 @@ func (b *RowBuilder) LoadHeaders(loop Looper) error {
 	return nil
 }
 
-func (b *RowBuilder) SetVisibleColumns() {
+// SetVisibleColumns hides default columns based on various flags
+func (b *RowBuilder) setVisibleColumns() {
 	log := logger{location: "RowBuilder:SetVisibleColumns"}
 	log.Debug("Start")
 
@@ -186,219 +279,170 @@ func (b *RowBuilder) SetVisibleColumns() {
 
 }
 
-func (b *RowBuilder) PodLoop(loop Looper) error {
-	var nodeLabels map[string]map[string]string
-	var podLabels map[string]map[string]string
-	var podAnnotations map[string]map[string]string
+//printHeadIfNeeded prints the tree view pod line once printed b.hTreeViewRow is cleared
+//  as we only want to print it once per pod
+func (b *RowBuilder) printHeadIfNeeded() {
+	if len(b.hTreeViewRow) > 0 {
+		b.Table.AddRow(b.hTreeViewRow...)
+		b.hTreeViewRow = []Cell{}
+	}
+}
+
+// PodLoop given a pod we loop over all containers adding to the table as we go
+//  returns total count of rows added and nil on success
+func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
+	var total int
 
 	log := logger{location: "RowBuilder:PodLoop"}
 	log.Debug("Start")
 
-	podList, err := b.Connection.GetPods(b.PodName)
-	if err != nil {
-		return err
-	}
-
-	if b.LabelNodeName != "" {
-		log.Debug("b.LabelNodeName", b.LabelNodeName)
-		// columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
-		nodeLabels, err = b.Connection.GetNodeLabels(podList)
-		if err != nil {
-			return err
-		}
-	}
-
-	if b.LabelPodName != "" {
-		log.Debug("b.LabelPodName", b.LabelPodName)
-		// columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
-		podLabels, err = b.Connection.GetPodLabels(podList)
-		if err != nil {
-			return err
-		}
-	}
-
-	if b.AnnotationPodName != "" {
-		log.Debug("b.AnnotationPodName", b.AnnotationPodName)
-		// columnInfo.annotationPodName = cmd.Flag("pod-annotation").Value.String()
-		podAnnotations, err = b.Connection.GetPodAnnotations(podList)
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, pod := range podList {
-		// p := pod.GetOwnerReferences()
-		// for i, a := range p {
-		// 	fmt.Println("index:", i)
-		// 	fmt.Println("** name:", a.Name)
-		// 	fmt.Println("** kind:", a.Kind)
-		// }
-		log.Debug("pod.Name =", pod.Name)
-		b.info.Pod = &pod
-		b.info.PodName = pod.Name
-		b.info.Namespace = pod.Namespace
-		b.info.NodeName = pod.Spec.NodeName
-
-		//check if we have any labels that need to be shown as columns
-		if b.LabelNodeName != "" {
-			b.labelNodeValue = nodeLabels[pod.Spec.NodeName][b.LabelNodeName]
-		}
-		if b.LabelPodName != "" {
-			b.labelPodValue = podLabels[pod.Name][b.LabelPodName]
-		}
-		if b.AnnotationPodName != "" {
-			b.annotationPodValue = podAnnotations[pod.Name][b.AnnotationPodName]
-		}
-
-		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-		log.Debug("b.info.TreeView", b.info.TreeView)
-		if b.info.TreeView {
-			b.info.ContainerType = "P"
-			tblOut, err := loop.BuildPod(pod, b.info)
-			if err != nil {
-
-			}
-			// log.Debug("len(tblOut)", len(tblOut))
-			rowsOut := b.MakeRow(b.info, tblOut)
-			log.Debug("rowsOut =", rowsOut)
-			b.Table.AddRow(rowsOut...)
-		}
-
-		if b.ShowInitContainers {
-			log.Debug("loop init ContainerStatuses")
-			b.info.ContainerType = "I"
-			if b.LoopStatus {
-				for _, container := range pod.Status.InitContainerStatuses {
-					// should the container be processed
-					log.Debug("processing -", container.Name)
-					if skipContainerName(b.CommonFlags, container.Name) {
-						continue
-					}
-					b.info.ContainerName = container.Name
-					allRows, err := loop.BuildContainerStatus(container, b.info)
-					if err != nil {
-
-					}
-					for _, row := range allRows {
-						rowsOut := b.MakeRow(b.info, row)
-						b.Table.AddRow(rowsOut...)
-					}
-				}
-			}
-
-			if b.LoopSpec {
-				for _, container := range pod.Spec.InitContainers {
-					// should the container be processed
-					log.Debug("processing -", container.Name)
-					if skipContainerName(b.CommonFlags, container.Name) {
-						continue
-					}
-					b.info.ContainerName = container.Name
-					allRows, err := loop.BuildContainerSpec(container, b.info)
-					if err != nil {
-
-					}
-					for _, row := range allRows {
-						rowsOut := b.MakeRow(b.info, row)
-						b.Table.AddRow(rowsOut...)
-					}
-				}
-			}
-		}
-
-		//now show the container line
-		log.Debug("loop standard ContainerStatuses")
-		b.info.ContainerType = "S"
+	if b.ShowInitContainers {
+		log.Debug("loop init ContainerStatuses")
+		b.info.ContainerType = "I"
 		if b.LoopStatus {
-			for _, container := range pod.Status.ContainerStatuses {
+			for _, container := range pod.Status.InitContainerStatuses {
 				// should the container be processed
+				log.Debug("processing -", container.Name)
 				if skipContainerName(b.CommonFlags, container.Name) {
 					continue
 				}
-				log.Debug("processing -", container.Name)
 				b.info.ContainerName = container.Name
 				allRows, err := loop.BuildContainerStatus(container, b.info)
 				if err != nil {
-
+					return 0, err
 				}
 				for _, row := range allRows {
-					rowsOut := b.MakeRow(b.info, row)
+					rowsOut := b.makeRow(b.info, row)
+					total += len(rowsOut)
+					b.printHeadIfNeeded()
 					b.Table.AddRow(rowsOut...)
 				}
 			}
 		}
 
 		if b.LoopSpec {
-			for _, container := range pod.Spec.Containers {
+			for _, container := range pod.Spec.InitContainers {
 				// should the container be processed
+				log.Debug("processing -", container.Name)
 				if skipContainerName(b.CommonFlags, container.Name) {
 					continue
 				}
-				log.Debug("processing -", container.Name)
 				b.info.ContainerName = container.Name
 				allRows, err := loop.BuildContainerSpec(container, b.info)
 				if err != nil {
-
+					return 0, err
 				}
 				for _, row := range allRows {
-					rowsOut := b.MakeRow(b.info, row)
-					b.Table.AddRow(rowsOut...)
-				}
-			}
-		}
-
-		log.Debug("loop ephemeral ContainerStatuses")
-		b.info.ContainerType = "E"
-
-		if b.LoopStatus {
-			for _, container := range pod.Status.EphemeralContainerStatuses {
-				// should the container be processed
-				if skipContainerName(b.CommonFlags, container.Name) {
-					continue
-				}
-				log.Debug("processing -", container.Name)
-				b.info.ContainerName = container.Name
-				allRows, err := loop.BuildContainerStatus(container, b.info)
-				if err != nil {
-
-				}
-				for _, row := range allRows {
-					rowsOut := b.MakeRow(b.info, row)
-					b.Table.AddRow(rowsOut...)
-				}
-			}
-		}
-
-		if b.LoopSpec {
-			for _, container := range pod.Spec.EphemeralContainers {
-				// should the container be processed
-				if skipContainerName(b.CommonFlags, container.Name) {
-					continue
-				}
-				log.Debug("processing -", container.Name)
-				b.info.ContainerName = container.Name
-				allRows, err := loop.BuildEphemeralContainerSpec(container, b.info)
-				if err != nil {
-
-				}
-				for _, row := range allRows {
-					rowsOut := b.MakeRow(b.info, row)
+					rowsOut := b.makeRow(b.info, row)
+					total += len(rowsOut)
+					b.printHeadIfNeeded()
 					b.Table.AddRow(rowsOut...)
 				}
 			}
 		}
 	}
 
-	return nil
+	//now show the container line
+	log.Debug("loop standard ContainerStatuses")
+	b.info.ContainerType = "S"
+	if b.LoopStatus {
+		for _, container := range pod.Status.ContainerStatuses {
+			// should the container be processed
+			if skipContainerName(b.CommonFlags, container.Name) {
+				continue
+			}
+			log.Debug("processing -", container.Name)
+			b.info.ContainerName = container.Name
+			allRows, err := loop.BuildContainerStatus(container, b.info)
+			if err != nil {
+				return 0, err
+			}
+			for _, row := range allRows {
+				rowsOut := b.makeRow(b.info, row)
+				total += len(rowsOut)
+				b.printHeadIfNeeded()
+				b.Table.AddRow(rowsOut...)
+			}
+		}
+	}
+
+	if b.LoopSpec {
+		for _, container := range pod.Spec.Containers {
+			// should the container be processed
+			if skipContainerName(b.CommonFlags, container.Name) {
+				continue
+			}
+			log.Debug("processing -", container.Name)
+			b.info.ContainerName = container.Name
+			allRows, err := loop.BuildContainerSpec(container, b.info)
+			if err != nil {
+				return 0, err
+			}
+			for _, row := range allRows {
+				rowsOut := b.makeRow(b.info, row)
+				total += len(rowsOut)
+				b.printHeadIfNeeded()
+				b.Table.AddRow(rowsOut...)
+			}
+		}
+	}
+
+	log.Debug("loop ephemeral ContainerStatuses")
+	b.info.ContainerType = "E"
+
+	if b.LoopStatus {
+		for _, container := range pod.Status.EphemeralContainerStatuses {
+			// should the container be processed
+			if skipContainerName(b.CommonFlags, container.Name) {
+				continue
+			}
+			log.Debug("processing -", container.Name)
+			b.info.ContainerName = container.Name
+			allRows, err := loop.BuildContainerStatus(container, b.info)
+			if err != nil {
+				return 0, err
+			}
+			for _, row := range allRows {
+				rowsOut := b.makeRow(b.info, row)
+				total += len(rowsOut)
+				b.printHeadIfNeeded()
+				b.Table.AddRow(rowsOut...)
+			}
+		}
+	}
+
+	if b.LoopSpec {
+		for _, container := range pod.Spec.EphemeralContainers {
+			// should the container be processed
+			if skipContainerName(b.CommonFlags, container.Name) {
+				continue
+			}
+			log.Debug("processing -", container.Name)
+			b.info.ContainerName = container.Name
+			allRows, err := loop.BuildEphemeralContainerSpec(container, b.info)
+			if err != nil {
+				return 0, err
+			}
+			for _, row := range allRows {
+				rowsOut := b.makeRow(b.info, row)
+				total += len(rowsOut)
+				b.printHeadIfNeeded()
+				b.Table.AddRow(rowsOut...)
+			}
+		}
+	}
+	// }
+
+	return total, nil
 }
 
 // MakeRow adds the listed columns to the default columns, outputs
 //  the complete row as a list of columns
-func (b *RowBuilder) MakeRow(info BuilderInformation, columns ...[]Cell) []Cell {
+func (b *RowBuilder) makeRow(info BuilderInformation, columns ...[]Cell) []Cell {
 	log := logger{location: "RowBuilder:MakeRow"}
 	log.Debug("Start")
 
-	rowList := b.GetDefaultCells()
+	rowList := b.getDefaultCells()
 
 	if b.LabelNodeName != "" {
 		rowList = append(rowList, NewCellText(b.labelNodeValue))
@@ -417,7 +461,7 @@ func (b *RowBuilder) MakeRow(info BuilderInformation, columns ...[]Cell) []Cell 
 }
 
 // GetDefaultHead: returns the common headers in order
-func (b *RowBuilder) GetDefaultHead() []string {
+func (b *RowBuilder) getDefaultHead() []string {
 	log := logger{location: "RowBuilder:GetDefaultHead"}
 	log.Debug("Start")
 
@@ -451,7 +495,7 @@ func (b *RowBuilder) GetDefaultHead() []string {
 }
 
 // GetDefaultCells: returns an array of cells prepopulated with the common information
-func (b *RowBuilder) GetDefaultCells() []Cell {
+func (b *RowBuilder) getDefaultCells() []Cell {
 	log := logger{location: "RowBuilder:GetDefaultCells"}
 	log.Debug("Start")
 

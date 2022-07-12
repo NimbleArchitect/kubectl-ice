@@ -1,8 +1,6 @@
 package plugin
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -44,9 +42,6 @@ var environmentExample = `  # List containers env info from pods
   %[1]s env -l "app in (web,mail)"`
 
 func Environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	// var columnInfo containerInfomation
-	// var podname []string
-
 	log := logger{location: "Environment"}
 	log.Debug("Start")
 
@@ -78,7 +73,6 @@ func Environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	}
 
 	table := Table{}
-	// columnInfo.table = &table
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 	builder.BuildRows(loopinfo)
@@ -118,7 +112,6 @@ func (s environment) HideColumns(info BuilderInformation) []int {
 // func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
 func (s environment) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 		NewCellText(""),
 		NewCellText(""),
 	}, nil

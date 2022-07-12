@@ -586,12 +586,12 @@ func canExcludeMatchFloat(filter matchFilter, val1 float64, val2 float64) bool {
 }
 
 // takes a filter as a string to exclude matching rows from the Print function
-// fulter is in the form COLUMN_NAME OPERATOR VALUE, where operator can be one of <,>,<=,>=,!=,=,==
+// filter is in the form COLUMN_NAME OPERATOR VALUE, where operator can be one of <,>,<=,>=,!=,=,==
 func (t *Table) SetFilter(filter map[string]matchValue) error {
 
 	for words, match := range filter {
 		// the smallest header name is T making a valid string "T=0"
-		if len(words) < 3 {
+		if len(words) < 1 {
 			continue
 		}
 

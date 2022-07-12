@@ -124,7 +124,6 @@ func (s volumes) HideColumns(info BuilderInformation) []int {
 func (s volumes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	if !s.ShowVolumeDevice {
 		return []Cell{
-			NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 			NewCellText(""),
 			NewCellText(""),
 			NewCellText(""),
@@ -134,7 +133,6 @@ func (s volumes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 		}, nil
 	} else {
 		return []Cell{
-			NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 			NewCellText(""),
 			NewCellText(""),
 		}, nil

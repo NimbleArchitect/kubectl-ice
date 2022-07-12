@@ -109,7 +109,6 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 }
 
 type status struct {
-	// columnInfo   containerInfomation
 	ShowPrevious bool
 	ShowDetails  bool
 }
@@ -184,7 +183,6 @@ func (s status) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	}
 
 	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 		NewCellText(""),                       //ready
 		NewCellText(""),                       //started
 		NewCellInt("0", 0),                    //restarts

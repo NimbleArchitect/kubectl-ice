@@ -125,7 +125,6 @@ func (s security) HideColumns(info BuilderInformation) []int {
 func (s security) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	if s.ShowSELinuxOptions {
 		return []Cell{
-			NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 			NewCellText(""),
 			NewCellText(""),
 			NewCellText(""),
@@ -133,7 +132,6 @@ func (s security) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) 
 		}, nil
 	} else {
 		return []Cell{
-			NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 			NewCellText(""),
 			NewCellText(""),
 			NewCellText(""),

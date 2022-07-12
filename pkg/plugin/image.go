@@ -1,8 +1,6 @@
 package plugin
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -53,7 +51,6 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	loopinfo := image{}
 	builder := RowBuilder{}
 	builder.LoopSpec = true
-	// builder.ShowPodName = true
 	builder.ShowInitContainers = true
 	builder.PodName = args
 
@@ -108,7 +105,6 @@ func (s image) HideColumns(info BuilderInformation) []int {
 
 func (s image) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
 		NewCellText(""),
 		NewCellText(""),
 	}, nil

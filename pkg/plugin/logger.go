@@ -2,7 +2,6 @@ package plugin
 
 import (
 	"fmt"
-	"os"
 )
 
 var logDebug bool
@@ -96,8 +95,6 @@ func (l *logger) showLog(format string, prefix string, message string) {
 	}
 
 	colourMsg := fmt.Sprintf(format, prefix, message)
-	fmt.Fprint(os.Stdout, colourMsg)
 	fmt.Print(colourMsg)
-	// fmt.Fprintf(os.Stdout, colourMsg)
 
 }
