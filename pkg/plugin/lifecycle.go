@@ -50,7 +50,7 @@ type lifecycleAction struct {
 
 func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	// var columnInfo containerInfomation
-	var podname []string
+	// var podname []string
 
 	log := logger{location: "LifeCycle"}
 	log.Debug("Start")
@@ -58,41 +58,21 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	loopinfo := lifecycle{}
 	builder := RowBuilder{}
 	builder.LoopSpec = true
-	builder.ShowPodName = true
 	builder.ShowInitContainers = true
+	builder.PodName = args
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
 	}
 
-	// if a single pod is selected we dont need to show its name
-	if len(args) >= 1 {
-		podname = args
-		if len(podname[0]) >= 1 {
-			log.Debug("builder.ShowPodName = false")
-			builder.ShowPodName = false
-		}
-	}
 	commonFlagList, err := processCommonFlags(cmd)
 	if err != nil {
 		return err
 	}
 	connect.Flags = commonFlagList
-	builder.CommonFlags = commonFlagList
 	builder.Connection = &connect
-
-	if cmd.Flag("node-label").Value.String() != "" {
-		label := cmd.Flag("node-label").Value.String()
-		log.Debug("builder.LabelNodeName =", label)
-		builder.LabelNodeName = label
-	}
-
-	if cmd.Flag("pod-label").Value.String() != "" {
-		label := cmd.Flag("pod-label").Value.String()
-		log.Debug("builder.LabelPodName =", label)
-		builder.LabelPodName = label
-	}
+	builder.SetFlagsFrom(commonFlagList)
 
 	table := Table{}
 	builder.Table = &table

@@ -45,7 +45,7 @@ var environmentExample = `  # List containers env info from pods
 
 func Environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	// var columnInfo containerInfomation
-	var podname []string
+	// var podname []string
 
 	log := logger{location: "Environment"}
 	log.Debug("Start")
@@ -53,30 +53,24 @@ func Environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	loopinfo := environment{}
 	builder := RowBuilder{}
 	builder.LoopSpec = true
-	builder.ShowPodName = true
 	builder.ShowInitContainers = true
+	builder.PodName = args
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
 	}
 
-	// if a single pod is selected we dont need to show its name
-	if len(args) >= 1 {
-		podname = args
-		if len(podname[0]) >= 1 {
-			log.Debug("builder.ShowPodName = false")
-			builder.ShowPodName = false
-		}
-	}
 	commonFlagList, err := processCommonFlags(cmd)
 	if err != nil {
 		return err
 	}
 	connect.Flags = commonFlagList
-	builder.CommonFlags = commonFlagList
 
 	builder.Connection = &connect
+	builder.SetFlagsFrom(commonFlagList)
+
+	//we need the connection details so we can translate the environment variables
 	loopinfo.Connection = &connect
 
 	if cmd.Flag("translate").Value.String() == "true" {
@@ -125,6 +119,7 @@ func (s environment) HideColumns(info BuilderInformation) []int {
 func (s environment) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
 		NewCellText(fmt.Sprint("Pod/", info.PodName)), //name
+		NewCellText(""),
 		NewCellText(""),
 	}, nil
 }

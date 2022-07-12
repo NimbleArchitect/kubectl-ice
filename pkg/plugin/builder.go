@@ -62,8 +62,24 @@ func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
 }
 
 func (b *RowBuilder) BuildRows(loop Looper) error {
+	// var showPod bool
+
 	log := logger{location: "RowBuilder:BuildRows"}
 	log.Debug("Start")
+
+	b.ShowPodName = true
+	// if a single pod is selected we dont need to show its name
+	if len(b.PodName) == 1 {
+		if len(b.PodName[0]) >= 1 {
+			log.Debug("builder.ShowPodName = false")
+			// showPod = false
+			b.ShowPodName = false
+		}
+	}
+
+	// if showPod {
+	// 	b.ShowPodName = true
+	// }
 
 	if b.ShowTreeView {
 		log.Debug("b.info.TreeView = true")
@@ -178,7 +194,7 @@ func (b *RowBuilder) PodLoop(loop Looper) error {
 	log := logger{location: "RowBuilder:PodLoop"}
 	log.Debug("Start")
 
-	podList, err := b.Connection.GetPods([]string{})
+	podList, err := b.Connection.GetPods(b.PodName)
 	if err != nil {
 		return err
 	}

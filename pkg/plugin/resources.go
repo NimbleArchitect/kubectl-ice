@@ -56,47 +56,36 @@ func resourceExample(r string) string {
 }
 
 func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string, resourceType string) error {
-	// var columnInfo containerInfomation
-	var podname []string
 
 	log := logger{location: "Resource"}
 	log.Debug("Start", resourceType)
 
 	builder := RowBuilder{}
 	builder.LoopSpec = true
-	builder.ShowPodName = true
 	builder.ShowInitContainers = true
-	// builder.ShowDetails = true
+	builder.PodName = args
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
 	}
 
-	// if a single pod is selected we dont need to show its name
-	if len(args) >= 1 {
-		podname = args
-		if len(podname[0]) >= 1 {
-			log.Debug("builder.ShowPodName = false")
-			builder.ShowPodName = false
-		}
-	}
 	commonFlagList, err := processCommonFlags(cmd)
 	if err != nil {
 		return err
 	}
 	connect.Flags = commonFlagList
-	builder.CommonFlags = commonFlagList
 
 	loopinfo := resource{}
 	builder.Connection = &connect
+	builder.SetFlagsFrom(commonFlagList)
 
 	loopinfo.ResourceType = resourceType
 
 	if err := connect.LoadMetricConfig(kubeFlags); err != nil {
 		return err
 	}
-	podStateList, err := connect.GetMetricPods(podname)
+	podStateList, err := connect.GetMetricPods(args)
 	if err != nil {
 		return err
 	}
@@ -105,21 +94,8 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		loopinfo.ShowRaw = true
 	}
 
-	if cmd.Flag("node-label").Value.String() != "" {
-		label := cmd.Flag("node-label").Value.String()
-		log.Debug("builder.LabelNodeName =", label)
-		builder.LabelNodeName = label
-	}
-
-	if cmd.Flag("pod-label").Value.String() != "" {
-		label := cmd.Flag("pod-label").Value.String()
-		log.Debug("builder.LabelPodName =", label)
-		builder.LabelPodName = label
-	}
-
 	table := Table{}
 	builder.Table = &table
-	// columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	loopinfo.MetricsResource = loopinfo.podMetrics2Hashtable(podStateList)
