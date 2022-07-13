@@ -36,10 +36,17 @@ func memoryGetUnitLst(byteType string) (int64, string) {
 
 	memSizes := map[string]int64{
 		"Ki": b, "Mi": b * b, "Gi": b * b * b, "Ti": b * b * b * b, "Pi": b * b * b * b * b, "Ei": b * b * b * b * b * b,
+
 		"k": d, "M": d * d, "G": d * d * d, "T": d * d * d * d, "P": d * d * d * d * d, "E": d * d * d * d * d * d,
+		"KB": d, "MB": d * d, "GB": d * d * d, "TB": d * d * d * d, "PB": d * d * d * d * d, "EB": d * d * d * d * d * d,
 	}
 
-	if len(byteType) > 0 && len(byteType) <= 2 {
+	// limit to two characters
+	if len([]rune(byteType)) > 2 {
+		byteType = byteType[0:2]
+	}
+
+	if len(byteType) > 0 {
 		for k, v := range memSizes {
 			a := strings.ToLower(k)
 			b := strings.ToLower(byteType)

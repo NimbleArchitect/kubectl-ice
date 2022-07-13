@@ -144,15 +144,6 @@ func (s status) HideColumns(info BuilderInformation) []int {
 	//"READY","STARTED","RESTARTS","STATE","REASON","EXIT-CODE","SIGNAL","TIMESTAMP","AGE","MESSAGE",
 	var hideColumns []int
 
-	// if info.TreeView {
-	// 	// tree view is too wide when all columns are shown so hide the non important
-	// 	if s.ShowDetails {
-	// 		hideColumns = append(hideColumns, 8)
-	// 	} else {
-	// 		hideColumns = append(hideColumns, 7, 9)
-	// 	}
-
-	// } else {
 	if s.ShowDetails {
 		hideColumns = append(hideColumns, 8)
 	}

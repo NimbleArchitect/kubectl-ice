@@ -588,7 +588,3 @@ func splitAndFilterMatchList(rawSortString string, filterString string, operator
 
 	return sortList, nil
 }
-
-// cmdCapabilities.Flags().StringP("node-label", "", "", nodeLabelShort)
-// cmdCapabilities.Flags().StringP("pod-label", "", "", podLabelShort)
-// cmdCapabilities.Flags().BoolP("tree", "t", false, treeShort)

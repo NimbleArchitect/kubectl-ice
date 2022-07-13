@@ -94,6 +94,12 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		loopinfo.ShowRaw = true
 	}
 
+	if cmd.Flag("size") != nil {
+		if len(cmd.Flag("size").Value.String()) > 0 {
+			loopinfo.BytesAs = cmd.Flag("size").Value.String()
+		}
+	}
+
 	table := Table{}
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
@@ -107,7 +113,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	// do we need to find the outliers, we have enough data to compute a range
 	if commonFlagList.showOddities {
-		row2Remove, err := table.ListOutOfRange(builder.DefaultHeaderLen+0, table.GetRows()) //1 = used column
+		row2Remove, err := table.ListOutOfRange(builder.DefaultHeaderLen, table.GetRows()) //1 = used column
 		if err != nil {
 			return err
 		}
@@ -186,10 +192,8 @@ func (s resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.R
 				floatfmt = "%.2f"
 			}
 
-			// limit = res.Limits.Cpu().Value()
 			rawLimit = res.Limits.Cpu().MilliValue()
 			limit = fmt.Sprintf("%dm", rawLimit)
-			// request = res.Requests.Cpu().String()
 			rawRequest = res.Requests.Cpu().MilliValue()
 			request = fmt.Sprintf("%dm", rawRequest)
 
@@ -229,10 +233,8 @@ func (s resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.R
 
 			limit = res.Limits.Memory().String()
 			rawLimit = res.Limits.Memory().Value()
-			// limit = fmt.Sprintf("%d", rawLimit)
 			request = res.Requests.Memory().String()
 			rawRequest = res.Requests.Memory().Value()
-			// request = fmt.Sprintf("%d", rawRequest)
 
 			if memVal := metrics.Memory().AsApproximateFloat64(); memVal > 0 {
 				// check memory limits has a value
@@ -256,10 +258,6 @@ func (s resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.R
 			}
 		}
 	}
-
-	// if info.TreeView {
-	// 	cellList = info.BuildTreeCell(cellList)
-	// }
 
 	cellList = append(cellList,
 		NewCellInt(displayValue, rawValue),
