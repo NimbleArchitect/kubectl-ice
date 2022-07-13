@@ -139,9 +139,9 @@ func (s ports) portsBuildRow(info BuilderInformation, port v1.ContainerPort) []C
 		hostPort = NewCellText("")
 	}
 
-	if info.TreeView {
-		cellList = info.BuildTreeCell(cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		NewCellText(port.Name),

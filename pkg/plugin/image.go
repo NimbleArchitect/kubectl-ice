@@ -125,9 +125,9 @@ func (s image) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info
 func (s image) imageBuildRow(info BuilderInformation, imageName string, pullPolicy string) []Cell {
 	var cellList []Cell
 
-	if info.TreeView {
-		cellList = info.BuildTreeCell(cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		NewCellText(pullPolicy),

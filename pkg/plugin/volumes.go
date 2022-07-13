@@ -309,9 +309,9 @@ func (s volumes) volumesBuildRow(info BuilderInformation, podVolumes map[string]
 		backing = volume["backing"]
 	}
 
-	if info.TreeView {
-		cellList = info.BuildTreeCell(cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		NewCellText(mount.Name),
@@ -327,9 +327,9 @@ func (s volumes) volumesBuildRow(info BuilderInformation, podVolumes map[string]
 func (s volumes) mountsBuildRow(info BuilderInformation, mountInfo v1.VolumeDevice) []Cell {
 	var cellList []Cell
 
-	if info.TreeView {
-		cellList = info.BuildTreeCell(cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		NewCellText(mountInfo.Name),

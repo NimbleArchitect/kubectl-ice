@@ -82,6 +82,11 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		loopinfo.ShowPrevious = true
 	}
 
+	if cmd.Flag("details").Value.String() == "true" {
+		loopinfo.ShowDetails = true
+		builder.ShowContainerType = true
+	}
+
 	table := Table{}
 	builder.Table = &table
 	log.Debug("commonFlagList.showTreeView =", commonFlagList.showTreeView)
@@ -89,7 +94,6 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 	builder.BuildRows(loopinfo)
 
-	// sorting by column breaks the tree view also previous is not valid so we sliently skip those actions
 	if !builder.ShowTreeView {
 		if !loopinfo.ShowPrevious { // restart count dosent show up when using previous flag
 			// do we need to find the outliers, we have enough data to compute a range
@@ -140,33 +144,31 @@ func (s status) HideColumns(info BuilderInformation) []int {
 	//"READY","STARTED","RESTARTS","STATE","REASON","EXIT-CODE","SIGNAL","TIMESTAMP","AGE","MESSAGE",
 	var hideColumns []int
 
-	if info.TreeView {
-		// tree view is too wide when all columns are shown so hide the non important
-		if s.ShowDetails {
-			hideColumns = append(hideColumns, 9)
-		} else {
-			hideColumns = append(hideColumns, 8, 10)
-		}
+	// if info.TreeView {
+	// 	// tree view is too wide when all columns are shown so hide the non important
+	// 	if s.ShowDetails {
+	// 		hideColumns = append(hideColumns, 8)
+	// 	} else {
+	// 		hideColumns = append(hideColumns, 7, 9)
+	// 	}
 
-		if s.ShowPrevious {
-			// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
-			hideColumns = append(hideColumns, 0, 1, 2)
-		}
-	} else {
-		if s.ShowDetails {
-			hideColumns = append(hideColumns, 8)
-		}
-
-		if s.ShowPrevious {
-			// STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
-			hideColumns = append(hideColumns, 0, 1, 2)
-		}
-
-		if len(hideColumns) == 0 {
-			hideColumns = append(hideColumns, 7, 9)
-		}
-
+	// } else {
+	if s.ShowDetails {
+		hideColumns = append(hideColumns, 8)
 	}
+
+	if s.ShowPrevious {
+		// remove "READY STARTED RESTARTS AGE" leaving the following
+		//  "STATE REASON EXIT-CODE SIGNAL TIMESTAMP MESSAGE"
+		hideColumns = append(hideColumns, 0, 1, 2, 8)
+	}
+
+	if len(hideColumns) == 0 {
+		// hide AGE, MESSAGE
+		hideColumns = append(hideColumns, 7, 9)
+	}
+	// }
+
 	return hideColumns
 }
 
@@ -264,9 +266,9 @@ func (s status) BuildContainerStatus(container v1.ContainerStatus, info BuilderI
 		age = duration.HumanDuration(rawAge)
 	}
 
-	if info.TreeView {
-		cellList = info.BuildTreeCell(cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	// READY STARTED RESTARTS STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
 	cellList = append(cellList,

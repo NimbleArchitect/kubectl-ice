@@ -151,9 +151,9 @@ func (s probes) BuildEphemeralContainerSpec(container v1.EphemeralContainer, inf
 func (s probes) probesBuildRow(info BuilderInformation, action probeAction) []Cell {
 	var cellList []Cell
 
-	if info.TreeView {
-		cellList = info.BuildTreeCell(cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		NewCellText(action.probeName),

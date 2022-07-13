@@ -135,9 +135,9 @@ func (s restarts) restartsBuildRow(info BuilderInformation, restartCount int32) 
 	// if container.RestartCount == 0
 	// restarts := fmt.Sprintf("%d", container.RestartCount)
 
-	if info.TreeView {
-		cellList = info.BuildTreeCell(cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		NewCellInt(fmt.Sprintf("%d", restartCount), int64(restartCount)),

@@ -135,9 +135,9 @@ func (s commands) BuildEphemeralContainerSpec(container v1.EphemeralContainer, i
 func (s commands) commandsBuildRow(cmdLine commandLine, info BuilderInformation) []Cell {
 	var cellList []Cell
 
-	if info.TreeView {
-		cellList = info.BuildTreeCell(cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		NewCellText(strings.Join(cmdLine.cmd, " ")),

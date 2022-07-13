@@ -154,9 +154,9 @@ func (s capabilities) capabilitiesBuildRow(securityContext *v1.SecurityContext, 
 	// 	cellList = buildTreeCell(info, cellList)
 	// }
 
-	if info.TreeView {
-		cellList = info.BuildTreeCell(cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		NewCellText(capAdd),

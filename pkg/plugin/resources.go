@@ -257,9 +257,9 @@ func (s resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.R
 		}
 	}
 
-	if info.TreeView {
-		cellList = info.BuildTreeCell(cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		NewCellInt(displayValue, rawValue),

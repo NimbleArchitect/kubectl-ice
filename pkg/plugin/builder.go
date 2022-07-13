@@ -170,7 +170,7 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 
 			log.Debug("rowsOut =", b.hTreeViewRow)
 			// we save the row rather than add it to the table so we can control the output later on
-			b.hTreeViewRow = b.makeRow(b.info, tblOut)
+			b.hTreeViewRow = b.makeRow(false, b.info, tblOut)
 		}
 
 		_, err = b.podLoop(loop, pod)
@@ -199,16 +199,12 @@ func (b *RowBuilder) LoadHeaders(loop Looper) error {
 	log.Debug("Start")
 
 	tblHead = b.getDefaultHead()
-	defaultHeaderLen := len(tblHead)
-	log.Debug("len(defaultHeaderLen) =", defaultHeaderLen)
 
 	// save the default lengh now as we need to use it in other functions
+	defaultHeaderLen := len(tblHead)
+	log.Debug("len(defaultHeaderLen) =", defaultHeaderLen)
 	b.DefaultHeaderLen = defaultHeaderLen
 
-	log.Debug("b.info.TreeView =", b.info.TreeView)
-	if b.info.TreeView {
-		tblHead = append(tblHead, "NAME")
-	}
 	hideColumns = loop.HideColumns(b.info)
 
 	tblHead = append(tblHead, loop.Headers()...)
@@ -244,11 +240,7 @@ func (b *RowBuilder) setVisibleColumns() {
 	}
 
 	if b.info.TreeView {
-		//only hide the nodename and namespace, podname is always show in tree view
-		if !b.CommonFlags.showNamespaceName {
-			b.Table.HideColumn(1)
-		}
-
+		//only hide the nodename in tree view
 		if !b.CommonFlags.showNodeName {
 			b.Table.HideColumn(2)
 		}
@@ -303,7 +295,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 					return 0, err
 				}
 				for _, row := range allRows {
-					rowsOut := b.makeRow(b.info, row)
+					rowsOut := b.makeRow(true, b.info, row)
 					total += len(rowsOut)
 					b.printHeadIfNeeded()
 					b.Table.AddRow(rowsOut...)
@@ -324,7 +316,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 					return 0, err
 				}
 				for _, row := range allRows {
-					rowsOut := b.makeRow(b.info, row)
+					rowsOut := b.makeRow(true, b.info, row)
 					total += len(rowsOut)
 					b.printHeadIfNeeded()
 					b.Table.AddRow(rowsOut...)
@@ -349,7 +341,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 				return 0, err
 			}
 			for _, row := range allRows {
-				rowsOut := b.makeRow(b.info, row)
+				rowsOut := b.makeRow(true, b.info, row)
 				total += len(rowsOut)
 				b.printHeadIfNeeded()
 				b.Table.AddRow(rowsOut...)
@@ -370,7 +362,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 				return 0, err
 			}
 			for _, row := range allRows {
-				rowsOut := b.makeRow(b.info, row)
+				rowsOut := b.makeRow(true, b.info, row)
 				total += len(rowsOut)
 				b.printHeadIfNeeded()
 				b.Table.AddRow(rowsOut...)
@@ -394,7 +386,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 				return 0, err
 			}
 			for _, row := range allRows {
-				rowsOut := b.makeRow(b.info, row)
+				rowsOut := b.makeRow(true, b.info, row)
 				total += len(rowsOut)
 				b.printHeadIfNeeded()
 				b.Table.AddRow(rowsOut...)
@@ -415,7 +407,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 				return 0, err
 			}
 			for _, row := range allRows {
-				rowsOut := b.makeRow(b.info, row)
+				rowsOut := b.makeRow(true, b.info, row)
 				total += len(rowsOut)
 				b.printHeadIfNeeded()
 				b.Table.AddRow(rowsOut...)
@@ -429,7 +421,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 
 // MakeRow adds the listed columns to the default columns, outputs
 //  the complete row as a list of columns
-func (b *RowBuilder) makeRow(info BuilderInformation, columns ...[]Cell) []Cell {
+func (b *RowBuilder) makeRow(containerLine bool, info BuilderInformation, columns ...[]Cell) []Cell {
 	log := logger{location: "RowBuilder:MakeRow"}
 	log.Debug("Start")
 
@@ -441,6 +433,9 @@ func (b *RowBuilder) makeRow(info BuilderInformation, columns ...[]Cell) []Cell 
 
 	if b.LabelPodName != "" {
 		rowList = append(rowList, NewCellText(b.labelPodValue))
+	}
+	if containerLine && b.info.TreeView {
+		rowList = b.info.BuildTreeCell(rowList)
 	}
 
 	for _, c := range columns {
@@ -479,6 +474,10 @@ func (b *RowBuilder) getDefaultHead() []string {
 	if b.LabelPodName != "" {
 		log.Debug("LabelPodName =", b.LabelPodName)
 		headList = append(headList, b.LabelPodName)
+	}
+
+	if b.info.TreeView {
+		headList = append(headList, "NAME")
 	}
 
 	log.Debug("headList =", headList)

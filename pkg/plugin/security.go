@@ -211,9 +211,9 @@ func (s security) securityBuildRow(info BuilderInformation, csc *v1.SecurityCont
 		}
 	}
 
-	if info.TreeView {
-		cellList = info.BuildTreeCell(cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		ape,
@@ -277,9 +277,9 @@ func (s security) seLinuxBuildRow(info BuilderInformation, csc *v1.SecurityConte
 		}
 	}
 
-	if info.TreeView {
-		cellList = info.BuildTreeCell(cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		seUser,
