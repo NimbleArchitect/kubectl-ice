@@ -23,10 +23,12 @@ to view the documentation or raise issues:
 
 if you find this program useful please consider saying thanks I can be reached
  on twitter @nimblearchitect or you can buy me a coffee:
-   https://www.buymeacoffee.com/NimbleArchitect
+    https://www.buymeacoffee.com/NimbleArchitect
+    https://ko-fi.com/nimblearchitect
 
 
-for just the version string output use: kubectl-ice -v
+if your just after the version string use: kubectl-ice -v
+
 `, cmd.Parent().Version)
 	return nil
 }

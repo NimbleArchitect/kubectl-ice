@@ -11,30 +11,29 @@ import (
 )
 
 type commonFlags struct {
-	allNamespaces bool                  // should we search all namespaces
-	container     string                // name of the container to search for
-	filterList    map[string]matchValue // used to filter out rows form the table during Print function
-	labels        string                // k8s pod labels
-	// showDetail         bool                  // shows extra the timestamp instead of the age column along with a few extra columns
-	showInitContainers bool //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
-	showOddities       bool // this isnt really common but it does show up across 3+ commands and im lazy
-	showNamespaceName  bool // shows the namespace name of each pod
-	// showPodName        bool                  // wether to show the pod name
-	showNodeName      bool                  // do we need to show the node name in the output
-	showTreeView      bool                  // show the table in a tree like view
-	showContainerType bool                  // show container type column
-	byteSize          string                // sets the bytes conversion for the output size
-	outputAs          string                // how to output the table, currently only accepts json
-	sortList          []string              //column names to sort on when table.Print() is called
-	matchSpecList     map[string]matchValue //filter pods based on matches to the v1.Pods.Spec fields
-	labelNodeName     string
-	labelPodName      string
+	allNamespaces      bool                  // should we search all namespaces
+	container          string                // name of the container to search for
+	filterList         map[string]matchValue // used to filter out rows form the table during Print function
+	labels             string                // k8s pod labels
+	showInitContainers bool                  //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
+	showOddities       bool                  // this isnt really common but it does show up across 3+ commands and im lazy
+	showNamespaceName  bool                  // shows the namespace name of each pod
+	showNodeName       bool                  // do we need to show the node name in the output
+	showTreeView       bool                  // show the table in a tree like view
+	showContainerType  bool                  // show container type column
+	byteSize           string                // sets the bytes conversion for the output size
+	outputAs           string                // how to output the table, currently only accepts json
+	sortList           []string              //column names to sort on when table.Print() is called
+	matchSpecList      map[string]matchValue //filter pods based on matches to the v1.Pods.Spec fields
+	labelNodeName      string
+	labelPodName       string
 }
 
 var helpTemplate = `
 {{if or .Runnable .HasSubCommands}}{{.UsageString}}{{end}}
 
 More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
 `
 
 func InitSubCommands(rootCmd *cobra.Command) {
