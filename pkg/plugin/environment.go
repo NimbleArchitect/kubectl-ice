@@ -41,107 +41,41 @@ var environmentExample = `  # List containers env info from pods
   # List container env info from all pods where the pod label app is either web or mail
   %[1]s env -l "app in (web,mail)"`
 
-func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	var columnInfo containerInfomation
-	var tblHead []string
-	var podname []string
-	var showPodName bool = true
-	var translateConfigMap bool
+func Environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+	log := logger{location: "Environment"}
+	log.Debug("Start")
+
+	loopinfo := environment{}
+	builder := RowBuilder{}
+	builder.LoopSpec = true
+	builder.ShowInitContainers = true
+	builder.PodName = args
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
 	}
 
-	// if a single pod is selected we dont need to show its name
-	if len(args) >= 1 {
-		podname = args
-		if len(podname[0]) >= 1 {
-			showPodName = false
-		}
-	}
 	commonFlagList, err := processCommonFlags(cmd)
 	if err != nil {
 		return err
 	}
 	connect.Flags = commonFlagList
 
-	podList, err := connect.GetPods(podname)
-	if err != nil {
-		return err
-	}
+	builder.Connection = &connect
+	builder.SetFlagsFrom(commonFlagList)
+
+	//we need the connection details so we can translate the environment variables
+	loopinfo.Connection = &connect
 
 	if cmd.Flag("translate").Value.String() == "true" {
-		translateConfigMap = true
+		loopinfo.TranslateConfigMap = true
 	}
 
 	table := Table{}
-	tblHead = append(columnInfo.GetDefaultHead(), "NAME", "VALUE")
-	table.SetHeader(tblHead...)
-
-	if len(commonFlagList.filterList) >= 1 {
-		err = table.SetFilter(commonFlagList.filterList)
-		if err != nil {
-			return err
-		}
-	}
-
-	commonFlagList.showPodName = showPodName
-	columnInfo.SetVisibleColumns(table, commonFlagList)
-
-	for _, pod := range podList {
-		columnInfo.LoadFromPod(pod)
-
-		connect.SetNamespace(pod.Namespace)
-		columnInfo.containerType = "S"
-		for _, container := range pod.Spec.Containers {
-
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			allRows := buildEnvFromContainer(container)
-			for _, envRow := range allRows {
-				tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
-				columnInfo.ApplyRow(&table, tblOut)
-				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				// table.AddRow(tblFullRow...)
-			}
-		}
-
-		columnInfo.containerType = "I"
-		for _, container := range pod.Spec.InitContainers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			allRows := buildEnvFromContainer(container)
-			for _, envRow := range allRows {
-				tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
-				columnInfo.ApplyRow(&table, tblOut)
-				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				// table.AddRow(tblFullRow...)
-			}
-		}
-
-		columnInfo.containerType = "E"
-		for _, container := range pod.Spec.EphemeralContainers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			allRows := buildEnvFromEphemeral(container)
-			for _, envRow := range allRows {
-				tblOut := envBuildRow(columnInfo, envRow, connect, translateConfigMap)
-				columnInfo.ApplyRow(&table, tblOut)
-				// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-				// table.AddRow(tblFullRow...)
-			}
-		}
-	}
+	builder.Table = &table
+	builder.ShowTreeView = commonFlagList.showTreeView
+	builder.BuildRows(loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -152,7 +86,56 @@ func environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 
 }
 
-func envBuildRow(info containerInfomation, env v1.EnvVar, connect Connector, translate bool) []Cell {
+type environment struct {
+	Connection         *Connector
+	TranslateConfigMap bool
+}
+
+func (s environment) Headers() []string {
+	return []string{
+		"NAME", "VALUE",
+	}
+}
+
+func (s environment) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
+
+func (s environment) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
+
+func (s environment) HideColumns(info BuilderInformation) []int {
+	return []int{}
+}
+
+// func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
+func (s environment) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+	return []Cell{
+		NewCellText(""),
+		NewCellText(""),
+	}, nil
+}
+
+func (s environment) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+	out := [][]Cell{}
+	allRows := s.buildEnvFromContainer(container)
+	for _, envRow := range allRows {
+		out = append(out, s.envBuildRow(info, envRow, s.Connection, s.TranslateConfigMap))
+	}
+	return out, nil
+}
+
+func (s environment) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+	out := [][]Cell{}
+	allRows := s.buildEnvFromEphemeral(container)
+	for _, envRow := range allRows {
+		out = append(out, s.envBuildRow(info, envRow, s.Connection, s.TranslateConfigMap))
+	}
+	return out, nil
+}
+
+func (s environment) envBuildRow(info BuilderInformation, env v1.EnvVar, connect *Connector, translate bool) []Cell {
 	var envKey, envValue string
 	var configName string
 	var key string
@@ -198,14 +181,14 @@ func envBuildRow(info containerInfomation, env v1.EnvVar, connect Connector, tra
 	}
 }
 
-func buildEnvFromContainer(container v1.Container) []v1.EnvVar {
+func (s environment) buildEnvFromContainer(container v1.Container) []v1.EnvVar {
 	if len(container.Env) == 0 {
 		return []v1.EnvVar{}
 	}
 	return container.Env
 }
 
-func buildEnvFromEphemeral(container v1.EphemeralContainer) []v1.EnvVar {
+func (s environment) buildEnvFromEphemeral(container v1.EphemeralContainer) []v1.EnvVar {
 	if len(container.Env) == 0 {
 		return []v1.EnvVar{}
 	}

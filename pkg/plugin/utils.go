@@ -11,6 +11,9 @@ import (
 // always returns false if the flagList.container is empty as we expect to show all containers
 // returns true if we dont have a match
 func skipContainerName(flagList commonFlags, containerName string) bool {
+	log := logger{location: "Resource"}
+	log.Debug("Start")
+
 	if len(flagList.container) == 0 {
 		return false
 	}
@@ -19,6 +22,7 @@ func skipContainerName(flagList commonFlags, containerName string) bool {
 		return false
 	}
 
+	log.Debug("skipping -", containerName)
 	return true
 
 }
@@ -32,10 +36,17 @@ func memoryGetUnitLst(byteType string) (int64, string) {
 
 	memSizes := map[string]int64{
 		"Ki": b, "Mi": b * b, "Gi": b * b * b, "Ti": b * b * b * b, "Pi": b * b * b * b * b, "Ei": b * b * b * b * b * b,
+
 		"k": d, "M": d * d, "G": d * d * d, "T": d * d * d * d, "P": d * d * d * d * d, "E": d * d * d * d * d * d,
+		"KB": d, "MB": d * d, "GB": d * d * d, "TB": d * d * d * d, "PB": d * d * d * d * d, "EB": d * d * d * d * d * d,
 	}
 
-	if len(byteType) > 0 && len(byteType) <= 2 {
+	// limit to two characters
+	if len([]rune(byteType)) > 2 {
+		byteType = byteType[0:2]
+	}
+
+	if len(byteType) > 0 {
 		for k, v := range memSizes {
 			a := strings.ToLower(k)
 			b := strings.ToLower(byteType)
@@ -118,21 +129,21 @@ func portAsString(port intstr.IntOrString) string {
 	return ""
 }
 
-func buildTreeCell(info containerInfomation, cellList []Cell) []Cell {
-	var namePrefix string
+// func buildTreeCell(info containerInfomation, cellList []Cell) []Cell {
+// 	var namePrefix string
 
-	if info.containerType == "S" {
-		namePrefix = "Container/"
-	}
-	if info.containerType == "I" {
-		namePrefix = "InitContainer/"
-	}
-	if info.containerType == "E" {
-		namePrefix = "EphemeralContainer/"
-	}
+// 	if info.containerType == "S" {
+// 		namePrefix = "Container/"
+// 	}
+// 	if info.containerType == "I" {
+// 		namePrefix = "InitContainer/"
+// 	}
+// 	if info.containerType == "E" {
+// 		namePrefix = "EphemeralContainer/"
+// 	}
 
-	cellList = append(cellList,
-		NewCellText(fmt.Sprint("└─", namePrefix, info.containerName)),
-	)
-	return cellList
-}
+// 	cellList = append(cellList,
+// 		NewCellText(fmt.Sprint("└─", namePrefix, info.containerName)),
+// 	)
+// 	return cellList
+// }

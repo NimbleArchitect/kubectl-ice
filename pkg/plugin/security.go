@@ -43,133 +43,39 @@ var securityExample = `  # List container security info from pods
 
 //list details of configured liveness readiness and startup security
 func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	var columnInfo containerInfomation
-	var tblHead []string
-	var podname []string
-	var showPodName bool = true
-	var showSELinuxOptions bool
-	var nodeLabels map[string]map[string]string
-	var podLabels map[string]map[string]string
+
+	log := logger{location: "Security"}
+	log.Debug("Start")
+
+	loopinfo := security{}
+	builder := RowBuilder{}
+	builder.LoopSpec = true
+	builder.ShowInitContainers = true
+	builder.PodName = args
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
 	}
 
-	// if a single pod is selected we dont need to show its name
-	if len(args) >= 1 {
-		podname = args
-		if len(podname[0]) >= 1 {
-			showPodName = false
-		}
-	}
 	commonFlagList, err := processCommonFlags(cmd)
 	if err != nil {
 		return err
 	}
 	connect.Flags = commonFlagList
-
-	podList, err := connect.GetPods(podname)
-	if err != nil {
-		return err
-	}
-
-	if cmd.Flag("node-label").Value.String() != "" {
-		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
-		nodeLabels, err = connect.GetNodeLabels(podList)
-		if err != nil {
-			return err
-		}
-	}
-
-	if cmd.Flag("pod-label").Value.String() != "" {
-		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
-		podLabels, err = connect.GetPodLabels(podList)
-		if err != nil {
-			return err
-		}
-	}
+	builder.Connection = &connect
+	builder.SetFlagsFrom(commonFlagList)
 
 	table := Table{}
-	columnInfo.treeView = commonFlagList.showTreeView
-
-	tblHead = columnInfo.GetDefaultHead()
-	if commonFlagList.showTreeView {
-		// we have to control the name when displaying a tree view as the table
-		//  object dosent have the extra info to be able to process it
-		tblHead = append(tblHead, "NAME")
-	}
+	builder.Table = &table
+	builder.ShowTreeView = commonFlagList.showTreeView
 
 	if cmd.Flag("selinux").Value.String() == "true" {
-		showSELinuxOptions = true
-		tblHead = append(tblHead, "USER", "ROLE", "TYPE", "LEVEL")
-	} else {
-		tblHead = append(tblHead, "ALLOW_PRIVILEGE_ESCALATION", "PRIVILEGED", "RO_ROOT_FS", "RUN_AS_NON_ROOT", "RUN_AS_USER", "RUN_AS_GROUP")
-	}
-	table.SetHeader(tblHead...)
-
-	if len(commonFlagList.filterList) >= 1 {
-		err = table.SetFilter(commonFlagList.filterList)
-		if err != nil {
-			return err
-		}
+		log.Debug("loopinfo.ShowSELinuxOptions = true")
+		loopinfo.ShowSELinuxOptions = true
 	}
 
-	commonFlagList.showPodName = showPodName
-	columnInfo.SetVisibleColumns(table, commonFlagList)
-
-	for _, pod := range podList {
-		columnInfo.LoadFromPod(pod)
-
-		if columnInfo.labelNodeName != "" {
-			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-		}
-		if columnInfo.labelPodName != "" {
-			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-		}
-
-		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-		if columnInfo.treeView {
-			tblOut := podSecurityBuildRow(pod, columnInfo, showSELinuxOptions)
-			columnInfo.ApplyRow(&table, tblOut)
-		}
-
-		columnInfo.containerType = "S"
-		for _, container := range pod.Spec.Containers {
-			var tblOut []Cell
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			if showSELinuxOptions {
-				tblOut = seLinuxBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
-			} else {
-				tblOut = securityBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
-			}
-			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
-		}
-
-		columnInfo.containerType = "I"
-		for _, container := range pod.Spec.InitContainers {
-			var tblOut []Cell
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			if showSELinuxOptions {
-				tblOut = seLinuxBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
-			} else {
-				tblOut = securityBuildRow(columnInfo, container.SecurityContext, pod.Spec.SecurityContext)
-			}
-			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
-		}
-	}
+	builder.BuildRows(loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -180,29 +86,83 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 }
 
-func podSecurityBuildRow(pod v1.Pod, info containerInfomation, showSELinuxOptions bool) []Cell {
-	if showSELinuxOptions {
-		return []Cell{
-			NewCellText(fmt.Sprint("Pod/", info.podName)), //name
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
+type security struct {
+	ShowSELinuxOptions bool
+}
+
+func (s security) Headers() []string {
+	if s.ShowSELinuxOptions {
+		return []string{
+			"USER",
+			"ROLE",
+			"TYPE",
+			"LEVEL",
 		}
 	} else {
-		return []Cell{
-			NewCellText(fmt.Sprint("Pod/", info.podName)), //name
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
+		return []string{
+			"ALLOW_PRIVILEGE_ESCALATION",
+			"PRIVILEGED",
+			"RO_ROOT_FS",
+			"RUN_AS_NON_ROOT",
+			"RUN_AS_USER",
+			"RUN_AS_GROUP",
 		}
 	}
 }
 
-func securityBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
+func (s security) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
+
+func (s security) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
+
+func (s security) HideColumns(info BuilderInformation) []int {
+	return []int{}
+}
+
+func (s security) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+	if s.ShowSELinuxOptions {
+		return []Cell{
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+		}, nil
+	} else {
+		return []Cell{
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+		}, nil
+	}
+}
+
+func (s security) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+	out := make([][]Cell, 1)
+	if s.ShowSELinuxOptions {
+		out[0] = s.seLinuxBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
+	} else {
+		out[0] = s.securityBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
+	}
+	return out, nil
+}
+
+func (s security) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+	out := make([][]Cell, 1)
+	if s.ShowSELinuxOptions {
+		out[0] = s.seLinuxBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
+	} else {
+		out[0] = s.securityBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
+	}
+	return out, nil
+}
+
+func (s security) securityBuildRow(info BuilderInformation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
 	var cellList []Cell
 	ape := Cell{}
 	p := Cell{}
@@ -251,9 +211,9 @@ func securityBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1
 		}
 	}
 
-	if info.treeView {
-		cellList = buildTreeCell(info, cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		ape,
@@ -268,7 +228,7 @@ func securityBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1
 
 }
 
-func seLinuxBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
+func (s security) seLinuxBuildRow(info BuilderInformation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
 	var cellList []Cell
 	seLevel := Cell{}
 	seRole := Cell{}
@@ -317,9 +277,9 @@ func seLinuxBuildRow(info containerInfomation, csc *v1.SecurityContext, psc *v1.
 		}
 	}
 
-	if info.treeView {
-		cellList = buildTreeCell(info, cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		seUser,

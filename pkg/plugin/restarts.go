@@ -43,130 +43,34 @@ var restartsExample = `  # List individual container restart count from pods
   %[1]s restarts -l "app in (web,mail)"`
 
 func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	var columnInfo containerInfomation
-	var tblHead []string
-	var podname []string
-	var showPodName bool = true
-	var nodeLabels map[string]map[string]string
-	var podLabels map[string]map[string]string
+
+	log := logger{location: "Restarts"}
+	log.Debug("Start")
+
+	loopinfo := restarts{}
+	builder := RowBuilder{}
+	builder.LoopStatus = true
+	builder.ShowInitContainers = true
+	builder.PodName = args
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
 	}
 
-	// if a single pod is selected we dont need to show its name
-	if len(args) >= 1 {
-		podname = args
-		if len(podname[0]) >= 1 {
-			showPodName = false
-		}
-	}
 	commonFlagList, err := processCommonFlags(cmd)
 	if err != nil {
 		return err
 	}
 	connect.Flags = commonFlagList
-
-	podList, err := connect.GetPods(podname)
-	if err != nil {
-		return err
-	}
-
-	if cmd.Flag("node-label").Value.String() != "" {
-		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
-		nodeLabels, err = connect.GetNodeLabels(podList)
-		if err != nil {
-			return err
-		}
-	}
-
-	if cmd.Flag("pod-label").Value.String() != "" {
-		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
-		podLabels, err = connect.GetPodLabels(podList)
-		if err != nil {
-			return err
-		}
-	}
+	builder.Connection = &connect
+	builder.SetFlagsFrom(commonFlagList)
 
 	table := Table{}
-	columnInfo.treeView = commonFlagList.showTreeView
+	builder.Table = &table
+	builder.ShowTreeView = commonFlagList.showTreeView
 
-	tblHead = columnInfo.GetDefaultHead()
-	if commonFlagList.showTreeView {
-		// we have to control the name when displaying a tree view as the table
-		//  object dosent have the extra info to be able to process it
-		tblHead = append(tblHead, "NAME")
-	}
-
-	tblHead = append(tblHead, "RESTARTS")
-	table.SetHeader(tblHead...)
-
-	if len(commonFlagList.filterList) >= 1 {
-		err = table.SetFilter(commonFlagList.filterList)
-		if err != nil {
-			return err
-		}
-	}
-
-	commonFlagList.showPodName = showPodName
-	columnInfo.SetVisibleColumns(table, commonFlagList)
-
-	for _, pod := range podList {
-		columnInfo.LoadFromPod(pod)
-
-		if columnInfo.labelNodeName != "" {
-			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-		}
-		if columnInfo.labelPodName != "" {
-			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-		}
-
-		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-		if columnInfo.treeView {
-			tblOut := podRestartsBuildRow(pod, columnInfo)
-			columnInfo.ApplyRow(&table, tblOut)
-		}
-
-		columnInfo.containerType = "S"
-		for _, container := range pod.Status.ContainerStatuses {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			tblOut := restartsBuildRow(columnInfo, container.RestartCount)
-			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
-		}
-
-		columnInfo.containerType = "I"
-		for _, container := range pod.Status.InitContainerStatuses {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			tblOut := restartsBuildRow(columnInfo, container.RestartCount)
-			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
-		}
-
-		columnInfo.containerType = "E"
-		for _, container := range pod.Status.EphemeralContainerStatuses {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			tblOut := restartsBuildRow(columnInfo, container.RestartCount)
-			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
-		}
-	}
+	builder.BuildRows(loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -186,22 +90,54 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 }
 
-func podRestartsBuildRow(pod v1.Pod, info containerInfomation) []Cell {
+type restarts struct{}
 
-	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
-		NewCellText(""),
+func (s restarts) Headers() []string {
+	return []string{
+		"RESTARTS",
 	}
 }
 
-func restartsBuildRow(info containerInfomation, restartCount int32) []Cell {
+func (s restarts) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	out := make([][]Cell, 1)
+	out[0] = s.restartsBuildRow(info, container.RestartCount)
+	return out, nil
+}
+
+func (s restarts) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	out := make([][]Cell, 1)
+	out[0] = s.restartsBuildRow(info, container.RestartCount)
+	return out, nil
+}
+
+func (s restarts) HideColumns(info BuilderInformation) []int {
+	return []int{}
+}
+
+func (s restarts) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+	return []Cell{
+		NewCellText(""),
+	}, nil
+}
+
+func (s restarts) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+	out := [][]Cell{}
+	return out, nil
+}
+
+func (s restarts) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+	out := [][]Cell{}
+	return out, nil
+}
+
+func (s restarts) restartsBuildRow(info BuilderInformation, restartCount int32) []Cell {
 	var cellList []Cell
 	// if container.RestartCount == 0
 	// restarts := fmt.Sprintf("%d", container.RestartCount)
 
-	if info.treeView {
-		cellList = buildTreeCell(info, cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		NewCellInt(fmt.Sprintf("%d", restartCount), int64(restartCount)),

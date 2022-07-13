@@ -15,32 +15,34 @@ type commonFlags struct {
 	container          string                // name of the container to search for
 	filterList         map[string]matchValue // used to filter out rows form the table during Print function
 	labels             string                // k8s pod labels
-	showDetails        bool                  // shows extra the timestamp instead of the age column along with a few extra columns
 	showInitContainers bool                  //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
 	showOddities       bool                  // this isnt really common but it does show up across 3+ commands and im lazy
 	showNamespaceName  bool                  // shows the namespace name of each pod
-	showPodName        bool                  // wether to show the pod name
 	showNodeName       bool                  // do we need to show the node name in the output
 	showTreeView       bool                  // show the table in a tree like view
+	showContainerType  bool                  // show container type column
 	byteSize           string                // sets the bytes conversion for the output size
 	outputAs           string                // how to output the table, currently only accepts json
 	sortList           []string              //column names to sort on when table.Print() is called
 	matchSpecList      map[string]matchValue //filter pods based on matches to the v1.Pods.Spec fields
+	labelNodeName      string
+	labelPodName       string
 }
 
 var helpTemplate = `
 {{if or .Runnable .HasSubCommands}}{{.UsageString}}{{end}}
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
-More information at: https://github.com/NimbleArchitect/kubectl-ice
 `
 
 func InitSubCommands(rootCmd *cobra.Command) {
 	var includeInitShort string = "include init container(s) in the output, by default init containers are hidden"
-	var nodeLabelShort string = "show the selected node label as a column"
 	var odditiesShort string = "show only the outlier rows that dont fall within the computed range"
-	var podLabelShort string = "show the selected pod label as a column"
 	var sizeShort string = "allows conversion to the selected size rather then the default megabyte output"
-	var treeShort string = "Display tree like view instead of the standard list"
+	// var treeShort string = "Display tree like view instead of the standard list"
+
+	log := logger{location: "InitSubCommands"}
+	log.Debug("Start")
 
 	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
 	rootCmd.SetHelpTemplate(helpTemplate)
@@ -62,9 +64,6 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdCapabilities.Flags())
-	cmdCapabilities.Flags().StringP("node-label", "", "", nodeLabelShort)
-	cmdCapabilities.Flags().StringP("pod-label", "", "", podLabelShort)
-	cmdCapabilities.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdCapabilities)
 	rootCmd.AddCommand(cmdCapabilities)
 
@@ -85,9 +84,6 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdCommands.Flags())
-	cmdCommands.Flags().StringP("node-label", "", "", nodeLabelShort)
-	cmdCommands.Flags().StringP("pod-label", "", "", podLabelShort)
-	cmdCommands.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdCommands)
 	rootCmd.AddCommand(cmdCommands)
 
@@ -110,9 +106,6 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	cmdCPU.Flags().BoolP("include-init", "i", false, includeInitShort)
 	cmdCPU.Flags().BoolP("oddities", "", false, odditiesShort)
 	cmdCPU.Flags().BoolP("raw", "r", false, "show raw values")
-	cmdCPU.Flags().StringP("node-label", "", "", nodeLabelShort)
-	cmdCPU.Flags().StringP("pod-label", "", "", podLabelShort)
-	cmdCPU.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdCPU)
 	rootCmd.AddCommand(cmdCPU)
 
@@ -125,7 +118,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		Aliases: []string{"env", "vars"},
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := environment(cmd, KubernetesConfigFlags, args); err != nil {
+			if err := Environment(cmd, KubernetesConfigFlags, args); err != nil {
 				return err
 			}
 
@@ -133,7 +126,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdEnvironment.Flags())
-	cmdEnvironment.Flags().BoolP("translate", "t", false, "read the configmap show its values")
+	cmdEnvironment.Flags().BoolP("translate", "", false, "read the configmap show its values")
 	addCommonFlags(cmdEnvironment)
 	rootCmd.AddCommand(cmdEnvironment)
 
@@ -173,9 +166,6 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdImage.Flags())
-	cmdImage.Flags().StringP("node-label", "", "", nodeLabelShort)
-	cmdImage.Flags().StringP("pod-label", "", "", podLabelShort)
-	cmdImage.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdImage)
 	rootCmd.AddCommand(cmdImage)
 
@@ -196,8 +186,6 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdLifecycle.Flags())
-	cmdLifecycle.Flags().StringP("node-label", "", "", nodeLabelShort)
-	cmdLifecycle.Flags().StringP("pod-label", "", "", podLabelShort)
 	addCommonFlags(cmdLifecycle)
 	rootCmd.AddCommand(cmdLifecycle)
 
@@ -223,9 +211,6 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	cmdMemory.Flags().BoolP("oddities", "", false, odditiesShort)
 	cmdMemory.Flags().BoolP("raw", "r", false, "show raw values")
 	cmdMemory.Flags().String("size", "Mi", sizeShort)
-	cmdMemory.Flags().StringP("node-label", "", "", nodeLabelShort)
-	cmdMemory.Flags().StringP("pod-label", "", "", podLabelShort)
-	cmdMemory.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdMemory)
 	rootCmd.AddCommand(cmdMemory)
 
@@ -246,9 +231,6 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdPorts.Flags())
-	cmdPorts.Flags().StringP("node-label", "", "", nodeLabelShort)
-	cmdPorts.Flags().StringP("pod-label", "", "", podLabelShort)
-	cmdPorts.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdPorts)
 	rootCmd.AddCommand(cmdPorts)
 
@@ -269,9 +251,6 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdProbes.Flags())
-	cmdProbes.Flags().StringP("node-label", "", "", nodeLabelShort)
-	cmdProbes.Flags().StringP("pod-label", "", "", podLabelShort)
-	// cmdProbes.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdProbes)
 	rootCmd.AddCommand(cmdProbes)
 
@@ -294,9 +273,6 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	KubernetesConfigFlags.AddFlags(cmdRestart.Flags())
 	cmdRestart.Flags().BoolP("oddities", "", false, odditiesShort)
-	cmdRestart.Flags().StringP("node-label", "", "", nodeLabelShort)
-	cmdRestart.Flags().StringP("pod-label", "", "", podLabelShort)
-	cmdRestart.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdRestart)
 	rootCmd.AddCommand(cmdRestart)
 
@@ -318,9 +294,6 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	KubernetesConfigFlags.AddFlags(cmdSecurity.Flags())
 	cmdSecurity.Flags().BoolP("selinux", "", false, "show the SELinux context thats applied to the containers")
-	cmdSecurity.Flags().StringP("node-label", "", "", nodeLabelShort)
-	cmdSecurity.Flags().StringP("pod-label", "", "", podLabelShort)
-	cmdSecurity.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdSecurity)
 	rootCmd.AddCommand(cmdSecurity)
 
@@ -345,11 +318,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	KubernetesConfigFlags.AddFlags(cmdStatus.Flags())
 	cmdStatus.Flags().BoolP("details", "d", false, `Display the timestamp instead of age along with the message column`)
-	cmdStatus.Flags().StringP("node-label", "", "", nodeLabelShort)
 	cmdStatus.Flags().BoolP("oddities", "", false, odditiesShort)
 	cmdStatus.Flags().BoolP("previous", "p", false, "Show previous state")
-	cmdStatus.Flags().StringP("pod-label", "", "", podLabelShort)
-	cmdStatus.Flags().BoolP("tree", "t", false, treeShort)
 	//TODO: check if I can add labels for service/replicaset/configmap etc.
 	addCommonFlags(cmdStatus)
 	rootCmd.AddCommand(cmdStatus)
@@ -383,9 +353,6 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	KubernetesConfigFlags.AddFlags(cmdVolume.Flags())
 	cmdVolume.Flags().BoolP("device", "d", false, "show raw block device mappings within a container")
-	cmdVolume.Flags().StringP("node-label", "", "", nodeLabelShort)
-	cmdVolume.Flags().StringP("pod-label", "", "", podLabelShort)
-	// cmdVolume.Flags().BoolP("tree", "t", false, treeShort)
 	addCommonFlags(cmdVolume)
 	rootCmd.AddCommand(cmdVolume)
 
@@ -400,8 +367,12 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("output", "o", "", `Output format, currently csv, list, json and yaml are supported`)
 	cmdObj.Flags().StringP("match", "", "", `Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != `)
 	cmdObj.Flags().StringP("select", "", "", `Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != `)
-	cmdObj.Flags().BoolP("show-namespace", "", false, `shows the namespace column`)
-	cmdObj.Flags().BoolP("show-node", "", false, `shows the node name column`)
+	cmdObj.Flags().BoolP("show-namespace", "", false, `Show the namespace column`)
+	cmdObj.Flags().BoolP("show-node", "", false, `Show the node name column`)
+	cmdObj.Flags().BoolP("show-type", "T", false, `Show the container type column`)
+	cmdObj.Flags().BoolP("tree", "t", false, `Display tree like view instead of the standard list`)
+	cmdObj.Flags().StringP("node-label", "", "", `Show the selected node label as a column`)
+	cmdObj.Flags().StringP("pod-label", "", "", `Show the selected pod label as a column`)
 }
 
 func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
@@ -510,6 +481,20 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 
 	if cmd.Flag("show-node").Value.String() == "true" {
 		f.showNodeName = true
+	}
+
+	if cmd.Flag("show-type").Value.String() == "true" {
+		f.showContainerType = true
+	}
+
+	if cmd.Flag("node-label").Value.String() != "" {
+		label := cmd.Flag("node-label").Value.String()
+		f.labelNodeName = label
+	}
+
+	if cmd.Flag("pod-label").Value.String() != "" {
+		label := cmd.Flag("pod-label").Value.String()
+		f.labelPodName = label
 	}
 
 	return f, nil

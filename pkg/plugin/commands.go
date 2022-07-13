@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -50,142 +49,34 @@ type commandLine struct {
 }
 
 func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	var columnInfo containerInfomation
-	var tblHead []string
-	var podname []string
-	var showPodName bool = true
-	var nodeLabels map[string]map[string]string
-	var podLabels map[string]map[string]string
+
+	log := logger{location: "Commands"}
+	log.Debug("Start")
+
+	loopinfo := commands{}
+	builder := RowBuilder{}
+	builder.LoopSpec = true
+	builder.ShowInitContainers = true
+	builder.PodName = args
 
 	connect := Connector{}
 	if err := connect.LoadConfig(kubeFlags); err != nil {
 		return err
 	}
 
-	// if a single pod is selected we dont need to show its name
-	if len(args) >= 1 {
-		podname = args
-		if len(podname[0]) >= 1 {
-			showPodName = false
-		}
-	}
 	commonFlagList, err := processCommonFlags(cmd)
 	if err != nil {
 		return err
 	}
 	connect.Flags = commonFlagList
-
-	podList, err := connect.GetPods(podname)
-	if err != nil {
-		return err
-	}
-
-	if cmd.Flag("node-label").Value.String() != "" {
-		columnInfo.labelNodeName = cmd.Flag("node-label").Value.String()
-		nodeLabels, err = connect.GetNodeLabels(podList)
-		if err != nil {
-			return err
-		}
-	}
-
-	if cmd.Flag("pod-label").Value.String() != "" {
-		columnInfo.labelPodName = cmd.Flag("pod-label").Value.String()
-		podLabels, err = connect.GetPodLabels(podList)
-		if err != nil {
-			return err
-		}
-	}
+	builder.Connection = &connect
+	builder.SetFlagsFrom(commonFlagList)
 
 	table := Table{}
-	columnInfo.treeView = commonFlagList.showTreeView
+	builder.Table = &table
+	builder.ShowTreeView = commonFlagList.showTreeView
 
-	tblHead = columnInfo.GetDefaultHead()
-	if commonFlagList.showTreeView {
-		// we have to control the name when displaying a tree view as the table
-		//  object dosent have the extra info to be able to process it
-		tblHead = append(tblHead, "NAME")
-	}
-
-	tblHead = append(tblHead, "COMMAND", "ARGUMENTS")
-	table.SetHeader(tblHead...)
-
-	if len(commonFlagList.filterList) >= 1 {
-		err = table.SetFilter(commonFlagList.filterList)
-		if err != nil {
-			return err
-		}
-	}
-
-	commonFlagList.showPodName = showPodName
-	columnInfo.SetVisibleColumns(table, commonFlagList)
-
-	for _, pod := range podList {
-		columnInfo.LoadFromPod(pod)
-
-		if columnInfo.labelNodeName != "" {
-			columnInfo.labelNodeValue = nodeLabels[pod.Spec.NodeName][columnInfo.labelNodeName]
-		}
-		if columnInfo.labelPodName != "" {
-			columnInfo.labelPodValue = podLabels[pod.Name][columnInfo.labelPodName]
-		}
-
-		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-		if columnInfo.treeView {
-			tblOut := podCommandsBuildRow(pod, columnInfo)
-			columnInfo.ApplyRow(&table, tblOut)
-		}
-
-		columnInfo.containerType = "S"
-		for _, container := range pod.Spec.Containers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			cmdLine := commandLine{
-				cmd:  container.Command,
-				args: container.Args,
-			}
-			tblOut := commandsBuildRow(cmdLine, columnInfo)
-			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
-		}
-
-		columnInfo.containerType = "I"
-		for _, container := range pod.Spec.InitContainers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			cmdLine := commandLine{
-				cmd:  container.Command,
-				args: container.Args,
-			}
-			tblOut := commandsBuildRow(cmdLine, columnInfo)
-			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
-		}
-
-		columnInfo.containerType = "E"
-		for _, container := range pod.Spec.EphemeralContainers {
-			// should the container be processed
-			if skipContainerName(commonFlagList, container.Name) {
-				continue
-			}
-			columnInfo.containerName = container.Name
-			cmdLine := commandLine{
-				cmd:  container.Command,
-				args: container.Args,
-			}
-			tblOut := commandsBuildRow(cmdLine, columnInfo)
-			columnInfo.ApplyRow(&table, tblOut)
-			// tblFullRow := append(columnInfo.GetDefaultCells(), tblOut...)
-			// table.AddRow(tblFullRow...)
-		}
-	}
+	builder.BuildRows(loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -196,21 +87,57 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 }
 
-func podCommandsBuildRow(pod v1.Pod, info containerInfomation) []Cell {
+type commands struct {
+}
 
-	return []Cell{
-		NewCellText(fmt.Sprint("Pod/", info.podName)), //name
-		NewCellText(""),
-		NewCellText(""),
+func (s commands) Headers() []string {
+	return []string{
+		"COMMAND", "ARGUMENTS",
 	}
 }
 
-func commandsBuildRow(cmdLine commandLine, info containerInfomation) []Cell {
+func (s commands) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
+
+func (s commands) HideColumns(info BuilderInformation) []int {
+	return []int{}
+}
+
+// func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
+func (s commands) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+	return []Cell{
+		NewCellText(""),
+		NewCellText(""),
+	}, nil
+}
+
+func (s commands) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+	cmdLine := commandLine{
+		cmd:  container.Command,
+		args: container.Args,
+	}
+	out := make([][]Cell, 1)
+	out[0] = s.commandsBuildRow(cmdLine, info)
+	return out, nil
+}
+
+func (s commands) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+	cmdLine := commandLine{
+		cmd:  container.Command,
+		args: container.Args,
+	}
+	out := make([][]Cell, 1)
+	out[0] = s.commandsBuildRow(cmdLine, info)
+	return out, nil
+}
+
+func (s commands) commandsBuildRow(cmdLine commandLine, info BuilderInformation) []Cell {
 	var cellList []Cell
 
-	if info.treeView {
-		cellList = buildTreeCell(info, cellList)
-	}
+	// if info.TreeView {
+	// 	cellList = info.BuildTreeCell(cellList)
+	// }
 
 	cellList = append(cellList,
 		NewCellText(strings.Join(cmdLine.cmd, " ")),

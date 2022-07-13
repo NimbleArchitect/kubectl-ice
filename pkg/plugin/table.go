@@ -74,6 +74,13 @@ func (t *Table) SetHeader(headItem ...string) {
 
 // Adds a new row to the end of the table, accepts an array of strings
 func (t *Table) AddRow(row ...Cell) {
+	log := logger{location: "Table:AddRow"}
+	log.Debug("Start")
+
+	if t.headCount > len(row) {
+		panic("not enough columns in provided row")
+	}
+
 	for i := 0; i < t.headCount; i++ {
 		strLen := len([]rune(row[i].text))
 		if strLen >= t.head[i].columnLength {
@@ -124,7 +131,13 @@ func (t *Table) Order(items ...int) {
 
 // select the column number to hide, columns numbers are the unsorted column number
 func (t *Table) HideColumn(columnNumber int) {
+	log := logger{location: "Table:HideColumn"}
+	log.Debug("Start")
+
+	log.Debug("columnNumber =", columnNumber)
+	log.Debug("len(t.head) =", len(t.head))
 	if len(t.head) > columnNumber {
+		log.Debug("hide =", t.head[columnNumber].title)
 		t.head[columnNumber].hidden = true
 	} else {
 		panic(fmt.Sprintln("invalid column number", columnNumber))
@@ -573,7 +586,7 @@ func canExcludeMatchFloat(filter matchFilter, val1 float64, val2 float64) bool {
 }
 
 // takes a filter as a string to exclude matching rows from the Print function
-// fulter is in the form COLUMN_NAME OPERATOR VALUE, where operator can be one of <,>,<=,>=,!=,=,==
+// filter is in the form COLUMN_NAME OPERATOR VALUE, where operator can be one of <,>,<=,>=,!=,=,==
 func (t *Table) SetFilter(filter map[string]matchValue) error {
 	for words, match := range filter {
 		// the smallest header name is T making a valid string "T=0"

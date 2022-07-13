@@ -3,9 +3,7 @@
 if [[ "$1" == "ice" ]]; then
     kubectl apply -f ./namespace.yml
     kubectl apply -n ice -f ./configmap.yml
-    kubectl apply -n ice -f ./configmap.yml
-    kubectl apply -n ice -f ./configmap.yml
-
+    
     kubectl apply -n ice -f ./demo-pod.yml
     kubectl apply -n ice -f ./demo-memory.yml
     kubectl apply -n ice -f ./demo-odd-cpu.yml

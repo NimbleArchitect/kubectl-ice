@@ -42,8 +42,7 @@ spec:
         livenessProbe:
           exec:
             command:
-            - exit
-            - "0"
+            - /bin/true
           initialDelaySeconds: 10
           periodSeconds: 5
         readinessProbe:
