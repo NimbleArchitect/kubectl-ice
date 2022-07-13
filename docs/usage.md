@@ -88,16 +88,17 @@ Aliases:
   capabilities, cap
 
 Flags:
-      --node-label string              show the selected node label as a column
+      --node-label string              Show the selected node label as a column
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
-      --pod-label string               show the selected pod label as a column
+      --pod-label string               Show the selected pod label as a column
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
-      --show-namespace                 shows the namespace column
-      --show-node                      shows the node name column
+      --show-namespace                 Show the namespace column
+      --show-node                      Show the node name column
+  -T, --show-type                      Show the container type column
   -t, --tree                           Display tree like view instead of the standard list
 
 
-More information at: https://github/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
 ```
 also includes standard common kubectl flags
@@ -141,16 +142,17 @@ Aliases:
   command, cmd, exec, args
 
 Flags:
-      --node-label string              show the selected node label as a column
+      --node-label string              Show the selected node label as a column
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
-      --pod-label string               show the selected pod label as a column
+      --pod-label string               Show the selected pod label as a column
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
-      --show-namespace                 shows the namespace column
-      --show-node                      shows the node name column
+      --show-namespace                 Show the namespace column
+      --show-node                      Show the node name column
+  -T, --show-type                      Show the container type column
   -t, --tree                           Display tree like view instead of the standard list
 
 
-More information at: https://github/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
 ```
 also includes standard common kubectl flags
@@ -192,18 +194,19 @@ Usage:
 
 Flags:
   -i, --include-init                   include init container(s) in the output, by default init containers are hidden
-      --node-label string              show the selected node label as a column
+      --node-label string              Show the selected node label as a column
       --oddities                       show only the outlier rows that dont fall within the computed range
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
-      --pod-label string               show the selected pod label as a column
+      --pod-label string               Show the selected pod label as a column
   -r, --raw                            show raw values
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
-      --show-namespace                 shows the namespace column
-      --show-node                      shows the node name column
+      --show-namespace                 Show the namespace column
+      --show-node                      Show the node name column
+  -T, --show-type                      Show the container type column
   -t, --tree                           Display tree like view instead of the standard list
 
 
-More information at: https://github/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
 ```
 also includes standard common kubectl flags
@@ -247,14 +250,18 @@ Aliases:
   environment, env, vars
 
 Flags:
+      --node-label string              Show the selected node label as a column
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
+      --pod-label string               Show the selected pod label as a column
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
-      --show-namespace                 shows the namespace column
-      --show-node                      shows the node name column
-  -t, --translate                      read the configmap show its values
+      --show-namespace                 Show the namespace column
+      --show-node                      Show the node name column
+  -T, --show-type                      Show the container type column
+      --translate                      read the configmap show its values
+  -t, --tree                           Display tree like view instead of the standard list
 
 
-More information at: https://github/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
 ```
 also includes standard common kubectl flags
@@ -298,16 +305,17 @@ Aliases:
   image, im
 
 Flags:
-      --node-label string              show the selected node label as a column
+      --node-label string              Show the selected node label as a column
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
-      --pod-label string               show the selected pod label as a column
+      --pod-label string               Show the selected pod label as a column
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
-      --show-namespace                 shows the namespace column
-      --show-node                      shows the node name column
+      --show-namespace                 Show the namespace column
+      --show-node                      Show the node name column
+  -T, --show-type                      Show the container type column
   -t, --tree                           Display tree like view instead of the standard list
 
 
-More information at: https://github/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
 ```
 also includes standard common kubectl flags
@@ -348,13 +356,17 @@ Usage:
   kubectl-ice ip [flags]
 
 Flags:
+      --node-label string              Show the selected node label as a column
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
+      --pod-label string               Show the selected pod label as a column
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
-      --show-namespace                 shows the namespace column
-      --show-node                      shows the node name column
+      --show-namespace                 Show the namespace column
+      --show-node                      Show the node name column
+  -T, --show-type                      Show the container type column
+  -t, --tree                           Display tree like view instead of the standard list
 
 
-More information at: https://github/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
 ```
 also includes standard common kubectl flags
@@ -387,19 +399,20 @@ Aliases:
 
 Flags:
   -i, --include-init                   include init container(s) in the output, by default init containers are hidden
-      --node-label string              show the selected node label as a column
+      --node-label string              Show the selected node label as a column
       --oddities                       show only the outlier rows that dont fall within the computed range
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
-      --pod-label string               show the selected pod label as a column
+      --pod-label string               Show the selected pod label as a column
   -r, --raw                            show raw values
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
-      --show-namespace                 shows the namespace column
-      --show-node                      shows the node name column
+      --show-namespace                 Show the namespace column
+      --show-node                      Show the node name column
+  -T, --show-type                      Show the container type column
       --size string                    allows conversion to the selected size rather then the default megabyte output (default "Mi")
   -t, --tree                           Display tree like view instead of the standard list
 
 
-More information at: https://github/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
 ```
 also includes standard common kubectl flags
@@ -443,16 +456,17 @@ Aliases:
   ports, port, po
 
 Flags:
-      --node-label string              show the selected node label as a column
+      --node-label string              Show the selected node label as a column
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
-      --pod-label string               show the selected pod label as a column
+      --pod-label string               Show the selected pod label as a column
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
-      --show-namespace                 shows the namespace column
-      --show-node                      shows the node name column
+      --show-namespace                 Show the namespace column
+      --show-node                      Show the node name column
+  -T, --show-type                      Show the container type column
   -t, --tree                           Display tree like view instead of the standard list
 
 
-More information at: https://github/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
 ```
 also includes standard common kubectl flags
@@ -496,15 +510,17 @@ Aliases:
   probes, probe
 
 Flags:
-      --node-label string              show the selected node label as a column
+      --node-label string              Show the selected node label as a column
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
-      --pod-label string               show the selected pod label as a column
+      --pod-label string               Show the selected pod label as a column
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
-      --show-namespace                 shows the namespace column
-      --show-node                      shows the node name column
+      --show-namespace                 Show the namespace column
+      --show-node                      Show the node name column
+  -T, --show-type                      Show the container type column
+  -t, --tree                           Display tree like view instead of the standard list
 
 
-More information at: https://github/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
 ```
 also includes standard common kubectl flags
@@ -548,17 +564,18 @@ Aliases:
   restarts, restart
 
 Flags:
-      --node-label string              show the selected node label as a column
+      --node-label string              Show the selected node label as a column
       --oddities                       show only the outlier rows that dont fall within the computed range
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
-      --pod-label string               show the selected pod label as a column
+      --pod-label string               Show the selected pod label as a column
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
-      --show-namespace                 shows the namespace column
-      --show-node                      shows the node name column
+      --show-namespace                 Show the namespace column
+      --show-node                      Show the node name column
+  -T, --show-type                      Show the container type column
   -t, --tree                           Display tree like view instead of the standard list
 
 
-More information at: https://github/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
 ```
 also includes standard common kubectl flags
@@ -602,17 +619,18 @@ Aliases:
   security, sec
 
 Flags:
-      --node-label string              show the selected node label as a column
+      --node-label string              Show the selected node label as a column
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
-      --pod-label string               show the selected pod label as a column
+      --pod-label string               Show the selected pod label as a column
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
       --selinux                        show the SELinux context thats applied to the containers
-      --show-namespace                 shows the namespace column
-      --show-node                      shows the node name column
+      --show-namespace                 Show the namespace column
+      --show-node                      Show the node name column
+  -T, --show-type                      Show the container type column
   -t, --tree                           Display tree like view instead of the standard list
 
 
-More information at: https://github/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
 ```
 also includes standard common kubectl flags
@@ -657,18 +675,19 @@ Aliases:
 
 Flags:
   -d, --details                        Display the timestamp instead of age along with the message column
-      --node-label string              show the selected node label as a column
+      --node-label string              Show the selected node label as a column
       --oddities                       show only the outlier rows that dont fall within the computed range
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
-      --pod-label string               show the selected pod label as a column
+      --pod-label string               Show the selected pod label as a column
   -p, --previous                       Show previous state
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
-      --show-namespace                 shows the namespace column
-      --show-node                      shows the node name column
+      --show-namespace                 Show the namespace column
+      --show-node                      Show the node name column
+  -T, --show-type                      Show the container type column
   -t, --tree                           Display tree like view instead of the standard list
 
 
-More information at: https://github/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
 ```
 also includes standard common kubectl flags
@@ -716,15 +735,17 @@ Aliases:
 
 Flags:
   -d, --device                         show raw block device mappings within a container
-      --node-label string              show the selected node label as a column
+      --node-label string              Show the selected node label as a column
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
-      --pod-label string               show the selected pod label as a column
+      --pod-label string               Show the selected pod label as a column
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
-      --show-namespace                 shows the namespace column
-      --show-node                      shows the node name column
+      --show-namespace                 Show the namespace column
+      --show-node                      Show the node name column
+  -T, --show-type                      Show the container type column
+  -t, --tree                           Display tree like view instead of the standard list
 
 
-More information at: https://github/NimbleArchitect/kubectl-ice
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
 
 ```
 also includes standard common kubectl flags
