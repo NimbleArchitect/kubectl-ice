@@ -27,6 +27,7 @@ type commonFlags struct {
 	matchSpecList      map[string]matchValue //filter pods based on matches to the v1.Pods.Spec fields
 	labelNodeName      string
 	labelPodName       string
+	annotationPodName  string
 }
 
 var helpTemplate = `
@@ -373,6 +374,7 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().BoolP("tree", "t", false, `Display tree like view instead of the standard list`)
 	cmdObj.Flags().StringP("node-label", "", "", `Show the selected node label as a column`)
 	cmdObj.Flags().StringP("pod-label", "", "", `Show the selected pod label as a column`)
+	cmdObj.Flags().StringP("annotation", "", "", `Show the selected annotation as a column`)
 }
 
 func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
@@ -495,6 +497,11 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 	if cmd.Flag("pod-label").Value.String() != "" {
 		label := cmd.Flag("pod-label").Value.String()
 		f.labelPodName = label
+	}
+
+	if cmd.Flag("annotation").Value.String() != "" {
+		annotation := cmd.Flag("annotation").Value.String()
+		f.annotationPodName = annotation
 	}
 
 	return f, nil

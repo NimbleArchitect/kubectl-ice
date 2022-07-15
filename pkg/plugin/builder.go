@@ -7,7 +7,6 @@ import (
 )
 
 type Looper interface {
-	// Build(container v1.ContainerStatus, columnInfo container) ([]Cell, error)
 	BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error)
 	BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error)
 	BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error)
@@ -33,7 +32,7 @@ type RowBuilder struct {
 	ShowPodName        bool
 	ShowInitContainers bool
 	ShowContainerType  bool
-	FilterList         map[string]matchValue // used to filter out rows form the table during Print function
+	FilterList         map[string]matchValue // used to filter out rows from the table during Print function
 	info               BuilderInformation
 	DefaultHeaderLen   int
 
@@ -62,6 +61,7 @@ func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
 	b.ShowTreeView = commonFlagList.showTreeView
 	b.LabelNodeName = commonFlagList.labelNodeName
 	b.LabelPodName = commonFlagList.labelPodName
+	b.AnnotationPodName = commonFlagList.annotationPodName
 	b.FilterList = b.CommonFlags.filterList
 
 	// we always show the pod name by default
@@ -131,13 +131,6 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 
 	b.info.TypeName = "Pod"
 	for _, pod := range podList {
-		// p := pod.GetOwnerReferences()
-		// for i, a := range p {
-		// 	fmt.Println("index:", i)
-		// 	fmt.Println("** name:", a.Name)
-		// 	fmt.Println("** kind:", a.Kind)
-		// }
-
 		log.Debug("pod.Name =", pod.Name)
 		b.info.Pod = &pod
 		b.info.PodName = pod.Name
@@ -434,6 +427,11 @@ func (b *RowBuilder) makeRow(containerLine bool, info BuilderInformation, column
 	if b.LabelPodName != "" {
 		rowList = append(rowList, NewCellText(b.labelPodValue))
 	}
+
+	if b.AnnotationPodName != "" {
+		rowList = append(rowList, NewCellText(b.annotationPodValue))
+	}
+
 	if containerLine && b.info.TreeView {
 		rowList = b.info.BuildTreeCell(rowList)
 	}
@@ -474,6 +472,11 @@ func (b *RowBuilder) getDefaultHead() []string {
 	if b.LabelPodName != "" {
 		log.Debug("LabelPodName =", b.LabelPodName)
 		headList = append(headList, b.LabelPodName)
+	}
+
+	if b.AnnotationPodName != "" {
+		log.Debug("AnnotationPodName =", b.AnnotationPodName)
+		headList = append(headList, b.AnnotationPodName)
 	}
 
 	if b.info.TreeView {

@@ -24,7 +24,7 @@ type Connector struct {
 	metricFlags    *genericclioptions.ConfigFlags
 	configMapArray map[string]map[string]string
 	setNameSpace   string
-	podList        []v1.Pod
+	podList        []v1.Pod //List of pods
 }
 
 //load config for the k8s endpoint
@@ -327,6 +327,7 @@ func (c *Connector) GetConfigMapValue(configMap string, key string) string {
 	return c.configMapArray[configMap][key]
 }
 
+// GetNamespace retrieves the namespace that is currently set as default
 func (c *Connector) GetNamespace(allNamespaces bool) string {
 	namespace := ""
 	ctx := ""
@@ -366,6 +367,7 @@ func (c *Connector) GetNamespace(allNamespaces bool) string {
 	return "default"
 }
 
+// SetNamespace sets the namespace to use when searching for pods
 func (c *Connector) SetNamespace(namespace string) {
 	if len(namespace) >= 1 {
 		c.setNameSpace = namespace
