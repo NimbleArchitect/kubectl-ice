@@ -73,7 +73,7 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 	// columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.BuildRows(loopinfo)
+	builder.Build(loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -99,6 +99,14 @@ func (s capabilities) BuildContainerStatus(container v1.ContainerStatus, info Bu
 
 func (s capabilities) HideColumns(info BuilderInformation) []int {
 	return []int{}
+}
+
+func (s capabilities) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+	out := []Cell{
+		NewCellText(""),
+		NewCellText(""),
+	}
+	return [][]Cell{out}, nil
 }
 
 // func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {

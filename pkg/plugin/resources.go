@@ -105,7 +105,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	loopinfo.MetricsResource = loopinfo.podMetrics2Hashtable(podStateList)
-	builder.BuildRows(loopinfo)
+	builder.Build(loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -145,6 +145,17 @@ func (s resource) BuildContainerStatus(container v1.ContainerStatus, info Builde
 
 func (s resource) HideColumns(info BuilderInformation) []int {
 	return []int{}
+}
+
+func (s resource) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+	out := []Cell{
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+		NewCellText(""),
+	}
+	return [][]Cell{out}, nil
 }
 
 func (s resource) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {

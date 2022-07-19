@@ -75,7 +75,7 @@ func Environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	table := Table{}
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
-	builder.BuildRows(loopinfo)
+	builder.Build(loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -107,6 +107,14 @@ func (s environment) BuildEphemeralContainerStatus(container v1.ContainerStatus,
 
 func (s environment) HideColumns(info BuilderInformation) []int {
 	return []int{}
+}
+
+func (s environment) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+	out := []Cell{
+		NewCellText(""),
+		NewCellText(""),
+	}
+	return [][]Cell{out}, nil
 }
 
 // func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {

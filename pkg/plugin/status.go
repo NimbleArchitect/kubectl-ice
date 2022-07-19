@@ -92,7 +92,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	log.Debug("commonFlagList.showTreeView =", commonFlagList.showTreeView)
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.BuildRows(loopinfo)
+	builder.Build(loopinfo)
 
 	if !builder.ShowTreeView {
 		if !loopinfo.ShowPrevious { // restart count dosent show up when using previous flag
@@ -161,6 +161,22 @@ func (s status) HideColumns(info BuilderInformation) []int {
 	// }
 
 	return hideColumns
+}
+
+func (s status) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+	out := []Cell{
+		NewCellText(""),   //ready
+		NewCellText(""),   //started
+		NewCellInt("", 0), //restarts
+		NewCellText(""),   //state
+		NewCellText(""),   //reason
+		NewCellText(""),   //exit-code
+		NewCellText(""),   //signal
+		NewCellText(""),   //timestamp
+		NewCellText(""),   //age
+		NewCellText(""),   //message
+	}
+	return [][]Cell{out}, nil
 }
 
 func (s status) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {

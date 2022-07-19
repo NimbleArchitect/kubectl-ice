@@ -167,12 +167,6 @@ func (c *Connector) GetNodes(nodeNameList []string) ([]v1.Node, error) {
 	if err == nil {
 		if len(nodes.Items) == 0 {
 			return []v1.Node{}, errors.New("no nodes found in default namespace")
-			// } else {
-			// 	if len(c.Flags.matchSpecList) > 0 {
-			// 		return c.SelectMatchinghNodeSpec(nodes.Items)
-			// 	} else {
-			// 		return nodes.Items, nil
-			// 	}
 		}
 	} else {
 		return []v1.Node{}, fmt.Errorf("failed to retrieve node list from server: %w", err)
@@ -449,3 +443,73 @@ func (c *Connector) LoadPods(podNameList []string) error {
 		return fmt.Errorf("failed to retrieve pod list from server: %w", err)
 	}
 }
+
+// GetOwnersList calls GetOwnerReference for each pod and returns a unique list of owner types as the key with an array of pods as the value
+func (c *Connector) GetOwnersList() (map[string][]v1.Pod, map[string]string) {
+	parentList := map[string][]v1.Pod{}
+	typeList := map[string]string{}
+
+	for _, pod := range c.podList {
+		ownerRef := pod.GetOwnerReferences()
+		for _, a := range ownerRef {
+			// if _, ok := parentList[a.Name]; ok {
+			parentList[a.Name] = append(parentList[a.Name], pod)
+			typeList[a.Name] = a.Kind
+			// } else {
+			// 	parentList[a.Kind] = append(parentList[a.Name], pod)
+			// 	typeList[a.Name] = a.Kind
+			// }
+		}
+	}
+
+	return parentList, typeList
+}
+
+// func (c *Connector) LoadReplicaSet(replicaNameList []string) error {
+// 	podList := []a1.ReplicaSet{}
+
+// 	selector := metav1.ListOptions{}
+
+// 	namespace := c.GetNamespace(c.Flags.allNamespaces)
+
+// 	if len(replicaNameList) > 0 {
+// 		// single pod
+// 		for _, replicaName := range replicaNameList {
+// 			rs, err := c.clientSet.AppsV1().ReplicaSets(namespace).Get(context.TODO(), replicaName, metav1.GetOptions{})
+// 			if err == nil {
+// 				podList = append(podList, []a1.ReplicaSet{*rs}...)
+// 			} else {
+// 				c.podList = []v1.Pod{}
+// 				return fmt.Errorf("failed to retrieve pod from server: %w", err)
+// 			}
+// 		}
+
+// 		// c.podList = podList
+// 		return nil
+// 	}
+
+// 	// multi pods
+// 	if len(c.Flags.labels) > 0 {
+// 		selector.LabelSelector = c.Flags.labels
+// 	}
+
+// 	rs, err := c.clientSet.AppsV1().ReplicaSets(namespace).List(context.TODO(), selector)
+
+// 	if err == nil {
+// 		if len(rs.Items) == 0 {
+// 			// c.podList = []v1.Pod{}
+// 			return errors.New("no pods found in default namespace")
+// 		} else {
+// 			if len(c.Flags.matchSpecList) > 0 {
+// 				// c.podList, err = c.SelectMatchinghPodSpec(rs.Items)
+// 				return err
+// 			} else {
+// 				// c.podList = pods.Items
+// 				return nil
+// 			}
+// 		}
+// 	} else {
+// 		// c.podList = []v1.Pod{}
+// 		return fmt.Errorf("failed to retrieve pod list from server: %w", err)
+// 	}
+// }

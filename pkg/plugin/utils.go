@@ -128,3 +128,21 @@ func portAsString(port intstr.IntOrString) string {
 
 	return ""
 }
+
+func indentText(level int, data ...string) string {
+	var indent string
+
+	if level == 0 {
+		indent = ""
+	}
+
+	if level == 1 {
+		indent = "└─"
+	}
+
+	if level >= 2 {
+		indent = strings.Repeat(" ", level) + "└─"
+	}
+
+	return fmt.Sprint(indent, strings.Join(data, ""))
+}

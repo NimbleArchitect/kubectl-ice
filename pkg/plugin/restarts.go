@@ -70,7 +70,7 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.BuildRows(loopinfo)
+	builder.Build(loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -112,6 +112,13 @@ func (s restarts) BuildEphemeralContainerStatus(container v1.ContainerStatus, in
 
 func (s restarts) HideColumns(info BuilderInformation) []int {
 	return []int{}
+}
+
+func (s restarts) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+	out := []Cell{
+		NewCellText(""),
+	}
+	return [][]Cell{out}, nil
 }
 
 func (s restarts) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {

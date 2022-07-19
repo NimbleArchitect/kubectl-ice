@@ -75,7 +75,7 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 		loopinfo.ShowSELinuxOptions = true
 	}
 
-	builder.BuildRows(loopinfo)
+	builder.Build(loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -120,6 +120,29 @@ func (s security) BuildEphemeralContainerStatus(container v1.ContainerStatus, in
 
 func (s security) HideColumns(info BuilderInformation) []int {
 	return []int{}
+}
+
+func (s security) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+	var out []Cell
+	if s.ShowSELinuxOptions {
+		out = []Cell{
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+		}
+	} else {
+		out = []Cell{
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+		}
+	}
+
+	return [][]Cell{out}, nil
 }
 
 func (s security) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {

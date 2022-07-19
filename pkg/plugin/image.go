@@ -71,7 +71,7 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	builder.CommonFlags = commonFlagList
 	builder.Connection = &connect
 
-	builder.BuildRows(loopinfo)
+	builder.Build(loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -101,6 +101,14 @@ func (s image) BuildEphemeralContainerStatus(container v1.ContainerStatus, info 
 
 func (s image) HideColumns(info BuilderInformation) []int {
 	return []int{}
+}
+
+func (s image) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+	out := []Cell{
+		NewCellText(""),
+		NewCellText(""),
+	}
+	return [][]Cell{out}, nil
 }
 
 func (s image) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {

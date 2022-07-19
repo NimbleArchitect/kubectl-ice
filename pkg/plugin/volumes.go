@@ -76,7 +76,7 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.BuildRows(loopinfo)
+	builder.Build(loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -119,6 +119,29 @@ func (s volumes) BuildEphemeralContainerStatus(container v1.ContainerStatus, inf
 
 func (s volumes) HideColumns(info BuilderInformation) []int {
 	return []int{}
+}
+
+func (s volumes) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+	var out []Cell
+
+	if !s.ShowVolumeDevice {
+		out = []Cell{
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+			NewCellText(""),
+		}
+
+	} else {
+		out = []Cell{
+			NewCellText(""),
+			NewCellText(""),
+		}
+	}
+
+	return [][]Cell{out}, nil
 }
 
 func (s volumes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {

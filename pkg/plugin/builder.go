@@ -6,8 +6,15 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+const (
+	TREE      = iota
+	CONTAINER = iota
+	PARENT    = iota
+)
+
 type Looper interface {
 	BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error)
+	BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error)
 	BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error)
 	BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error)
 	BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error)
@@ -48,6 +55,9 @@ type BuilderInformation struct {
 	PodName       string
 	TreeView      bool
 	TypeName      string
+	BranchType    int
+	Owner         string
+	OwnerType     string
 }
 
 // SetFlagsFrom sets the common flags to match the values retrieved from the passed object
@@ -86,13 +96,9 @@ func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
 
 }
 
-// BuildRows
-func (b *RowBuilder) BuildRows(loop Looper) error {
-	var nodeLabels map[string]map[string]string
-	var podLabels map[string]map[string]string
-	var podAnnotations map[string]map[string]string
-
-	log := logger{location: "RowBuilder:BuildRows"}
+// Build
+func (b *RowBuilder) Build(loop Looper) error {
+	log := logger{location: "RowBuilder:Build"}
 	log.Debug("Start")
 
 	err := b.LoadHeaders(loop)
@@ -104,6 +110,144 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 	if err != nil {
 		return err
 	}
+
+	if b.ShowTreeView {
+		return b.BuildContainerTree(loop, podList)
+	} else {
+		return b.BuildContainerTable(loop, podList)
+	}
+}
+
+// BuildRows
+func (b *RowBuilder) BuildContainerTree(loop Looper, podList []v1.Pod) error {
+	var err error
+	var nodeLabels map[string]map[string]string
+	var podLabels map[string]map[string]string
+	var podAnnotations map[string]map[string]string
+
+	log := logger{location: "RowBuilder:BuildContainerTree"}
+	log.Debug("Start")
+
+	if b.LabelNodeName != "" {
+		log.Debug("b.LabelNodeName", b.LabelNodeName)
+		nodeLabels, err = b.Connection.GetNodeLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	if b.LabelPodName != "" {
+		log.Debug("b.LabelPodName", b.LabelPodName)
+		podLabels, err = b.Connection.GetPodLabels(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	if b.AnnotationPodName != "" {
+		log.Debug("b.AnnotationPodName", b.AnnotationPodName)
+		podAnnotations, err = b.Connection.GetPodAnnotations(podList)
+		if err != nil {
+			return err
+		}
+	}
+
+	ownerList, ownerTypeList := b.Connection.GetOwnersList()
+
+	for owner, podList := range ownerList {
+		// ########################################
+		// somehow need to count columns and need a list of ownerNames and ownerTypes from ownerList
+		b.info.ContainerType = "R"
+
+		b.info.BranchType = PARENT
+		b.info.Owner = owner
+		b.info.OwnerType = ownerTypeList[owner]
+
+		allRows, err := loop.BuildBranch(b.info, podList)
+		if err != nil {
+			return err
+		}
+		// tblOut := []Cell{NewCellText(owner)}
+		parentType := make([]Cell, 1)
+		parentType[0] = NewCellText(fmt.Sprint(b.info.OwnerType, "/", b.info.Owner))
+		for _, row := range allRows {
+			tblOut := append(parentType, row...)
+			// true/false in this function signals we are on a container or pod line for tree view, need to create a replicaset line now though
+			//  maybe an int would be better???
+			b.Table.AddRow(b.makeRow(TREE, 0, b.info, tblOut)...)
+
+			// rowsOut := b.makeRow(CONTAINER, b.info, row)
+			// total += len(rowsOut)
+			// b.printHeadIfNeeded()
+			// b.Table.AddRow(rowsOut...)
+		}
+		// ########################################
+
+		b.info.TypeName = "Pod"
+		for _, pod := range podList {
+
+			log.Debug("pod.Name =", pod.Name)
+			b.info.Pod = &pod
+			b.info.PodName = pod.Name
+			b.info.Namespace = pod.Namespace
+			b.info.NodeName = pod.Spec.NodeName
+
+			//check if we have any labels that need to be shown as columns
+			if b.LabelNodeName != "" {
+				b.labelNodeValue = nodeLabels[pod.Spec.NodeName][b.LabelNodeName]
+			}
+			if b.LabelPodName != "" {
+				b.labelPodValue = podLabels[pod.Name][b.LabelPodName]
+			}
+			if b.AnnotationPodName != "" {
+				b.annotationPodValue = podAnnotations[pod.Name][b.AnnotationPodName]
+			}
+
+			//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+			if b.ShowTreeView {
+				b.info.ContainerType = "P"
+				tblOut, err := loop.BuildPod(pod, b.info)
+				if err != nil {
+					return err
+				}
+
+				//this is a tree view, so we have a name column to deal with 'Pod/foo-6f67dcc579-znb55'
+				parentType := make([]Cell, 1)
+				// parentType[0] = NewCellText(fmt.Sprint(b.info.TypeName, "/", b.info.PodName))
+				parentType[0] = NewCellText(indentText(1, b.info.TypeName, "/", b.info.PodName))
+				tblOut = append(parentType, tblOut...)
+
+				log.Debug("rowsOut =", b.hTreeViewRow)
+				// we save the row rather than add it to the table so we can control the output later on
+				b.hTreeViewRow = b.makeRow(TREE, 1, b.info, tblOut)
+			}
+
+			_, err = b.podLoop(2, loop, pod)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// sorting by column breaks the tree view so we sliently skip
+	if !b.ShowTreeView {
+		if err := b.Table.SortByNames(b.CommonFlags.sortList...); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Build normal table
+func (b *RowBuilder) BuildContainerTable(loop Looper, podList []v1.Pod) error {
+	var err error
+	var nodeLabels map[string]map[string]string
+	var podLabels map[string]map[string]string
+	var podAnnotations map[string]map[string]string
+
+	log := logger{location: "RowBuilder:BuildContainerTable"}
+	log.Debug("Start")
 
 	if b.LabelNodeName != "" {
 		log.Debug("b.LabelNodeName", b.LabelNodeName)
@@ -163,10 +307,10 @@ func (b *RowBuilder) BuildRows(loop Looper) error {
 
 			log.Debug("rowsOut =", b.hTreeViewRow)
 			// we save the row rather than add it to the table so we can control the output later on
-			b.hTreeViewRow = b.makeRow(false, b.info, tblOut)
+			b.hTreeViewRow = b.makeRow(TREE, 0, b.info, tblOut)
 		}
 
-		_, err = b.podLoop(loop, pod)
+		_, err = b.podLoop(0, loop, pod)
 		if err != nil {
 			return err
 		}
@@ -266,7 +410,7 @@ func (b *RowBuilder) printHeadIfNeeded() {
 
 // PodLoop given a pod we loop over all containers adding to the table as we go
 //  returns total count of rows added and nil on success
-func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
+func (b *RowBuilder) podLoop(indentLevel int, loop Looper, pod v1.Pod) (int, error) {
 	var total int
 
 	log := logger{location: "RowBuilder:PodLoop"}
@@ -288,7 +432,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 					return 0, err
 				}
 				for _, row := range allRows {
-					rowsOut := b.makeRow(true, b.info, row)
+					rowsOut := b.makeRow(CONTAINER, indentLevel, b.info, row)
 					total += len(rowsOut)
 					b.printHeadIfNeeded()
 					b.Table.AddRow(rowsOut...)
@@ -309,7 +453,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 					return 0, err
 				}
 				for _, row := range allRows {
-					rowsOut := b.makeRow(true, b.info, row)
+					rowsOut := b.makeRow(CONTAINER, indentLevel, b.info, row)
 					total += len(rowsOut)
 					b.printHeadIfNeeded()
 					b.Table.AddRow(rowsOut...)
@@ -334,7 +478,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 				return 0, err
 			}
 			for _, row := range allRows {
-				rowsOut := b.makeRow(true, b.info, row)
+				rowsOut := b.makeRow(CONTAINER, indentLevel, b.info, row)
 				total += len(rowsOut)
 				b.printHeadIfNeeded()
 				b.Table.AddRow(rowsOut...)
@@ -355,7 +499,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 				return 0, err
 			}
 			for _, row := range allRows {
-				rowsOut := b.makeRow(true, b.info, row)
+				rowsOut := b.makeRow(CONTAINER, indentLevel, b.info, row)
 				total += len(rowsOut)
 				b.printHeadIfNeeded()
 				b.Table.AddRow(rowsOut...)
@@ -379,7 +523,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 				return 0, err
 			}
 			for _, row := range allRows {
-				rowsOut := b.makeRow(true, b.info, row)
+				rowsOut := b.makeRow(CONTAINER, indentLevel, b.info, row)
 				total += len(rowsOut)
 				b.printHeadIfNeeded()
 				b.Table.AddRow(rowsOut...)
@@ -400,7 +544,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 				return 0, err
 			}
 			for _, row := range allRows {
-				rowsOut := b.makeRow(true, b.info, row)
+				rowsOut := b.makeRow(CONTAINER, indentLevel, b.info, row)
 				total += len(rowsOut)
 				b.printHeadIfNeeded()
 				b.Table.AddRow(rowsOut...)
@@ -414,7 +558,7 @@ func (b *RowBuilder) podLoop(loop Looper, pod v1.Pod) (int, error) {
 
 // MakeRow adds the listed columns to the default columns, outputs
 //  the complete row as a list of columns
-func (b *RowBuilder) makeRow(containerLine bool, info BuilderInformation, columns ...[]Cell) []Cell {
+func (b *RowBuilder) makeRow(containerLine int, indentLevel int, info BuilderInformation, columns ...[]Cell) []Cell {
 	log := logger{location: "RowBuilder:MakeRow"}
 	log.Debug("Start")
 
@@ -432,8 +576,8 @@ func (b *RowBuilder) makeRow(containerLine bool, info BuilderInformation, column
 		rowList = append(rowList, NewCellText(b.annotationPodValue))
 	}
 
-	if containerLine && b.info.TreeView {
-		rowList = b.info.BuildTreeCell(rowList)
+	if containerLine == CONTAINER && b.info.TreeView {
+		rowList = b.info.BuildTreeCell(indentLevel, rowList)
 	}
 
 	for _, c := range columns {
@@ -509,7 +653,7 @@ func (b *RowBuilder) getDefaultCells() []Cell {
 	}
 }
 
-func (b *BuilderInformation) BuildTreeCell(cellList []Cell) []Cell {
+func (b *BuilderInformation) BuildTreeCell(indentLevel int, cellList []Cell) []Cell {
 	var namePrefix string
 
 	log := logger{location: "RowBuilder:BuildTreeCell"}
@@ -526,7 +670,8 @@ func (b *BuilderInformation) BuildTreeCell(cellList []Cell) []Cell {
 	}
 
 	cellList = append(cellList,
-		NewCellText(fmt.Sprint("└─", namePrefix, b.ContainerName)),
+		// NewCellText(fmt.Sprint("  └─", namePrefix, b.ContainerName)),
+		NewCellText(indentText(indentLevel, namePrefix, b.ContainerName)),
 	)
 	return cellList
 }
