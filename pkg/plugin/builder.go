@@ -162,12 +162,26 @@ func (b *RowBuilder) BuildContainerTree(loop Looper, podList []v1.Pod) error {
 		b.info.BranchType = PARENT
 		b.info.Owner = owner
 		b.info.OwnerType = ownerTypeList[owner]
+		b.info.Namespace = podList[0].Namespace
+
+		if b.LabelNodeName != "" {
+			// b.labelNodeValue = nodeLabels[podList[0].Spec.NodeName][b.LabelNodeName]
+			b.labelNodeValue = ""
+		}
+		if b.LabelPodName != "" {
+			// b.labelPodValue = podLabels[podList[0].Name][b.LabelPodName]
+			b.labelPodValue = ""
+		}
+		if b.AnnotationPodName != "" {
+			// b.annotationPodValue = podAnnotations[podList[0].Name][b.AnnotationPodName]
+			b.annotationPodValue = ""
+		}
 
 		allRows, err := loop.BuildBranch(b.info, podList)
 		if err != nil {
 			return err
 		}
-		// tblOut := []Cell{NewCellText(owner)}
+
 		parentType := make([]Cell, 1)
 		parentType[0] = NewCellText(fmt.Sprint(b.info.OwnerType, "/", b.info.Owner))
 		for _, row := range allRows {
@@ -175,13 +189,7 @@ func (b *RowBuilder) BuildContainerTree(loop Looper, podList []v1.Pod) error {
 			// true/false in this function signals we are on a container or pod line for tree view, need to create a replicaset line now though
 			//  maybe an int would be better???
 			b.Table.AddRow(b.makeRow(TREE, 0, b.info, tblOut)...)
-
-			// rowsOut := b.makeRow(CONTAINER, b.info, row)
-			// total += len(rowsOut)
-			// b.printHeadIfNeeded()
-			// b.Table.AddRow(rowsOut...)
 		}
-		// ########################################
 
 		b.info.TypeName = "Pod"
 		for _, pod := range podList {
