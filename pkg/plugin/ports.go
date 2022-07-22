@@ -71,7 +71,7 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.Build(loopinfo)
+	builder.Build(&loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -85,35 +85,35 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 type ports struct {
 }
 
-func (s ports) Headers() []string {
+func (s *ports) Headers() []string {
 	return []string{
 		"PORTNAME", "PORT", "PROTO", "HOSTPORT",
 	}
 }
 
-func (s ports) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *ports) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s ports) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *ports) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s ports) HideColumns(info BuilderInformation) []int {
+func (s *ports) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s ports) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+func (s *ports) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),
 	}
-	return [][]Cell{out}, nil
+	return out, nil
 }
 
-func (s ports) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+func (s *ports) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
 		NewCellText(""),
 		NewCellText(""),
@@ -122,7 +122,7 @@ func (s ports) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	}, nil
 }
 
-func (s ports) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+func (s *ports) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
 	for _, port := range container.Ports {
 		out = append(out, s.portsBuildRow(info, port))
@@ -130,7 +130,7 @@ func (s ports) BuildContainerSpec(container v1.Container, info BuilderInformatio
 	return out, nil
 }
 
-func (s ports) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+func (s *ports) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
 	for _, port := range container.Ports {
 		out = append(out, s.portsBuildRow(info, port))
@@ -138,11 +138,12 @@ func (s ports) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info
 	return out, nil
 }
 
-func (s ports) Sum(rows [][]Cell) []Cell {
-	return []Cell{}
+func (s *ports) Sum(rows [][]Cell) []Cell {
+	rowOut := make([]Cell, 4)
+	return rowOut
 }
 
-func (s ports) portsBuildRow(info BuilderInformation, port v1.ContainerPort) []Cell {
+func (s *ports) portsBuildRow(info BuilderInformation, port v1.ContainerPort) []Cell {
 	var cellList []Cell
 
 	hostPort := Cell{}

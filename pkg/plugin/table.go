@@ -939,6 +939,16 @@ func (t *Table) UpdatePlaceHolderRow(id int, cellList []Cell) {
 			}
 		}
 	}
-
 	t.placeHolder[id] = cellList
+}
+
+func (t *Table) HidePlaceHolderRow(id int) {
+	for r := 0; r < len(t.data); r++ {
+		rowNum := t.rowOrder[r]
+
+		if t.data[rowNum][0].phRef == id {
+			t.HideRows([]int{r})
+		}
+	}
+
 }

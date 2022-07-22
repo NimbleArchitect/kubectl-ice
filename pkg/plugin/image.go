@@ -71,7 +71,7 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	builder.CommonFlags = commonFlagList
 	builder.Connection = &connect
 
-	builder.Build(loopinfo)
+	builder.Build(&loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -85,56 +85,57 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 type image struct {
 }
 
-func (s image) Headers() []string {
+func (s *image) Headers() []string {
 	return []string{
 		"PULL", "IMAGE",
 	}
 }
 
-func (s image) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *image) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s image) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *image) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s image) HideColumns(info BuilderInformation) []int {
+func (s *image) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s image) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+func (s *image) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),
 	}
-	return [][]Cell{out}, nil
+	return out, nil
 }
 
-func (s image) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+func (s *image) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
 		NewCellText(""),
 		NewCellText(""),
 	}, nil
 }
 
-func (s image) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+func (s *image) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	out := make([][]Cell, 1)
 	out[0] = s.imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
 	return out, nil
 }
 
-func (s image) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+func (s *image) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := make([][]Cell, 1)
 	out[0] = s.imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
 	return out, nil
 }
 
-func (s image) Sum(rows [][]Cell) []Cell {
-	return []Cell{}
+func (s *image) Sum(rows [][]Cell) []Cell {
+	rowOut := make([]Cell, 2)
+	return rowOut
 }
 
-func (s image) imageBuildRow(info BuilderInformation, imageName string, pullPolicy string) []Cell {
+func (s *image) imageBuildRow(info BuilderInformation, imageName string, pullPolicy string) []Cell {
 	var cellList []Cell
 
 	// if info.TreeView {

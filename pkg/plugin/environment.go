@@ -75,7 +75,7 @@ func Environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	table := Table{}
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
-	builder.Build(loopinfo)
+	builder.Build(&loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -91,41 +91,41 @@ type environment struct {
 	TranslateConfigMap bool
 }
 
-func (s environment) Headers() []string {
+func (s *environment) Headers() []string {
 	return []string{
 		"NAME", "VALUE",
 	}
 }
 
-func (s environment) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *environment) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s environment) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *environment) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s environment) HideColumns(info BuilderInformation) []int {
+func (s *environment) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s environment) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+func (s *environment) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),
 	}
-	return [][]Cell{out}, nil
+	return out, nil
 }
 
 // func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
-func (s environment) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+func (s *environment) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
 		NewCellText(""),
 		NewCellText(""),
 	}, nil
 }
 
-func (s environment) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+func (s *environment) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
 	allRows := s.buildEnvFromContainer(container)
 	for _, envRow := range allRows {
@@ -134,7 +134,7 @@ func (s environment) BuildContainerSpec(container v1.Container, info BuilderInfo
 	return out, nil
 }
 
-func (s environment) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+func (s *environment) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
 	allRows := s.buildEnvFromEphemeral(container)
 	for _, envRow := range allRows {
@@ -143,11 +143,12 @@ func (s environment) BuildEphemeralContainerSpec(container v1.EphemeralContainer
 	return out, nil
 }
 
-func (s environment) Sum(rows [][]Cell) []Cell {
-	return []Cell{}
+func (s *environment) Sum(rows [][]Cell) []Cell {
+	rowOut := make([]Cell, 2)
+	return rowOut
 }
 
-func (s environment) envBuildRow(info BuilderInformation, env v1.EnvVar, connect *Connector, translate bool) []Cell {
+func (s *environment) envBuildRow(info BuilderInformation, env v1.EnvVar, connect *Connector, translate bool) []Cell {
 	var envKey, envValue string
 	var configName string
 	var key string
@@ -193,14 +194,14 @@ func (s environment) envBuildRow(info BuilderInformation, env v1.EnvVar, connect
 	}
 }
 
-func (s environment) buildEnvFromContainer(container v1.Container) []v1.EnvVar {
+func (s *environment) buildEnvFromContainer(container v1.Container) []v1.EnvVar {
 	if len(container.Env) == 0 {
 		return []v1.EnvVar{}
 	}
 	return container.Env
 }
 
-func (s environment) buildEnvFromEphemeral(container v1.EphemeralContainer) []v1.EnvVar {
+func (s *environment) buildEnvFromEphemeral(container v1.EphemeralContainer) []v1.EnvVar {
 	if len(container.Env) == 0 {
 		return []v1.EnvVar{}
 	}

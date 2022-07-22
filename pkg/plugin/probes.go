@@ -80,7 +80,7 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.Build(loopinfo)
+	builder.Build(&loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -94,7 +94,7 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 type probes struct {
 }
 
-func (s probes) Headers() []string {
+func (s *probes) Headers() []string {
 	return []string{
 		"PROBE",
 		"DELAY",
@@ -107,19 +107,19 @@ func (s probes) Headers() []string {
 	}
 }
 
-func (s probes) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *probes) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s probes) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *probes) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s probes) HideColumns(info BuilderInformation) []int {
+func (s *probes) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s probes) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+func (s *probes) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),
@@ -128,11 +128,12 @@ func (s probes) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell
 		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),
-		NewCellText("")}
-	return [][]Cell{out}, nil
+		NewCellText(""),
+	}
+	return out, nil
 }
 
-func (s probes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+func (s *probes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
 		NewCellText(""),
 		NewCellText(""),
@@ -145,7 +146,7 @@ func (s probes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	}, nil
 }
 
-func (s probes) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+func (s *probes) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
 	probeList := s.buildProbeList(container)
 	for _, probe := range probeList {
@@ -156,16 +157,17 @@ func (s probes) BuildContainerSpec(container v1.Container, info BuilderInformati
 	return out, nil
 }
 
-func (s probes) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+func (s *probes) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
 	return out, nil
 }
 
-func (s probes) Sum(rows [][]Cell) []Cell {
-	return []Cell{}
+func (s *probes) Sum(rows [][]Cell) []Cell {
+	rowOut := make([]Cell, 8)
+	return rowOut
 }
 
-func (s probes) probesBuildRow(info BuilderInformation, action probeAction) []Cell {
+func (s *probes) probesBuildRow(info BuilderInformation, action probeAction) []Cell {
 	var cellList []Cell
 
 	// if info.TreeView {
@@ -187,7 +189,7 @@ func (s probes) probesBuildRow(info BuilderInformation, action probeAction) []Ce
 }
 
 //check each type of probe and return a list
-func (s probes) buildProbeList(container v1.Container) map[string][]probeAction {
+func (s *probes) buildProbeList(container v1.Container) map[string][]probeAction {
 	probes := make(map[string][]probeAction)
 	if container.LivenessProbe != nil {
 		probes["liveness"] = s.buildProbeAction("liveness", container.LivenessProbe)
@@ -203,7 +205,7 @@ func (s probes) buildProbeList(container v1.Container) map[string][]probeAction 
 }
 
 //given a probe return an array of probeAction with the action translated to a string
-func (s probes) buildProbeAction(name string, probe *v1.Probe) []probeAction {
+func (s *probes) buildProbeAction(name string, probe *v1.Probe) []probeAction {
 	probeList := []probeAction{}
 	item := probeAction{
 		probeName: name,

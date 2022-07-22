@@ -114,11 +114,11 @@ func (s restarts) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s restarts) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+func (s restarts) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 	}
-	return [][]Cell{out}, nil
+	return out, nil
 }
 
 func (s restarts) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
@@ -138,7 +138,11 @@ func (s restarts) BuildEphemeralContainerSpec(container v1.EphemeralContainer, i
 }
 
 func (s restarts) Sum(rows [][]Cell) []Cell {
-	return []Cell{}
+	out := []Cell{
+		NewCellText(""),
+		NewCellText(""),
+	}
+	return out
 }
 
 func (s restarts) restartsBuildRow(info BuilderInformation, restartCount int32) []Cell {

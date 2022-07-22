@@ -168,9 +168,9 @@ func (s *status) HideColumns(info BuilderInformation) []int {
 	return hideColumns
 }
 
-func (s *status) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+func (s *status) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
 	var out []Cell
-	fmt.Println(">>", info.BranchType)
+
 	switch info.BranchType {
 	case CONTAINER:
 		out = []Cell{
@@ -205,7 +205,7 @@ func (s *status) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cel
 		s.pNotReady = false
 		s.pStopped = false
 	}
-	return [][]Cell{out}, nil
+	return out, nil
 }
 
 func (s *status) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
@@ -356,13 +356,13 @@ func (s *status) Sum(rows [][]Cell) []Cell {
 		rowOut[2].number += c[2].number //restarts
 		rowOut[2].text = fmt.Sprintf("%d", rowOut[2].number)
 
-		rowOut[3].text = c[3].text //state
-		rowOut[4].text = c[4].text //reason
-		rowOut[5].text = c[5].text //exit-code
-		rowOut[6].text = c[6].text //signal
-		rowOut[7].text = c[7].text //timestamp
-		rowOut[8].text = c[8].text //age
-		rowOut[9].text = c[9].text //message
+		rowOut[3].text = "" //state
+		rowOut[4].text = "" //reason
+		rowOut[5].text = "" //exit-code
+		rowOut[6].text = "" //signal
+		rowOut[7].text = "" //timestamp
+		rowOut[8].text = "" //age
+		rowOut[9].text = "" //message
 	}
 	return rowOut
 }

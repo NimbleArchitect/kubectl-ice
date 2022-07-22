@@ -76,7 +76,7 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.Build(loopinfo)
+	builder.Build(&loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -90,36 +90,36 @@ func Commands(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 type commands struct {
 }
 
-func (s commands) Headers() []string {
+func (s *commands) Headers() []string {
 	return []string{
 		"COMMAND", "ARGUMENTS",
 	}
 }
 
-func (s commands) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *commands) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s commands) HideColumns(info BuilderInformation) []int {
+func (s *commands) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s commands) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+func (s *commands) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText("")}
-	return [][]Cell{out}, nil
+	return out, nil
 }
 
 // func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
-func (s commands) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+func (s *commands) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
 		NewCellText(""),
 		NewCellText(""),
 	}, nil
 }
 
-func (s commands) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+func (s *commands) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	cmdLine := commandLine{
 		cmd:  container.Command,
 		args: container.Args,
@@ -129,7 +129,7 @@ func (s commands) BuildContainerSpec(container v1.Container, info BuilderInforma
 	return out, nil
 }
 
-func (s commands) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+func (s *commands) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	cmdLine := commandLine{
 		cmd:  container.Command,
 		args: container.Args,
@@ -139,11 +139,12 @@ func (s commands) BuildEphemeralContainerSpec(container v1.EphemeralContainer, i
 	return out, nil
 }
 
-func (s commands) Sum(rows [][]Cell) []Cell {
-	return []Cell{}
+func (s *commands) Sum(rows [][]Cell) []Cell {
+	rowOut := make([]Cell, 2)
+	return rowOut
 }
 
-func (s commands) commandsBuildRow(cmdLine commandLine, info BuilderInformation) []Cell {
+func (s *commands) commandsBuildRow(cmdLine commandLine, info BuilderInformation) []Cell {
 	var cellList []Cell
 
 	// if info.TreeView {

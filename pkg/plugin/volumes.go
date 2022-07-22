@@ -76,7 +76,7 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.Build(loopinfo)
+	builder.Build(&loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -91,7 +91,7 @@ type volumes struct {
 	ShowVolumeDevice bool
 }
 
-func (s volumes) Headers() []string {
+func (s *volumes) Headers() []string {
 	if !s.ShowVolumeDevice {
 		return []string{
 			"VOLUME",
@@ -109,19 +109,19 @@ func (s volumes) Headers() []string {
 	}
 }
 
-func (s volumes) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *volumes) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s volumes) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *volumes) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s volumes) HideColumns(info BuilderInformation) []int {
+func (s *volumes) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s volumes) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+func (s *volumes) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
 	var out []Cell
 
 	if !s.ShowVolumeDevice {
@@ -141,10 +141,10 @@ func (s volumes) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cel
 		}
 	}
 
-	return [][]Cell{out}, nil
+	return out, nil
 }
 
-func (s volumes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+func (s *volumes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	if !s.ShowVolumeDevice {
 		return []Cell{
 			NewCellText(""),
@@ -162,7 +162,7 @@ func (s volumes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	}
 }
 
-func (s volumes) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+func (s *volumes) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
 	if !s.ShowVolumeDevice {
 		podVolumes := s.createVolumeMap(info.Pod.Spec.Volumes)
@@ -177,7 +177,7 @@ func (s volumes) BuildContainerSpec(container v1.Container, info BuilderInformat
 	return out, nil
 }
 
-func (s volumes) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+func (s *volumes) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
 	if !s.ShowVolumeDevice {
 		podVolumes := s.createVolumeMap(info.Pod.Spec.Volumes)
@@ -192,11 +192,18 @@ func (s volumes) BuildEphemeralContainerSpec(container v1.EphemeralContainer, in
 	return out, nil
 }
 
-func (s volumes) Sum(rows [][]Cell) []Cell {
-	return []Cell{}
+func (s *volumes) Sum(rows [][]Cell) []Cell {
+	var rowOut []Cell
+
+	if !s.ShowVolumeDevice {
+		rowOut = make([]Cell, 6)
+	} else {
+		rowOut = make([]Cell, 2)
+	}
+	return rowOut
 }
 
-func (s volumes) createVolumeMap(volumes []v1.Volume) map[string]map[string]Cell {
+func (s *volumes) createVolumeMap(volumes []v1.Volume) map[string]map[string]Cell {
 	podMap := make(map[string]map[string]Cell)
 	// podVolumes := map[string]map[string]string{}
 	for _, vol := range volumes {
@@ -214,7 +221,7 @@ func (s volumes) createVolumeMap(volumes []v1.Volume) map[string]map[string]Cell
 	return podMap
 }
 
-func (s volumes) decodeVolumeType(volType string, volume v1.VolumeSource) map[string]Cell {
+func (s *volumes) decodeVolumeType(volType string, volume v1.VolumeSource) map[string]Cell {
 	outMap := make(map[string]Cell)
 
 	if volType == "" {
@@ -323,7 +330,7 @@ func (s volumes) decodeVolumeType(volType string, volume v1.VolumeSource) map[st
 	return outMap
 }
 
-func (s volumes) volumesBuildRow(info BuilderInformation, podVolumes map[string]map[string]Cell, mount v1.VolumeMount) []Cell {
+func (s *volumes) volumesBuildRow(info BuilderInformation, podVolumes map[string]map[string]Cell, mount v1.VolumeMount) []Cell {
 	var cellList []Cell
 	var volumeType Cell
 	var size Cell
@@ -351,7 +358,7 @@ func (s volumes) volumesBuildRow(info BuilderInformation, podVolumes map[string]
 	return cellList
 }
 
-func (s volumes) mountsBuildRow(info BuilderInformation, mountInfo v1.VolumeDevice) []Cell {
+func (s *volumes) mountsBuildRow(info BuilderInformation, mountInfo v1.VolumeDevice) []Cell {
 	var cellList []Cell
 
 	// if info.TreeView {

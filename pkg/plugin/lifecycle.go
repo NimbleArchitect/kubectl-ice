@@ -75,7 +75,7 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.Build(loopinfo)
+	builder.Build(&loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -89,34 +89,34 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 type lifecycle struct {
 }
 
-func (s lifecycle) Headers() []string {
+func (s *lifecycle) Headers() []string {
 	return []string{
 		"LIFECYCLE", "HANDLER", "ACTION",
 	}
 }
 
-func (s lifecycle) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *lifecycle) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s lifecycle) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *lifecycle) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s lifecycle) HideColumns(info BuilderInformation) []int {
+func (s *lifecycle) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s lifecycle) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+func (s *lifecycle) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),
 	}
-	return [][]Cell{out}, nil
+	return out, nil
 }
 
-func (s lifecycle) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+func (s *lifecycle) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
 		NewCellText(""),
 		NewCellText(""),
@@ -124,7 +124,7 @@ func (s lifecycle) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error)
 	}, nil
 }
 
-func (s lifecycle) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+func (s *lifecycle) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
 	lifecycleList := s.buildLifecycleList(container.Lifecycle)
 	for name, action := range lifecycleList {
@@ -133,17 +133,18 @@ func (s lifecycle) BuildContainerSpec(container v1.Container, info BuilderInform
 	return out, nil
 }
 
-func (s lifecycle) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+func (s *lifecycle) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
 	return out, nil
 
 }
 
-func (s lifecycle) Sum(rows [][]Cell) []Cell {
-	return []Cell{}
+func (s *lifecycle) Sum(rows [][]Cell) []Cell {
+	rowOut := make([]Cell, 3)
+	return rowOut
 }
 
-func (s lifecycle) lifecycleBuildRow(info BuilderInformation, handlerName string, lifecycles lifecycleAction) []Cell {
+func (s *lifecycle) lifecycleBuildRow(info BuilderInformation, handlerName string, lifecycles lifecycleAction) []Cell {
 
 	return []Cell{
 		NewCellText(handlerName),
@@ -153,7 +154,7 @@ func (s lifecycle) lifecycleBuildRow(info BuilderInformation, handlerName string
 }
 
 //check each type of probe and return a list
-func (s lifecycle) buildLifecycleList(lifecycle *v1.Lifecycle) map[string]lifecycleAction {
+func (s *lifecycle) buildLifecycleList(lifecycle *v1.Lifecycle) map[string]lifecycleAction {
 	lifeCycleList := make(map[string]lifecycleAction)
 	if lifecycle == nil {
 		return lifeCycleList
@@ -171,7 +172,7 @@ func (s lifecycle) buildLifecycleList(lifecycle *v1.Lifecycle) map[string]lifecy
 }
 
 //given a lifecycle handler return a lifecycle action with the action translated to a string
-func (s lifecycle) buildLifecycleAction(lifecycle *v1.LifecycleHandler) lifecycleAction {
+func (s *lifecycle) buildLifecycleAction(lifecycle *v1.LifecycleHandler) lifecycleAction {
 	item := lifecycleAction{}
 
 	//translate Exec action

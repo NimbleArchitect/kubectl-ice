@@ -16,7 +16,7 @@ const (
 
 type Looper interface {
 	BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error)
-	BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error)
+	BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error)
 	BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error)
 	BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error)
 	BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error)
@@ -170,6 +170,7 @@ func (b *RowBuilder) BuildContainerTree(loop Looper, podList []v1.Pod) error {
 		b.info.OwnerType = ownerTypeList[owner]
 
 		rowid := b.Table.AddPlaceHolderRow()
+		// rowscommited := 0
 
 		b.info.TypeName = "Pod"
 		for _, pod := range podList {
@@ -191,19 +192,25 @@ func (b *RowBuilder) BuildContainerTree(loop Looper, podList []v1.Pod) error {
 			}
 
 			rowid := b.Table.AddPlaceHolderRow()
+			// rowscommited, err = b.podLoop(2, loop, pod)
 			_, err = b.podLoop(2, loop, pod)
 			if err != nil {
 				return err
 			}
 
+			// TODO: if returning a proper filtered and sorted list from ownerTypeList dosent work then this is a backup process to follow
+			// if rowscommited <= 0 {
+			// 	b.Table.HidePlaceHolderRow(rowid)
+			// }
+
 			b.info.BranchType = POD
 			//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
 			b.info.ContainerType = "P"
-			rowsOut, err := loop.BuildBranch(b.info, podList)
+			tblOut, err := loop.BuildBranch(b.info, podList)
 			if err != nil {
 				return err
 			}
-			tblOut := rowsOut[0] //TODO:this needs fixing, BuildBranch should only return a single element now
+			// tblOut := rowsOut[0] //TODO: this needs fixing, BuildBranch should only return a single element now
 
 			//this is a tree view, so we have a name column to deal with 'Pod/foo-6f67dcc579-znb55'
 			parentType := make([]Cell, 1)
@@ -238,12 +245,14 @@ func (b *RowBuilder) BuildContainerTree(loop Looper, podList []v1.Pod) error {
 
 		//add pod totals to owners totals using rowid
 		tblOut := loop.Sum(podTotals)
-		if len(tblOut) > 0 {
-			parentType := make([]Cell, 1)
-			parentType[0] = NewCellText(fmt.Sprint(b.info.OwnerType, "/", b.info.Owner))
-			// insert table totals with rowid
-			b.Table.UpdatePlaceHolderRow(rowid, b.makeRow(0, b.info, parentType, tblOut))
-		}
+		// if len(tblOut) > 0 {
+		parentType := make([]Cell, 1)
+		parentType[0] = NewCellText(fmt.Sprint(b.info.OwnerType, "/", b.info.Owner))
+		// insert table totals with rowid
+		b.Table.UpdatePlaceHolderRow(rowid, b.makeRow(0, b.info, parentType, tblOut))
+		// } else {
+		// 	b.Table.HidePlaceHolderRow(rowid)
+		// }
 
 	}
 
@@ -410,23 +419,6 @@ func (b *RowBuilder) setVisibleColumns() {
 		b.Table.HideColumn(3)
 	}
 
-}
-
-//printHeadIfNeeded prints the tree view pod line once printed b.hTreeViewRow is cleared
-//  as we only want to print it once per pod
-func (b *RowBuilder) printHeadIfNeeded() {
-	if len(b.hTreeViewRow) > 0 {
-		b.Table.AddRow(b.hTreeViewRow...)
-		b.hTreeViewRow = []Cell{}
-	}
-}
-func (b *RowBuilder) addHeadIfNeeded() []Cell {
-	var out []Cell
-	if len(b.hTreeViewRow) > 0 {
-		out = b.hTreeViewRow
-		b.hTreeViewRow = []Cell{}
-	}
-	return out
 }
 
 // PodLoop given a pod we loop over all containers adding to the table as we go

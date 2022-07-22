@@ -73,7 +73,7 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 	// columnInfo.table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.Build(loopinfo)
+	builder.Build(&loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -87,53 +87,54 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 type capabilities struct {
 }
 
-func (s capabilities) Headers() []string {
+func (s *capabilities) Headers() []string {
 	return []string{
 		"ADD", "DROP",
 	}
 }
 
-func (s capabilities) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *capabilities) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s capabilities) HideColumns(info BuilderInformation) []int {
+func (s *capabilities) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s capabilities) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+func (s *capabilities) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),
 	}
-	return [][]Cell{out}, nil
+	return out, nil
 }
 
 // func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
-func (s capabilities) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+func (s *capabilities) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	return []Cell{
 		NewCellText(""),
 		NewCellText(""),
 	}, nil
 }
 
-func (s capabilities) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+func (s *capabilities) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	out := make([][]Cell, 1)
 	out[0] = s.capabilitiesBuildRow(container.SecurityContext, info)
 	return out, nil
 }
 
-func (s capabilities) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+func (s *capabilities) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := make([][]Cell, 1)
 	out[0] = s.capabilitiesBuildRow(container.SecurityContext, info)
 	return out, nil
 }
 
-func (s capabilities) Sum(rows [][]Cell) []Cell {
-	return []Cell{}
+func (s *capabilities) Sum(rows [][]Cell) []Cell {
+	rowOut := make([]Cell, 2)
+	return rowOut
 }
 
-func (s capabilities) capabilitiesBuildRow(securityContext *v1.SecurityContext, info BuilderInformation) []Cell {
+func (s *capabilities) capabilitiesBuildRow(securityContext *v1.SecurityContext, info BuilderInformation) []Cell {
 	// func capabilitiesBuildRow(securityContext *v1.SecurityContext, info containerInfomation) []Cell {
 	var cellList []Cell
 

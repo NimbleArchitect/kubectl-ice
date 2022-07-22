@@ -75,7 +75,7 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 		loopinfo.ShowSELinuxOptions = true
 	}
 
-	builder.Build(loopinfo)
+	builder.Build(&loopinfo)
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
@@ -90,7 +90,7 @@ type security struct {
 	ShowSELinuxOptions bool
 }
 
-func (s security) Headers() []string {
+func (s *security) Headers() []string {
 	if s.ShowSELinuxOptions {
 		return []string{
 			"USER",
@@ -110,19 +110,19 @@ func (s security) Headers() []string {
 	}
 }
 
-func (s security) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *security) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s security) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *security) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s security) HideColumns(info BuilderInformation) []int {
+func (s *security) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s security) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+func (s *security) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
 	var out []Cell
 	if s.ShowSELinuxOptions {
 		out = []Cell{
@@ -142,10 +142,10 @@ func (s security) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Ce
 		}
 	}
 
-	return [][]Cell{out}, nil
+	return out, nil
 }
 
-func (s security) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+func (s *security) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	if s.ShowSELinuxOptions {
 		return []Cell{
 			NewCellText(""),
@@ -165,7 +165,7 @@ func (s security) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) 
 	}
 }
 
-func (s security) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+func (s *security) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	out := make([][]Cell, 1)
 	if s.ShowSELinuxOptions {
 		out[0] = s.seLinuxBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
@@ -175,7 +175,7 @@ func (s security) BuildContainerSpec(container v1.Container, info BuilderInforma
 	return out, nil
 }
 
-func (s security) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+func (s *security) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := make([][]Cell, 1)
 	if s.ShowSELinuxOptions {
 		out[0] = s.seLinuxBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
@@ -185,11 +185,18 @@ func (s security) BuildEphemeralContainerSpec(container v1.EphemeralContainer, i
 	return out, nil
 }
 
-func (s security) Sum(rows [][]Cell) []Cell {
-	return []Cell{}
+func (s *security) Sum(rows [][]Cell) []Cell {
+	var rowOut []Cell
+
+	if s.ShowSELinuxOptions {
+		rowOut = make([]Cell, 4)
+	} else {
+		rowOut = make([]Cell, 6)
+	}
+	return rowOut
 }
 
-func (s security) securityBuildRow(info BuilderInformation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
+func (s *security) securityBuildRow(info BuilderInformation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
 	var cellList []Cell
 	ape := Cell{}
 	p := Cell{}
@@ -255,7 +262,7 @@ func (s security) securityBuildRow(info BuilderInformation, csc *v1.SecurityCont
 
 }
 
-func (s security) seLinuxBuildRow(info BuilderInformation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
+func (s *security) seLinuxBuildRow(info BuilderInformation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
 	var cellList []Cell
 	seLevel := Cell{}
 	seRole := Cell{}
