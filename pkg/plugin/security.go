@@ -185,6 +185,10 @@ func (s security) BuildEphemeralContainerSpec(container v1.EphemeralContainer, i
 	return out, nil
 }
 
+func (s security) Sum(rows [][]Cell) []Cell {
+	return []Cell{}
+}
+
 func (s security) securityBuildRow(info BuilderInformation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {
 	var cellList []Cell
 	ape := Cell{}

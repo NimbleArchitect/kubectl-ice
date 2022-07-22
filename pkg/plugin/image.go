@@ -130,6 +130,10 @@ func (s image) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info
 	return out, nil
 }
 
+func (s image) Sum(rows [][]Cell) []Cell {
+	return []Cell{}
+}
+
 func (s image) imageBuildRow(info BuilderInformation, imageName string, pullPolicy string) []Cell {
 	var cellList []Cell
 

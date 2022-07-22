@@ -137,6 +137,10 @@ func (s restarts) BuildEphemeralContainerSpec(container v1.EphemeralContainer, i
 	return out, nil
 }
 
+func (s restarts) Sum(rows [][]Cell) []Cell {
+	return []Cell{}
+}
+
 func (s restarts) restartsBuildRow(info BuilderInformation, restartCount int32) []Cell {
 	var cellList []Cell
 	// if container.RestartCount == 0

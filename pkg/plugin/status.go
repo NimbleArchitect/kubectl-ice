@@ -92,7 +92,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	log.Debug("commonFlagList.showTreeView =", commonFlagList.showTreeView)
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.Build(loopinfo)
+	builder.Build(&loopinfo)
 
 	if !builder.ShowTreeView {
 		if !loopinfo.ShowPrevious { // restart count dosent show up when using previous flag
@@ -115,9 +115,14 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 type status struct {
 	ShowPrevious bool
 	ShowDetails  bool
+
+	pNotReady     bool //Ready - we use the inverted term so the code makes more sense
+	pStopped      bool //Started - we use the inverted term so the code makes more sense
+	pRestarts     int64
+	pRestartsText string
 }
 
-func (s status) Headers() []string {
+func (s *status) Headers() []string {
 
 	return []string{
 		"READY",
@@ -133,14 +138,14 @@ func (s status) Headers() []string {
 	}
 }
 
-func (s status) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+func (s *status) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
-func (s status) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+func (s *status) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	return [][]Cell{}, nil
 }
 
-func (s status) HideColumns(info BuilderInformation) []int {
+func (s *status) HideColumns(info BuilderInformation) []int {
 	//"READY","STARTED","RESTARTS","STATE","REASON","EXIT-CODE","SIGNAL","TIMESTAMP","AGE","MESSAGE",
 	var hideColumns []int
 
@@ -163,23 +168,47 @@ func (s status) HideColumns(info BuilderInformation) []int {
 	return hideColumns
 }
 
-func (s status) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
-	out := []Cell{
-		NewCellText(""),   //ready
-		NewCellText(""),   //started
-		NewCellInt("", 0), //restarts
-		NewCellText(""),   //state
-		NewCellText(""),   //reason
-		NewCellText(""),   //exit-code
-		NewCellText(""),   //signal
-		NewCellText(""),   //timestamp
-		NewCellText(""),   //age
-		NewCellText(""),   //message
+func (s *status) BuildBranch(info BuilderInformation, podList []v1.Pod) ([][]Cell, error) {
+	var out []Cell
+	fmt.Println(">>", info.BranchType)
+	switch info.BranchType {
+	case CONTAINER:
+		out = []Cell{
+			NewCellText(""),   //ready
+			NewCellText(""),   //started
+			NewCellInt("", 0), //restarts
+			NewCellText(""),   //state
+			NewCellText(""),   //reason
+			NewCellText(""),   //exit-code
+			NewCellText(""),   //signal
+			NewCellText(""),   //timestamp
+			NewCellText(""),   //age
+			NewCellText(""),   //message
+		}
+	case PARENT:
+		fallthrough
+	case POD:
+		out = []Cell{
+			NewCellText(fmt.Sprint(!s.pNotReady)),    //ready
+			NewCellText(fmt.Sprint(!s.pStopped)),     //started
+			NewCellInt(s.pRestartsText, s.pRestarts), //restarts
+			NewCellText(""),                          //state
+			NewCellText(""),                          //reason
+			NewCellText(""),                          //exit-code
+			NewCellText(""),                          //signal
+			NewCellText(""),                          //timestamp
+			NewCellText(""),                          //age
+			NewCellText(""),                          //message
+		}
+		s.pRestartsText = ""
+		s.pRestarts = 0
+		s.pNotReady = false
+		s.pStopped = false
 	}
 	return [][]Cell{out}, nil
 }
 
-func (s status) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
+func (s *status) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	var age string
 	var timestamp string
 
@@ -205,7 +234,7 @@ func (s status) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
 	}, nil
 }
 
-func (s status) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+func (s *status) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
 	var cellList []Cell
 	var reason string
 	var exitCode string
@@ -257,11 +286,22 @@ func (s status) BuildContainerStatus(container v1.ContainerStatus, info BuilderI
 
 	if container.Started != nil {
 		started = fmt.Sprintf("%t", *container.Started)
+		if !*container.Started {
+			s.pStopped = true
+		}
 	}
 
 	ready := fmt.Sprintf("%t", container.Ready)
+	if !container.Ready {
+		s.pNotReady = true
+	}
 	restarts := fmt.Sprintf("%d", container.RestartCount)
 	rawRestarts = int64(container.RestartCount)
+
+	// TODO: pods dont show when they dont have an owner :(  this needs fixing
+	s.pRestarts += rawRestarts
+	s.pRestartsText = fmt.Sprintf("%d", s.pRestarts)
+
 	// remove pod and container name from the message string
 	message = s.trimStatusMessage(message, info.PodName, info.ContainerName)
 
@@ -298,8 +338,37 @@ func (s status) BuildContainerStatus(container v1.ContainerStatus, info BuilderI
 	return out, nil
 }
 
+func (s *status) Sum(rows [][]Cell) []Cell {
+
+	rowOut := make([]Cell, 10)
+
+	rowOut[0].text = "true"
+	rowOut[1].text = "true"
+
+	//loop through each row in podTotals and add the columns in each row
+	for _, c := range rows {
+		if c[0].text != "true" {
+			rowOut[0].text = c[0].text //ready
+		}
+		if c[1].text != "true" {
+			rowOut[1].text = c[1].text //started
+		}
+		rowOut[2].number += c[2].number //restarts
+		rowOut[2].text = fmt.Sprintf("%d", rowOut[2].number)
+
+		rowOut[3].text = c[3].text //state
+		rowOut[4].text = c[4].text //reason
+		rowOut[5].text = c[5].text //exit-code
+		rowOut[6].text = c[6].text //signal
+		rowOut[7].text = c[7].text //timestamp
+		rowOut[8].text = c[8].text //age
+		rowOut[9].text = c[9].text //message
+	}
+	return rowOut
+}
+
 // Removes the pod name and container name from the status message as its already in the output table
-func (s status) trimStatusMessage(message string, podName string, containerName string) string {
+func (s *status) trimStatusMessage(message string, podName string, containerName string) string {
 
 	if len(message) <= 0 {
 		return ""

@@ -138,6 +138,10 @@ func (s ports) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info
 	return out, nil
 }
 
+func (s ports) Sum(rows [][]Cell) []Cell {
+	return []Cell{}
+}
+
 func (s ports) portsBuildRow(info BuilderInformation, port v1.ContainerPort) []Cell {
 	var cellList []Cell
 

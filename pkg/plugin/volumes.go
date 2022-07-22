@@ -192,6 +192,10 @@ func (s volumes) BuildEphemeralContainerSpec(container v1.EphemeralContainer, in
 	return out, nil
 }
 
+func (s volumes) Sum(rows [][]Cell) []Cell {
+	return []Cell{}
+}
+
 func (s volumes) createVolumeMap(volumes []v1.Volume) map[string]map[string]Cell {
 	podMap := make(map[string]map[string]Cell)
 	// podVolumes := map[string]map[string]string{}

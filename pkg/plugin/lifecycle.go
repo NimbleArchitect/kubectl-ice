@@ -139,6 +139,10 @@ func (s lifecycle) BuildEphemeralContainerSpec(container v1.EphemeralContainer, 
 
 }
 
+func (s lifecycle) Sum(rows [][]Cell) []Cell {
+	return []Cell{}
+}
+
 func (s lifecycle) lifecycleBuildRow(info BuilderInformation, handlerName string, lifecycles lifecycleAction) []Cell {
 
 	return []Cell{

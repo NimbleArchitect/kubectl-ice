@@ -35,17 +35,20 @@ type Cell struct {
 	text   string
 	number int64
 	float  float64
-	typ    int // 0=string, 1=int64, 2=float64
+	typ    int // 0=string, 1=int64, 2=float64, 3=placeholder
+	phRef  int
 }
 
 type Table struct {
-	currentRow  int
-	headCount   int
-	columnOrder []int
-	rowOrder    []int
-	head        []headerRow
-	data        [][]Cell
-	hideRow     []bool
+	currentRow    int
+	headCount     int
+	columnOrder   []int
+	rowOrder      []int
+	head          []headerRow
+	data          [][]Cell
+	hideRow       []bool
+	placeHolder   map[int][]Cell
+	placeHolderID int
 }
 
 // sets the header row to the specified array of strings
@@ -167,6 +170,7 @@ func (t *Table) Print() {
 
 	// loop through each row
 	for r := 0; r < len(t.data); r++ {
+		row := []Cell{}
 		line := ""
 		excludeRow := false
 		rowNum := t.rowOrder[r]
@@ -175,7 +179,11 @@ func (t *Table) Print() {
 			continue
 		}
 
-		row := t.data[rowNum]
+		if t.data[rowNum][0].typ == 3 {
+			row = t.placeHolder[t.data[rowNum][0].phRef]
+		} else {
+			row = t.data[rowNum]
+		}
 		// now loop through each column the the currentl selected row
 		for col := 0; col < t.headCount; col++ {
 			idx := t.columnOrder[col]
@@ -892,4 +900,45 @@ func (t *Table) getFencesBoundarys(orderList []int, columnID int, rows [][]Cell,
 		lowerFenceFloat := pc - q1Float
 		return upperFenceFloat, lowerFenceFloat
 	}
+}
+
+// AddPlaceHolderRow - Adds an updatable row to the table, returns an update id that can be used with UpdatePlaceHolderRow
+func (t *Table) AddPlaceHolderRow() int {
+	var cellRow []Cell
+
+	id := t.placeHolderID
+	t.placeHolderID++
+
+	for i := 0; i < t.headCount; i++ {
+		cellRow = append(cellRow, Cell{
+			// text:  "PH" + fmt.Sprint(id),
+			typ:   3,
+			phRef: id,
+		})
+	}
+
+	t.AddRow(cellRow...)
+	if len(t.placeHolder) == 0 {
+		t.placeHolder = make(map[int][]Cell, 1)
+	}
+	t.placeHolder[id] = cellRow
+
+	return id
+}
+
+// UpdatePlaceHolderRow - updates the given placeholder at id with the contents of cellList
+func (t *Table) UpdatePlaceHolderRow(id int, cellList []Cell) {
+
+	for i := 0; i < t.headCount; i++ {
+		strLen := len([]rune(cellList[i].text))
+		if strLen >= t.head[i].columnLength {
+			if (strLen + 2) > maxLineLength {
+				t.head[i].columnLength = maxLineLength
+			} else {
+				t.head[i].columnLength = strLen + 2
+			}
+		}
+	}
+
+	t.placeHolder[id] = cellList
 }

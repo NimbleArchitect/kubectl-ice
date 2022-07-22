@@ -182,6 +182,10 @@ func (s resource) BuildEphemeralContainerSpec(container v1.EphemeralContainer, i
 	return out, nil
 }
 
+func (s resource) Sum(rows [][]Cell) []Cell {
+	return []Cell{}
+}
+
 func (s resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, info BuilderInformation, resource string, showRaw bool, bytesAs string) []Cell {
 	var cellList []Cell
 	var displayValue, request, limit, percentLimit, percentRequest string

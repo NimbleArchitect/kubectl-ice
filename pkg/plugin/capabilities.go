@@ -129,6 +129,10 @@ func (s capabilities) BuildEphemeralContainerSpec(container v1.EphemeralContaine
 	return out, nil
 }
 
+func (s capabilities) Sum(rows [][]Cell) []Cell {
+	return []Cell{}
+}
+
 func (s capabilities) capabilitiesBuildRow(securityContext *v1.SecurityContext, info BuilderInformation) []Cell {
 	// func capabilitiesBuildRow(securityContext *v1.SecurityContext, info containerInfomation) []Cell {
 	var cellList []Cell

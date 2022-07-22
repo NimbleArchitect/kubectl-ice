@@ -451,6 +451,13 @@ func (c *Connector) GetOwnersList() (map[string][]v1.Pod, map[string]string) {
 
 	for _, pod := range c.podList {
 		ownerRef := pod.GetOwnerReferences()
+		if len(ownerRef) == 0 {
+			n := pod.Spec.NodeName
+			parentList[n] = append(parentList[n], pod)
+			typeList[n] = "Node"
+			continue
+		}
+
 		for _, a := range ownerRef {
 			// if _, ok := parentList[a.Name]; ok {
 			parentList[a.Name] = append(parentList[a.Name], pod)

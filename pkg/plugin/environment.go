@@ -143,6 +143,10 @@ func (s environment) BuildEphemeralContainerSpec(container v1.EphemeralContainer
 	return out, nil
 }
 
+func (s environment) Sum(rows [][]Cell) []Cell {
+	return []Cell{}
+}
+
 func (s environment) envBuildRow(info BuilderInformation, env v1.EnvVar, connect *Connector, translate bool) []Cell {
 	var envKey, envValue string
 	var configName string

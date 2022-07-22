@@ -161,6 +161,10 @@ func (s probes) BuildEphemeralContainerSpec(container v1.EphemeralContainer, inf
 	return out, nil
 }
 
+func (s probes) Sum(rows [][]Cell) []Cell {
+	return []Cell{}
+}
+
 func (s probes) probesBuildRow(info BuilderInformation, action probeAction) []Cell {
 	var cellList []Cell
 
