@@ -170,7 +170,8 @@ func (t *Table) Print() {
 
 	// loop through each row
 	for r := 0; r < len(t.data); r++ {
-		row := []Cell{}
+		var row []Cell
+
 		line := ""
 		excludeRow := false
 		rowNum := t.rowOrder[r]
@@ -950,5 +951,4 @@ func (t *Table) HidePlaceHolderRow(id int) {
 			t.HideRows([]int{r})
 		}
 	}
-
 }

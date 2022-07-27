@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	a1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -24,7 +25,46 @@ type Connector struct {
 	metricFlags    *genericclioptions.ConfigFlags
 	configMapArray map[string]map[string]string
 	setNameSpace   string
-	podList        []v1.Pod //List of pods
+	podList        []v1.Pod         //List of Pods
+	replicaList    []a1.ReplicaSet  //list of ReplicaSets
+	daemonList     []a1.DaemonSet   //list of DaemonSets
+	statefulList   []a1.StatefulSet //list of StatefulSet
+	deploymentList []a1.Deployment  //list of Deployments
+}
+
+type parentData struct {
+	name       string
+	kind       string
+	deployment a1.Deployment
+	replica    a1.ReplicaSet
+	stateful   a1.StatefulSet
+	daemon     a1.DaemonSet
+	pod        v1.Pod
+}
+
+type node struct {
+	child  map[string]*node
+	name   string
+	kind   string
+	indent int
+	data   parentData
+}
+
+func (n *node) getChild(name string) *node {
+	for k, v := range n.child {
+		if k == name {
+			return v
+		}
+	}
+
+	child := node{
+		name:  name,
+		child: make(map[string]*node),
+	}
+
+	n.child[name] = &child
+
+	return n.child[name]
 }
 
 //load config for the k8s endpoint
@@ -79,6 +119,22 @@ func (c *Connector) GetPods(podNameList []string) ([]v1.Pod, error) {
 	return c.podList, nil
 
 }
+
+// // returns a list of pods or a list with one pod when given a pod name
+// func (c *Connector) GetReplica(replicaNameList []string) ([]a1.ReplicaSet, error) {
+// 	if len(c.replicaList) == 0 {
+// 		err := c.LoadPods(replicaNameList)
+// 		return c.replicaList, err
+// 	}
+
+// 	if len(replicaNameList) > 0 {
+// 		err := c.LoadReplicaSet(replicaNameList)
+// 		return c.replicaList, err
+// 	}
+
+// 	return c.replicaList, nil
+
+// }
 
 func (c *Connector) GetPodAnnotations(podList []v1.Pod) (map[string]map[string]string, error) {
 	//
@@ -452,71 +508,334 @@ func (c *Connector) GetOwnersList() (map[string][]v1.Pod, map[string]string) {
 	for _, pod := range c.podList {
 		ownerRef := pod.GetOwnerReferences()
 		if len(ownerRef) == 0 {
-			n := pod.Spec.NodeName
-			parentList[n] = append(parentList[n], pod)
-			typeList[n] = "Node"
 			continue
 		}
 
 		for _, a := range ownerRef {
-			// if _, ok := parentList[a.Name]; ok {
 			parentList[a.Name] = append(parentList[a.Name], pod)
 			typeList[a.Name] = a.Kind
-			// } else {
-			// 	parentList[a.Kind] = append(parentList[a.Name], pod)
-			// 	typeList[a.Name] = a.Kind
-			// }
 		}
 	}
 
 	return parentList, typeList
 }
 
-// func (c *Connector) LoadReplicaSet(replicaNameList []string) error {
-// 	podList := []a1.ReplicaSet{}
+func (c *Connector) LoadReplicaSet(replicaNameList []string, namespace string) error {
+	replicaList := []a1.ReplicaSet{}
+	selector := metav1.ListOptions{}
 
-// 	selector := metav1.ListOptions{}
+	// namespace := c.GetNamespace(c.Flags.allNamespaces)
 
-// 	namespace := c.GetNamespace(c.Flags.allNamespaces)
+	if len(replicaNameList) > 0 {
+		// single pod
+		for _, replicaName := range replicaNameList {
+			rs, err := c.clientSet.AppsV1().ReplicaSets(namespace).Get(context.TODO(), replicaName, metav1.GetOptions{})
+			if err == nil {
+				replicaList = append(replicaList, []a1.ReplicaSet{*rs}...)
+			} else {
+				c.replicaList = []a1.ReplicaSet{}
+				return fmt.Errorf("failed to retrieve ReplicaSet from server: %w", err)
+			}
+		}
 
-// 	if len(replicaNameList) > 0 {
-// 		// single pod
-// 		for _, replicaName := range replicaNameList {
-// 			rs, err := c.clientSet.AppsV1().ReplicaSets(namespace).Get(context.TODO(), replicaName, metav1.GetOptions{})
-// 			if err == nil {
-// 				podList = append(podList, []a1.ReplicaSet{*rs}...)
-// 			} else {
-// 				c.podList = []v1.Pod{}
-// 				return fmt.Errorf("failed to retrieve pod from server: %w", err)
-// 			}
-// 		}
+		c.replicaList = replicaList
+		return nil
+	}
 
-// 		// c.podList = podList
-// 		return nil
-// 	}
+	// multi pods
+	if len(c.Flags.labels) > 0 {
+		selector.LabelSelector = c.Flags.labels
+	}
 
-// 	// multi pods
-// 	if len(c.Flags.labels) > 0 {
-// 		selector.LabelSelector = c.Flags.labels
-// 	}
+	rs, err := c.clientSet.AppsV1().ReplicaSets(namespace).List(context.TODO(), selector)
 
-// 	rs, err := c.clientSet.AppsV1().ReplicaSets(namespace).List(context.TODO(), selector)
+	if err == nil {
+		if len(rs.Items) == 0 {
+			c.replicaList = []a1.ReplicaSet{}
+			return errors.New("no ReplicaSet found in default namespace")
+		} else {
+			if len(c.Flags.matchSpecList) > 0 {
+				// c.replicaList, err = c.SelectMatchinghPodSpec(rs.Items)
+				return err
+			} else {
+				// c.replicaList = pods.Items
+				return nil
+			}
+		}
+	} else {
+		c.replicaList = []a1.ReplicaSet{}
+		return fmt.Errorf("failed to retrieve ReplicaSet list from server: %w", err)
+	}
+}
 
-// 	if err == nil {
-// 		if len(rs.Items) == 0 {
-// 			// c.podList = []v1.Pod{}
-// 			return errors.New("no pods found in default namespace")
-// 		} else {
-// 			if len(c.Flags.matchSpecList) > 0 {
-// 				// c.podList, err = c.SelectMatchinghPodSpec(rs.Items)
-// 				return err
-// 			} else {
-// 				// c.podList = pods.Items
-// 				return nil
-// 			}
-// 		}
-// 	} else {
-// 		// c.podList = []v1.Pod{}
-// 		return fmt.Errorf("failed to retrieve pod list from server: %w", err)
-// 	}
-// }
+func (c *Connector) LoadDeployment(deploymentNameList []string, namespace string) error {
+	deploymentList := []a1.Deployment{}
+	selector := metav1.ListOptions{}
+
+	// namespace := c.GetNamespace(c.Flags.allNamespaces)
+
+	if len(deploymentNameList) > 0 {
+		// single pod
+		for _, replicaName := range deploymentNameList {
+			d, err := c.clientSet.AppsV1().Deployments(namespace).Get(context.TODO(), replicaName, metav1.GetOptions{})
+			if err == nil {
+				deploymentList = append(deploymentList, []a1.Deployment{*d}...)
+			} else {
+				c.deploymentList = []a1.Deployment{}
+				return fmt.Errorf("failed to retrieve Deployment from server: %w", err)
+			}
+		}
+
+		c.deploymentList = deploymentList
+		return nil
+	}
+
+	// multi pods
+	if len(c.Flags.labels) > 0 {
+		selector.LabelSelector = c.Flags.labels
+	}
+
+	d, err := c.clientSet.AppsV1().Deployments(namespace).List(context.TODO(), selector)
+
+	if err == nil {
+		if len(d.Items) == 0 {
+			c.deploymentList = []a1.Deployment{}
+			return errors.New("no Deployment found in default namespace")
+		} else {
+			if len(c.Flags.matchSpecList) > 0 {
+				// c.deploymentList, err = c.SelectMatchinghPodSpec(rs.Items)
+				return err
+			} else {
+				// c.deploymentList = pods.Items
+				return nil
+			}
+		}
+	} else {
+		c.deploymentList = []a1.Deployment{}
+		return fmt.Errorf("failed to retrieve Deployment list from server: %w", err)
+	}
+}
+
+func (c *Connector) LoadDaemonSet(daemonNameList []string, namespace string) error {
+	daemonList := []a1.DaemonSet{}
+	selector := metav1.ListOptions{}
+
+	// namespace := c.GetNamespace(c.Flags.allNamespaces)
+
+	if len(daemonNameList) > 0 {
+		// single pod
+		for _, replicaName := range daemonNameList {
+			d, err := c.clientSet.AppsV1().DaemonSets(namespace).Get(context.TODO(), replicaName, metav1.GetOptions{})
+			if err == nil {
+				daemonList = append(daemonList, []a1.DaemonSet{*d}...)
+			} else {
+				c.daemonList = []a1.DaemonSet{}
+				return fmt.Errorf("failed to retrieve DaemonSet from server: %w", err)
+			}
+		}
+
+		c.daemonList = daemonList
+		return nil
+	}
+
+	// multi pods
+	if len(c.Flags.labels) > 0 {
+		selector.LabelSelector = c.Flags.labels
+	}
+
+	d, err := c.clientSet.AppsV1().DaemonSets(namespace).List(context.TODO(), selector)
+
+	if err == nil {
+		if len(d.Items) == 0 {
+			c.daemonList = []a1.DaemonSet{}
+			return errors.New("no DaemonSet found in default namespace")
+		} else {
+			if len(c.Flags.matchSpecList) > 0 {
+				// c.deploymentList, err = c.SelectMatchinghPodSpec(rs.Items)
+				return err
+			} else {
+				// c.deploymentList = pods.Items
+				return nil
+			}
+		}
+	} else {
+		c.daemonList = []a1.DaemonSet{}
+		return fmt.Errorf("failed to retrieve DaemonSet list from server: %w", err)
+	}
+}
+
+func (c *Connector) LoadStatefulSet(statefulNameList []string, namespace string) error {
+	statefulList := []a1.StatefulSet{}
+	selector := metav1.ListOptions{}
+
+	// namespace := c.GetNamespace(c.Flags.allNamespaces)
+
+	if len(statefulNameList) > 0 {
+		// single pod
+		for _, replicaName := range statefulNameList {
+			d, err := c.clientSet.AppsV1().StatefulSets(namespace).Get(context.TODO(), replicaName, metav1.GetOptions{})
+			if err == nil {
+				statefulList = append(statefulList, []a1.StatefulSet{*d}...)
+			} else {
+				c.statefulList = []a1.StatefulSet{}
+				return fmt.Errorf("failed to retrieve StatefulSet from server: %w", err)
+			}
+		}
+
+		c.statefulList = statefulList
+		return nil
+	}
+
+	// multi pods
+	if len(c.Flags.labels) > 0 {
+		selector.LabelSelector = c.Flags.labels
+	}
+
+	d, err := c.clientSet.AppsV1().StatefulSets(namespace).List(context.TODO(), selector)
+
+	if err == nil {
+		if len(d.Items) == 0 {
+			c.statefulList = []a1.StatefulSet{}
+			return errors.New("no StatefulSet found in default namespace")
+		} else {
+			if len(c.Flags.matchSpecList) > 0 {
+				// c.deploymentList, err = c.SelectMatchinghPodSpec(rs.Items)
+				return err
+			} else {
+				// c.deploymentList = pods.Items
+				return nil
+			}
+		}
+	} else {
+		c.statefulList = []a1.StatefulSet{}
+		return fmt.Errorf("failed to retrieve StatefulSet list from server: %w", err)
+	}
+}
+
+func (c *Connector) BuildOwnersList() map[string]*node {
+
+	children := make(map[string]*node)
+	rootnode := node{child: children}
+
+	for _, pod := range c.podList {
+		nodename := pod.Spec.NodeName
+		parentList := []parentData{{
+			name: pod.Name,
+			kind: pod.Kind,
+			pod:  pod,
+		}}
+		oref := pod.GetOwnerReferences()
+
+		//loop each pod get the parent, add pod to parent as child
+		parentList = c.appendParents(parentList, oref, nodename, pod.Namespace)
+
+		current := rootnode
+		for i, v := range parentList {
+			child := current.getChild(v.name)
+			child.kind = v.kind
+			child.indent = len(parentList) - i
+			child.data = v
+			current = *child
+		}
+
+	}
+
+	return rootnode.child
+
+}
+
+func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerReference, nodename string, namespace string) []parentData {
+	//check if parent exists based on kind
+	if len(oref) == 0 {
+		current = append([]parentData{{
+			name: nodename,
+			kind: "Node",
+		}}, current...)
+	}
+	for _, v := range oref {
+		if v.Kind == "Node" {
+			current = append([]parentData{{
+				name: v.Name,
+				kind: v.Kind,
+			}}, current...)
+		}
+		if v.Kind == "Deployment" {
+			err := c.LoadDeployment([]string{v.Name}, namespace)
+			if err != nil {
+				panic(err)
+			}
+
+			n := v.Name
+			for _, deployment := range c.deploymentList {
+				if n == deployment.Name {
+					current = append([]parentData{{
+						name:       v.Name,
+						kind:       v.Kind,
+						deployment: deployment,
+					}}, current...)
+
+					return c.appendParents(current, deployment.GetOwnerReferences(), nodename, namespace)
+				}
+			}
+		}
+		if v.Kind == "ReplicaSet" {
+			err := c.LoadReplicaSet([]string{v.Name}, namespace)
+			if err != nil {
+				panic(err)
+			}
+
+			n := v.Name
+			for _, replica := range c.replicaList {
+				if n == replica.Name {
+					current = append([]parentData{{
+						name:    v.Name,
+						kind:    v.Kind,
+						replica: replica,
+					}}, current...)
+
+					return c.appendParents(current, replica.GetOwnerReferences(), nodename, namespace)
+				}
+			}
+		}
+		if v.Kind == "DaemonSet" {
+			err := c.LoadDaemonSet([]string{v.Name}, namespace)
+			if err != nil {
+				panic(err)
+			}
+
+			n := v.Name
+			for _, daemon := range c.daemonList {
+				if n == daemon.Name {
+					current = append([]parentData{{
+						name:   v.Name,
+						kind:   v.Kind,
+						daemon: daemon,
+					}}, current...)
+
+					return c.appendParents(current, daemon.GetOwnerReferences(), nodename, namespace)
+				}
+			}
+		}
+		if v.Kind == "StatefulSet" {
+			err := c.LoadStatefulSet([]string{v.Name}, namespace)
+			if err != nil {
+				panic(err)
+			}
+
+			n := v.Name
+			for _, stateful := range c.statefulList {
+				if n == stateful.Name {
+					current = append([]parentData{{
+						name:     v.Name,
+						kind:     v.Kind,
+						stateful: stateful,
+					}}, current...)
+
+					return c.appendParents(current, stateful.GetOwnerReferences(), nodename, namespace)
+				}
+			}
+		}
+	}
+
+	return current
+}
