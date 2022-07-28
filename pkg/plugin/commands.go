@@ -104,7 +104,7 @@ func (s *commands) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *commands) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
+func (s *commands) BuildBranch(info BuilderInformation) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText("")}

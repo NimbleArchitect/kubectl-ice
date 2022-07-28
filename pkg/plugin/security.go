@@ -122,7 +122,7 @@ func (s *security) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *security) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
+func (s *security) BuildBranch(info BuilderInformation) ([]Cell, error) {
 	var out []Cell
 	if s.ShowSELinuxOptions {
 		out = []Cell{

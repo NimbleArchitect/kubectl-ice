@@ -109,7 +109,7 @@ func (s *environment) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *environment) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
+func (s *environment) BuildBranch(info BuilderInformation) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),

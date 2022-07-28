@@ -35,6 +35,7 @@ type Connector struct {
 type parentData struct {
 	name       string
 	kind       string
+	namespace  string
 	deployment a1.Deployment
 	replica    a1.ReplicaSet
 	stateful   a1.StatefulSet
@@ -43,25 +44,30 @@ type parentData struct {
 }
 
 type node struct {
-	child  map[string]*node
-	name   string
-	kind   string
-	indent int
-	data   parentData
+	child     map[string]*node
+	name      string
+	kind      string
+	namespace string
+	indent    int
+	data      parentData
 }
 
 func (n *node) getChild(name string) *node {
+
 	for k, v := range n.child {
 		if k == name {
+			//return matching child if we have it
 			return v
 		}
 	}
 
+	//if we got here we dont have a match so we create a new entry
 	child := node{
 		name:  name,
 		child: make(map[string]*node),
 	}
 
+	// and add it as a child
 	n.child[name] = &child
 
 	return n.child[name]
@@ -719,21 +725,25 @@ func (c *Connector) BuildOwnersList() map[string]*node {
 
 	for _, pod := range c.podList {
 		nodename := pod.Spec.NodeName
+		//first create a list with the pod as the first entry
 		parentList := []parentData{{
-			name: pod.Name,
-			kind: pod.Kind,
-			pod:  pod,
+			name:      pod.Name,
+			namespace: pod.Namespace,
+			kind:      "Pod",
+			pod:       pod,
 		}}
 		oref := pod.GetOwnerReferences()
 
-		//loop each pod get the parent, add pod to parent as child
+		//then append each owner to the begining of the list, this way we end up with a list that runs from Node to Pod
 		parentList = c.appendParents(parentList, oref, nodename, pod.Namespace)
 
+		// finally we can loop through the above list adding children to the tree where they are needed and using child nodes if they already exist
 		current := rootnode
 		for i, v := range parentList {
 			child := current.getChild(v.name)
 			child.kind = v.kind
-			child.indent = len(parentList) - i
+			child.namespace = v.namespace
+			child.indent = i //- len(parentList)
 			child.data = v
 			current = *child
 		}
@@ -771,6 +781,7 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 					current = append([]parentData{{
 						name:       v.Name,
 						kind:       v.Kind,
+						namespace:  deployment.Namespace,
 						deployment: deployment,
 					}}, current...)
 
@@ -788,9 +799,10 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 			for _, replica := range c.replicaList {
 				if n == replica.Name {
 					current = append([]parentData{{
-						name:    v.Name,
-						kind:    v.Kind,
-						replica: replica,
+						name:      v.Name,
+						kind:      v.Kind,
+						namespace: replica.Namespace,
+						replica:   replica,
 					}}, current...)
 
 					return c.appendParents(current, replica.GetOwnerReferences(), nodename, namespace)
@@ -807,9 +819,10 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 			for _, daemon := range c.daemonList {
 				if n == daemon.Name {
 					current = append([]parentData{{
-						name:   v.Name,
-						kind:   v.Kind,
-						daemon: daemon,
+						name:      v.Name,
+						kind:      v.Kind,
+						namespace: daemon.Namespace,
+						daemon:    daemon,
 					}}, current...)
 
 					return c.appendParents(current, daemon.GetOwnerReferences(), nodename, namespace)
@@ -826,9 +839,10 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 			for _, stateful := range c.statefulList {
 				if n == stateful.Name {
 					current = append([]parentData{{
-						name:     v.Name,
-						kind:     v.Kind,
-						stateful: stateful,
+						name:      v.Name,
+						kind:      v.Kind,
+						namespace: stateful.Namespace,
+						stateful:  stateful,
 					}}, current...)
 
 					return c.appendParents(current, stateful.GetOwnerReferences(), nodename, namespace)

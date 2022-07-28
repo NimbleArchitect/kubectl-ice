@@ -147,7 +147,7 @@ func (s *resource) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *resource) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
+func (s *resource) BuildBranch(info BuilderInformation) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),
@@ -169,14 +169,14 @@ func (s *resource) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error)
 }
 
 func (s *resource) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
-	metrics := s.MetricsResource[info.PodName][info.ContainerName]
+	metrics := s.MetricsResource[info.Name][info.ContainerName]
 	out := make([][]Cell, 1)
 	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs)
 	return out, nil
 }
 
 func (s *resource) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
-	metrics := s.MetricsResource[info.PodName][info.ContainerName]
+	metrics := s.MetricsResource[info.Name][info.ContainerName]
 	out := make([][]Cell, 1)
 	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs)
 	return out, nil

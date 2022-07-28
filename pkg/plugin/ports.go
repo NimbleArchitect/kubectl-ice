@@ -103,7 +103,7 @@ func (s *ports) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *ports) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
+func (s *ports) BuildBranch(info BuilderInformation) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),

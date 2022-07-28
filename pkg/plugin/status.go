@@ -168,43 +168,21 @@ func (s *status) HideColumns(info BuilderInformation) []int {
 	return hideColumns
 }
 
-func (s *status) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
-	var out []Cell
+func (s *status) BuildBranch(info BuilderInformation) ([]Cell, error) {
 
-	switch info.BranchType {
-	case CONTAINER:
-		out = []Cell{
-			NewCellText(""),   //ready
-			NewCellText(""),   //started
-			NewCellInt("", 0), //restarts
-			NewCellText(""),   //state
-			NewCellText(""),   //reason
-			NewCellText(""),   //exit-code
-			NewCellText(""),   //signal
-			NewCellText(""),   //timestamp
-			NewCellText(""),   //age
-			NewCellText(""),   //message
-		}
-	case PARENT:
-		fallthrough
-	case POD:
-		out = []Cell{
-			NewCellText(fmt.Sprint(!s.pNotReady)),    //ready
-			NewCellText(fmt.Sprint(!s.pStopped)),     //started
-			NewCellInt(s.pRestartsText, s.pRestarts), //restarts
-			NewCellText(""),                          //state
-			NewCellText(""),                          //reason
-			NewCellText(""),                          //exit-code
-			NewCellText(""),                          //signal
-			NewCellText(""),                          //timestamp
-			NewCellText(""),                          //age
-			NewCellText(""),                          //message
-		}
-		s.pRestartsText = ""
-		s.pRestarts = 0
-		s.pNotReady = false
-		s.pStopped = false
+	out := []Cell{
+		NewCellText(""),   //ready
+		NewCellText(""),   //started
+		NewCellInt("", 0), //restarts
+		NewCellText(""),   //state
+		NewCellText(""),   //reason
+		NewCellText(""),   //exit-code
+		NewCellText(""),   //signal
+		NewCellText(""),   //timestamp
+		NewCellText(""),   //age
+		NewCellText(""),   //message
 	}
+
 	return out, nil
 }
 
@@ -303,7 +281,7 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 	s.pRestartsText = fmt.Sprintf("%d", s.pRestarts)
 
 	// remove pod and container name from the message string
-	message = s.trimStatusMessage(message, info.PodName, info.ContainerName)
+	message = s.trimStatusMessage(message, info.Name, info.ContainerName)
 
 	//we can only show the age if we have a start time some states dont have said starttime so we have to skip them
 	if skipAgeCalculation {

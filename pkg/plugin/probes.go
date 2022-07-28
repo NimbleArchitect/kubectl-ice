@@ -119,7 +119,7 @@ func (s *probes) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *probes) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
+func (s *probes) BuildBranch(info BuilderInformation) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),

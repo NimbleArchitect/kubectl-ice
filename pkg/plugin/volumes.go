@@ -121,7 +121,7 @@ func (s *volumes) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *volumes) BuildBranch(info BuilderInformation, podList []v1.Pod) ([]Cell, error) {
+func (s *volumes) BuildBranch(info BuilderInformation) ([]Cell, error) {
 	var out []Cell
 
 	if !s.ShowVolumeDevice {
