@@ -281,7 +281,7 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 	s.pRestartsText = fmt.Sprintf("%d", s.pRestarts)
 
 	// remove pod and container name from the message string
-	message = s.trimStatusMessage(message, info.Name, info.ContainerName)
+	message = s.trimStatusMessage(message, info.PodName, info.Name)
 
 	//we can only show the age if we have a start time some states dont have said starttime so we have to skip them
 	if skipAgeCalculation {
@@ -317,21 +317,20 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 }
 
 func (s *status) Sum(rows [][]Cell) []Cell {
-
 	rowOut := make([]Cell, 10)
 
 	rowOut[0].text = "true"
 	rowOut[1].text = "true"
 
 	//loop through each row in podTotals and add the columns in each row
-	for _, c := range rows {
-		if c[0].text != "true" {
-			rowOut[0].text = c[0].text //ready
+	for _, r := range rows {
+		if r[0].text != "true" {
+			rowOut[0].text = r[0].text //ready
 		}
-		if c[1].text != "true" {
-			rowOut[1].text = c[1].text //started
+		if r[1].text != "true" {
+			rowOut[1].text = r[1].text //started
 		}
-		rowOut[2].number += c[2].number //restarts
+		rowOut[2].number += r[2].number //restarts
 		rowOut[2].text = fmt.Sprintf("%d", rowOut[2].number)
 
 		rowOut[3].text = "" //state

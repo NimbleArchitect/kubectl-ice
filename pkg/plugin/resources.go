@@ -169,25 +169,59 @@ func (s *resource) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error)
 }
 
 func (s *resource) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
-	metrics := s.MetricsResource[info.Name][info.ContainerName]
+	metrics := s.MetricsResource[info.PodName][info.Name]
 	out := make([][]Cell, 1)
-	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs)
+	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.BytesAs)
 	return out, nil
 }
 
 func (s *resource) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
-	metrics := s.MetricsResource[info.Name][info.ContainerName]
+	metrics := s.MetricsResource[info.PodName][info.Name]
 	out := make([][]Cell, 1)
-	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.ShowRaw, s.BytesAs)
+	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.BytesAs)
 	return out, nil
 }
 
 func (s *resource) Sum(rows [][]Cell) []Cell {
 	rowOut := make([]Cell, 5)
+	for _, r := range rows {
+		//"USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
+		rowOut[0].number += r[0].number
+		rowOut[1].number += r[1].number
+		rowOut[2].number += r[2].number
+	}
+
+	floatfmt := "%.6f"
+	typefmt := "%dm"
+	if !s.ShowRaw {
+		floatfmt = "%.2f"
+		if s.ResourceType == "cpu" {
+
+		} else if s.ResourceType == "memory" {
+			floatfmt = "%.2f"
+		}
+	}
+
+	rowOut[0].text = fmt.Sprintf(typefmt, rowOut[0].number)
+	rowOut[1].text = fmt.Sprintf(typefmt, rowOut[1].number)
+	rowOut[2].text = fmt.Sprintf(typefmt, rowOut[2].number)
+
+	if rowOut[0].number != 0 && rowOut[2].float != 0.0 {
+		val := validateFloat64(float64(rowOut[0].number) / float64(rowOut[2].number) * 100)
+		rowOut[3].text = fmt.Sprintf(floatfmt, val)
+		rowOut[3].float = val
+	}
+
+	if rowOut[0].number != 0 && rowOut[1].float != 0.0 {
+		val := validateFloat64(float64(rowOut[0].number) / float64(rowOut[1].number) * 100)
+		rowOut[4].text = fmt.Sprintf(floatfmt, val)
+		rowOut[4].float = val
+	}
+
 	return rowOut
 }
 
-func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, info BuilderInformation, resource string, showRaw bool, bytesAs string) []Cell {
+func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, info BuilderInformation, resource string, bytesAs string) []Cell {
 	var cellList []Cell
 	var displayValue, request, limit, percentLimit, percentRequest string
 	var rawRequest, rawLimit, rawValue int64
@@ -201,7 +235,7 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 	if resource == "cpu" {
 		if metrics.Cpu() != nil {
 			rawValue = metrics.Cpu().MilliValue()
-			if showRaw {
+			if s.ShowRaw {
 				displayValue = metrics.Cpu().String()
 			} else {
 				displayValue = fmt.Sprintf("%dm", metrics.Cpu().MilliValue())
@@ -240,7 +274,7 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 	if resource == "memory" {
 		if metrics.Memory() != nil {
 			rawValue = metrics.Memory().Value() / 1000
-			if showRaw {
+			if s.ShowRaw {
 				displayValue = fmt.Sprintf("%d", metrics.Memory().Value())
 			} else {
 				displayValue = memoryHumanReadable(metrics.Memory().Value(), bytesAs)
