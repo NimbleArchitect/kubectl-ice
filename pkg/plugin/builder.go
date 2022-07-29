@@ -308,24 +308,6 @@ func (b *RowBuilder) BuildContainerTable(loop Looper, podList []v1.Pod) error {
 		//check if we have any labels that need to be shown as columns
 		b.setValuesAnnotationLabel(pod)
 
-		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-		// if b.ShowTreeView {
-		// 	b.info.TreeView = true
-		// 	tblOut, err := loop.BuildPod(pod, b.info)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-
-		// 	//this is a tree view, so we have a name column to deal with 'Pod/foo-6f67dcc579-znb55'
-		// 	// parentType := make([]Cell, 1)
-		// 	// parentType[0] = NewCellText(fmt.Sprint(b.info.TypeName, "/", b.info.PodName))
-		// 	// tblOut = append(parentType, tblOut...)
-
-		// 	log.Debug("rowsOut =", b.hTreeViewRow)
-		// 	// we save the row rather than add it to the table so we can control the output later on
-		// 	b.hTreeViewRow = b.makeRow(0, b.info, tblOut)
-		// }
-
 		_, err := b.podLoop(0, loop, pod)
 		if err != nil {
 			return err

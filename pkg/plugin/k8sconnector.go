@@ -25,11 +25,11 @@ type Connector struct {
 	metricFlags    *genericclioptions.ConfigFlags
 	configMapArray map[string]map[string]string
 	setNameSpace   string
-	podList        []v1.Pod         //List of Pods
-	replicaList    []a1.ReplicaSet  //list of ReplicaSets
-	daemonList     []a1.DaemonSet   //list of DaemonSets
-	statefulList   []a1.StatefulSet //list of StatefulSet
-	deploymentList []a1.Deployment  //list of Deployments
+	podList        []v1.Pod                    //List of Pods
+	replicaList    map[string][]a1.ReplicaSet  //list of ReplicaSets
+	daemonList     map[string][]a1.DaemonSet   //list of DaemonSets
+	statefulList   map[string][]a1.StatefulSet //list of StatefulSet
+	deploymentList map[string][]a1.Deployment  //list of Deployments
 }
 
 type parentData struct {
@@ -526,25 +526,48 @@ func (c *Connector) GetOwnersList() (map[string][]v1.Pod, map[string]string) {
 	return parentList, typeList
 }
 
-func (c *Connector) LoadReplicaSet(replicaNameList []string, namespace string) error {
-	replicaList := []a1.ReplicaSet{}
-	selector := metav1.ListOptions{}
+func (c *Connector) GetReplicaSet(replicaName string, namespace string) *a1.ReplicaSet {
+	var rs []a1.ReplicaSet
 
-	// namespace := c.GetNamespace(c.Flags.allNamespaces)
+	if _, ok := c.replicaList[namespace]; ok {
+		rs = c.replicaList[namespace]
+	} else {
+		c.LoadReplicaSet([]string{}, namespace)
+		if _, ok := c.replicaList[namespace]; ok {
+			rs = c.replicaList[namespace]
+		}
+	}
+
+	for _, r := range rs {
+		if r.Name == replicaName {
+			return &r
+		}
+	}
+	return nil
+}
+
+func (c *Connector) LoadReplicaSet(replicaNameList []string, namespace string) error {
+
+	log := logger{location: "k8sconnector:LoadReplicaSet"}
+	log.Debug("Start")
+
+	selector := metav1.ListOptions{}
+	if len(c.replicaList[namespace]) == 0 {
+		c.replicaList = make(map[string][]a1.ReplicaSet)
+	}
 
 	if len(replicaNameList) > 0 {
 		// single pod
 		for _, replicaName := range replicaNameList {
 			rs, err := c.clientSet.AppsV1().ReplicaSets(namespace).Get(context.TODO(), replicaName, metav1.GetOptions{})
 			if err == nil {
-				replicaList = append(replicaList, []a1.ReplicaSet{*rs}...)
+				list := append(c.replicaList[namespace], *rs)
+				c.replicaList[namespace] = list
 			} else {
-				c.replicaList = []a1.ReplicaSet{}
 				return fmt.Errorf("failed to retrieve ReplicaSet from server: %w", err)
 			}
 		}
 
-		c.replicaList = replicaList
 		return nil
 	}
 
@@ -554,45 +577,64 @@ func (c *Connector) LoadReplicaSet(replicaNameList []string, namespace string) e
 	}
 
 	rs, err := c.clientSet.AppsV1().ReplicaSets(namespace).List(context.TODO(), selector)
-
 	if err == nil {
 		if len(rs.Items) == 0 {
-			c.replicaList = []a1.ReplicaSet{}
 			return errors.New("no ReplicaSet found in default namespace")
 		} else {
 			if len(c.Flags.matchSpecList) > 0 {
 				// c.replicaList, err = c.SelectMatchinghPodSpec(rs.Items)
 				return err
 			} else {
-				// c.replicaList = pods.Items
+				c.replicaList[namespace] = append(c.replicaList[namespace], rs.Items...)
 				return nil
 			}
 		}
 	} else {
-		c.replicaList = []a1.ReplicaSet{}
 		return fmt.Errorf("failed to retrieve ReplicaSet list from server: %w", err)
 	}
 }
 
-func (c *Connector) LoadDeployment(deploymentNameList []string, namespace string) error {
-	deploymentList := []a1.Deployment{}
-	selector := metav1.ListOptions{}
+func (c *Connector) GetDeployment(deploymentName string, namespace string) *a1.Deployment {
+	var de []a1.Deployment
 
-	// namespace := c.GetNamespace(c.Flags.allNamespaces)
+	if _, ok := c.deploymentList[namespace]; ok {
+		de = c.deploymentList[namespace]
+	} else {
+		c.LoadDeployment([]string{}, namespace)
+		if _, ok := c.deploymentList[namespace]; ok {
+			de = c.deploymentList[namespace]
+		}
+	}
+
+	for _, d := range de {
+		if d.Name == deploymentName {
+			return &d
+		}
+	}
+	return nil
+}
+
+func (c *Connector) LoadDeployment(deploymentNameList []string, namespace string) error {
+	log := logger{location: "k8sconnector:LoadDeployment"}
+	log.Debug("Start")
+
+	selector := metav1.ListOptions{}
+	if len(c.deploymentList[namespace]) == 0 {
+		c.deploymentList = make(map[string][]a1.Deployment)
+	}
 
 	if len(deploymentNameList) > 0 {
 		// single pod
-		for _, replicaName := range deploymentNameList {
-			d, err := c.clientSet.AppsV1().Deployments(namespace).Get(context.TODO(), replicaName, metav1.GetOptions{})
+		for _, name := range deploymentNameList {
+			d, err := c.clientSet.AppsV1().Deployments(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 			if err == nil {
-				deploymentList = append(deploymentList, []a1.Deployment{*d}...)
+				list := append(c.deploymentList[namespace], *d)
+				c.deploymentList[namespace] = list
 			} else {
-				c.deploymentList = []a1.Deployment{}
 				return fmt.Errorf("failed to retrieve Deployment from server: %w", err)
 			}
 		}
 
-		c.deploymentList = deploymentList
 		return nil
 	}
 
@@ -605,7 +647,6 @@ func (c *Connector) LoadDeployment(deploymentNameList []string, namespace string
 
 	if err == nil {
 		if len(d.Items) == 0 {
-			c.deploymentList = []a1.Deployment{}
 			return errors.New("no Deployment found in default namespace")
 		} else {
 			if len(c.Flags.matchSpecList) > 0 {
@@ -613,34 +654,56 @@ func (c *Connector) LoadDeployment(deploymentNameList []string, namespace string
 				return err
 			} else {
 				// c.deploymentList = pods.Items
+				c.deploymentList[namespace] = append(c.deploymentList[namespace], d.Items...)
 				return nil
 			}
 		}
 	} else {
-		c.deploymentList = []a1.Deployment{}
 		return fmt.Errorf("failed to retrieve Deployment list from server: %w", err)
 	}
 }
 
-func (c *Connector) LoadDaemonSet(daemonNameList []string, namespace string) error {
-	daemonList := []a1.DaemonSet{}
-	selector := metav1.ListOptions{}
+func (c *Connector) GetDaemonSet(daemonName string, namespace string) *a1.DaemonSet {
+	var rs []a1.DaemonSet
 
-	// namespace := c.GetNamespace(c.Flags.allNamespaces)
+	if _, ok := c.daemonList[namespace]; ok {
+		rs = c.daemonList[namespace]
+	} else {
+		c.LoadDaemonSet([]string{}, namespace)
+		if _, ok := c.daemonList[namespace]; ok {
+			rs = c.daemonList[namespace]
+		}
+	}
+
+	for _, r := range rs {
+		if r.Name == daemonName {
+			return &r
+		}
+	}
+	return nil
+}
+
+func (c *Connector) LoadDaemonSet(daemonNameList []string, namespace string) error {
+	log := logger{location: "k8sconnector:LoadDaemonSet"}
+	log.Debug("Start")
+
+	selector := metav1.ListOptions{}
+	if len(c.daemonList[namespace]) == 0 {
+		c.daemonList = make(map[string][]a1.DaemonSet)
+	}
 
 	if len(daemonNameList) > 0 {
 		// single pod
-		for _, replicaName := range daemonNameList {
-			d, err := c.clientSet.AppsV1().DaemonSets(namespace).Get(context.TODO(), replicaName, metav1.GetOptions{})
+		for _, name := range daemonNameList {
+			d, err := c.clientSet.AppsV1().DaemonSets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 			if err == nil {
-				daemonList = append(daemonList, []a1.DaemonSet{*d}...)
+				list := append(c.daemonList[namespace], *d)
+				c.daemonList[namespace] = list
 			} else {
-				c.daemonList = []a1.DaemonSet{}
 				return fmt.Errorf("failed to retrieve DaemonSet from server: %w", err)
 			}
 		}
 
-		c.daemonList = daemonList
 		return nil
 	}
 
@@ -653,42 +716,61 @@ func (c *Connector) LoadDaemonSet(daemonNameList []string, namespace string) err
 
 	if err == nil {
 		if len(d.Items) == 0 {
-			c.daemonList = []a1.DaemonSet{}
 			return errors.New("no DaemonSet found in default namespace")
 		} else {
 			if len(c.Flags.matchSpecList) > 0 {
-				// c.deploymentList, err = c.SelectMatchinghPodSpec(rs.Items)
 				return err
 			} else {
-				// c.deploymentList = pods.Items
+				c.daemonList[namespace] = append(c.daemonList[namespace], d.Items...)
 				return nil
 			}
 		}
 	} else {
-		c.daemonList = []a1.DaemonSet{}
 		return fmt.Errorf("failed to retrieve DaemonSet list from server: %w", err)
 	}
 }
 
-func (c *Connector) LoadStatefulSet(statefulNameList []string, namespace string) error {
-	statefulList := []a1.StatefulSet{}
-	selector := metav1.ListOptions{}
+func (c *Connector) GetStatefulSet(statefulsetName string, namespace string) *a1.StatefulSet {
+	var ss []a1.StatefulSet
 
-	// namespace := c.GetNamespace(c.Flags.allNamespaces)
+	if _, ok := c.statefulList[namespace]; ok {
+		ss = c.statefulList[namespace]
+	} else {
+		c.LoadStatefulSet([]string{}, namespace)
+		if _, ok := c.statefulList[namespace]; ok {
+			ss = c.statefulList[namespace]
+		}
+	}
+
+	for _, s := range ss {
+		if s.Name == statefulsetName {
+			return &s
+		}
+	}
+	return nil
+}
+
+func (c *Connector) LoadStatefulSet(statefulNameList []string, namespace string) error {
+	log := logger{location: "k8sconnector:LoadStatefulSet"}
+	log.Debug("Start")
+
+	selector := metav1.ListOptions{}
+	if len(c.statefulList[namespace]) == 0 {
+		c.statefulList = make(map[string][]a1.StatefulSet)
+	}
 
 	if len(statefulNameList) > 0 {
 		// single pod
 		for _, replicaName := range statefulNameList {
-			d, err := c.clientSet.AppsV1().StatefulSets(namespace).Get(context.TODO(), replicaName, metav1.GetOptions{})
+			s, err := c.clientSet.AppsV1().StatefulSets(namespace).Get(context.TODO(), replicaName, metav1.GetOptions{})
 			if err == nil {
-				statefulList = append(statefulList, []a1.StatefulSet{*d}...)
+				list := append(c.statefulList[namespace], *s)
+				c.statefulList[namespace] = list
 			} else {
-				c.statefulList = []a1.StatefulSet{}
 				return fmt.Errorf("failed to retrieve StatefulSet from server: %w", err)
 			}
 		}
 
-		c.statefulList = statefulList
 		return nil
 	}
 
@@ -697,23 +779,20 @@ func (c *Connector) LoadStatefulSet(statefulNameList []string, namespace string)
 		selector.LabelSelector = c.Flags.labels
 	}
 
-	d, err := c.clientSet.AppsV1().StatefulSets(namespace).List(context.TODO(), selector)
+	s, err := c.clientSet.AppsV1().StatefulSets(namespace).List(context.TODO(), selector)
 
 	if err == nil {
-		if len(d.Items) == 0 {
-			c.statefulList = []a1.StatefulSet{}
+		if len(s.Items) == 0 {
 			return errors.New("no StatefulSet found in default namespace")
 		} else {
 			if len(c.Flags.matchSpecList) > 0 {
-				// c.deploymentList, err = c.SelectMatchinghPodSpec(rs.Items)
 				return err
 			} else {
-				// c.deploymentList = pods.Items
+				c.statefulList[namespace] = append(c.statefulList[namespace], s.Items...)
 				return nil
 			}
 		}
 	} else {
-		c.statefulList = []a1.StatefulSet{}
 		return fmt.Errorf("failed to retrieve StatefulSet list from server: %w", err)
 	}
 }
@@ -770,84 +849,61 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 			}}, current...)
 		}
 		if v.Kind == "Deployment" {
-			err := c.LoadDeployment([]string{v.Name}, namespace)
-			if err != nil {
-				panic(err)
-			}
+			deployment := c.GetDeployment(v.Name, namespace)
+			if deployment != nil {
+				current = append([]parentData{{
+					name:       v.Name,
+					kind:       v.Kind,
+					namespace:  deployment.Namespace,
+					deployment: *deployment,
+				}}, current...)
 
-			n := v.Name
-			for _, deployment := range c.deploymentList {
-				if n == deployment.Name {
-					current = append([]parentData{{
-						name:       v.Name,
-						kind:       v.Kind,
-						namespace:  deployment.Namespace,
-						deployment: deployment,
-					}}, current...)
+				return c.appendParents(current, deployment.GetOwnerReferences(), nodename, namespace)
 
-					return c.appendParents(current, deployment.GetOwnerReferences(), nodename, namespace)
-				}
 			}
 		}
 		if v.Kind == "ReplicaSet" {
-			err := c.LoadReplicaSet([]string{v.Name}, namespace)
-			if err != nil {
-				panic(err)
+			replica := c.GetReplicaSet(v.Name, namespace)
+
+			if replica != nil {
+				current = append([]parentData{{
+					name:      v.Name,
+					kind:      v.Kind,
+					namespace: replica.Namespace,
+					replica:   *replica,
+				}}, current...)
+
+				return c.appendParents(current, replica.GetOwnerReferences(), nodename, namespace)
 			}
 
-			n := v.Name
-			for _, replica := range c.replicaList {
-				if n == replica.Name {
-					current = append([]parentData{{
-						name:      v.Name,
-						kind:      v.Kind,
-						namespace: replica.Namespace,
-						replica:   replica,
-					}}, current...)
-
-					return c.appendParents(current, replica.GetOwnerReferences(), nodename, namespace)
-				}
-			}
 		}
 		if v.Kind == "DaemonSet" {
-			err := c.LoadDaemonSet([]string{v.Name}, namespace)
-			if err != nil {
-				panic(err)
+			daemon := c.GetDaemonSet(v.Name, namespace)
+			if daemon != nil {
+				current = append([]parentData{{
+					name:      v.Name,
+					kind:      v.Kind,
+					namespace: daemon.Namespace,
+					daemon:    *daemon,
+				}}, current...)
+
+				return c.appendParents(current, daemon.GetOwnerReferences(), nodename, namespace)
 			}
 
-			n := v.Name
-			for _, daemon := range c.daemonList {
-				if n == daemon.Name {
-					current = append([]parentData{{
-						name:      v.Name,
-						kind:      v.Kind,
-						namespace: daemon.Namespace,
-						daemon:    daemon,
-					}}, current...)
-
-					return c.appendParents(current, daemon.GetOwnerReferences(), nodename, namespace)
-				}
-			}
 		}
 		if v.Kind == "StatefulSet" {
-			err := c.LoadStatefulSet([]string{v.Name}, namespace)
-			if err != nil {
-				panic(err)
+			stateful := c.GetStatefulSet(v.Name, namespace)
+			if stateful != nil {
+				current = append([]parentData{{
+					name:      v.Name,
+					kind:      v.Kind,
+					namespace: stateful.Namespace,
+					stateful:  *stateful,
+				}}, current...)
+
+				return c.appendParents(current, stateful.GetOwnerReferences(), nodename, namespace)
 			}
 
-			n := v.Name
-			for _, stateful := range c.statefulList {
-				if n == stateful.Name {
-					current = append([]parentData{{
-						name:      v.Name,
-						kind:      v.Kind,
-						namespace: stateful.Namespace,
-						stateful:  stateful,
-					}}, current...)
-
-					return c.appendParents(current, stateful.GetOwnerReferences(), nodename, namespace)
-				}
-			}
 		}
 	}
 
