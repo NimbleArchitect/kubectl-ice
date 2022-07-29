@@ -184,40 +184,60 @@ func (s *resource) BuildEphemeralContainerSpec(container v1.EphemeralContainer, 
 
 func (s *resource) Sum(rows [][]Cell) []Cell {
 	rowOut := make([]Cell, 5)
+	// fmt.Println("=== startRow ===")
 	for _, r := range rows {
 		//"USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
+		// fmt.Println("+", r[0].number)
 		rowOut[0].number += r[0].number
 		rowOut[1].number += r[1].number
 		rowOut[2].number += r[2].number
 	}
+	// fmt.Println("===", rowOut[0].number)
 
 	floatfmt := "%.6f"
-	typefmt := "%dm"
+	typefmt := "%d"
+	if s.ResourceType == "cpu" {
+		typefmt = "%dm"
+	}
 	if !s.ShowRaw {
 		floatfmt = "%.2f"
-		if s.ResourceType == "cpu" {
+	}
 
-		} else if s.ResourceType == "memory" {
-			floatfmt = "%.2f"
+	if s.ResourceType == "memory" {
+		//everything is stored internally as kb so we need to * 1000 to get back to bytes
+		if s.ShowRaw {
+			typefmt = "%d"
+			rowOut[0].text = fmt.Sprintf(typefmt, rowOut[0].number)
+		} else {
+			rowOut[0].text = memoryHumanReadable(rowOut[0].number*1000, s.BytesAs)
+		}
+		rowOut[1].text = memoryHumanReadable(rowOut[1].number, s.BytesAs)
+		rowOut[2].text = memoryHumanReadable(rowOut[2].number, s.BytesAs)
+	} else {
+		if s.ShowRaw {
+			typefmt = "%dn"
+		}
+		rowOut[0].text = fmt.Sprintf(typefmt, rowOut[0].number)
+		rowOut[0].text = fmt.Sprintf(typefmt, rowOut[0].number)
+		rowOut[1].text = fmt.Sprintf(typefmt, rowOut[1].number)
+		rowOut[2].text = fmt.Sprintf(typefmt, rowOut[2].number)
+	}
+
+	if rowOut[0].number > 0 {
+		if rowOut[1].number > 0.0 {
+			//calc % request
+			val := validateFloat64(float64(rowOut[0].number) / float64(rowOut[1].number) * 100)
+			rowOut[4].text = fmt.Sprintf(floatfmt, val)
+			rowOut[4].float = val
+		}
+
+		if rowOut[2].number > 0.0 {
+			//calc % limit
+			val := validateFloat64(float64(rowOut[0].number) / float64(rowOut[2].number) * 100)
+			rowOut[3].text = fmt.Sprintf(floatfmt, val)
+			rowOut[3].float = val
 		}
 	}
-
-	rowOut[0].text = fmt.Sprintf(typefmt, rowOut[0].number)
-	rowOut[1].text = fmt.Sprintf(typefmt, rowOut[1].number)
-	rowOut[2].text = fmt.Sprintf(typefmt, rowOut[2].number)
-
-	if rowOut[0].number != 0 && rowOut[2].float != 0.0 {
-		val := validateFloat64(float64(rowOut[0].number) / float64(rowOut[2].number) * 100)
-		rowOut[3].text = fmt.Sprintf(floatfmt, val)
-		rowOut[3].float = val
-	}
-
-	if rowOut[0].number != 0 && rowOut[1].float != 0.0 {
-		val := validateFloat64(float64(rowOut[0].number) / float64(rowOut[1].number) * 100)
-		rowOut[4].text = fmt.Sprintf(floatfmt, val)
-		rowOut[4].float = val
-	}
-
 	return rowOut
 }
 

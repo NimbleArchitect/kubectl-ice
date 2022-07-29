@@ -63,7 +63,6 @@ func memoryGetUnitLst(byteType string) (int64, string) {
 func memoryHumanReadable(memorySize int64, displayAs string) string {
 	power := 100.0
 	outVal := ""
-
 	if memorySize == 0 {
 		return "0"
 	}

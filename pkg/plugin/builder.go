@@ -127,6 +127,7 @@ func (b *RowBuilder) Build(loop Looper) error {
 				info.ContainerType = "N"
 				info.TypeName = value.kind
 				// partOut, _ := loop.BuildBranch(b.info)
+				log.Debug("call loop.Sum for", info.PodName, info.Name)
 				partOut := loop.Sum(totals)
 				tblOut := b.makeFullRow(&info, value.indent, partOut)
 				if len(tblOut) > 0 {
@@ -144,12 +145,14 @@ func (b *RowBuilder) Build(loop Looper) error {
 func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, parent node) ([][]Cell, error) {
 	var parentTotals [][]Cell
 
+	log := logger{location: "RowBuilder:walkTreeCreateRow"}
+	log.Debug("Start")
+
 	for _, value := range parent.child {
 		var totals [][]Cell
 		var tblOut []Cell
 
 		rowid := b.Table.AddPlaceHolderRow()
-
 		info.Namespace = value.namespace
 		info.Name = value.name
 		info.TypeName = value.kind
@@ -173,6 +176,7 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 			totals = append(totals, partOut)
 		}
 
+		log.Debug("call loop.Sum for", info.PodName, info.Name)
 		partOut := loop.Sum(totals)
 		tblOut = b.makeFullRow(info, value.indent, partOut)
 		if len(tblOut) > 0 {
@@ -213,9 +217,7 @@ func (b *RowBuilder) buildPodRow(loop Looper, info *BuilderInformation, pod v1.P
 	// 	b.Table.HidePlaceHolderRow(rowid)
 	// }
 
-	// b.info.BranchType = POD
 	//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-
 	tblBranch, err := loop.BuildBranch(*info)
 	if err != nil {
 		return [][]Cell{}, err
