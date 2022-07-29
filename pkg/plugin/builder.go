@@ -4,14 +4,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-const (
-	FLAT      = iota
-	TREE      = iota
-	CONTAINER = iota
-	POD       = iota
-	PARENT    = iota
-)
-
 type Looper interface {
 	BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error)
 	BuildBranch(info BuilderInformation) ([]Cell, error)
@@ -36,16 +28,15 @@ type RowBuilder struct {
 	labelPodValue      string
 	AnnotationPodName  string
 	annotationPodValue string
-	ShowTreeView       bool
+	ShowTreeView       bool //show the standard tree view with the resource sets as the root
 	ShowPodName        bool
 	ShowInitContainers bool
 	ShowContainerType  bool
-	ShowNodeTree       bool
+	ShowNodeTree       bool                  //show the tree view with the nodes at the root level rather than just the resource sets at root
 	FilterList         map[string]matchValue // used to filter out rows from the table during Print function
 	info               BuilderInformation
 	DefaultHeaderLen   int
 
-	hTreeViewRow    []Cell
 	annotationLabel map[string]map[string]map[string]map[string]string
 }
 
@@ -114,7 +105,7 @@ func (b *RowBuilder) Build(loop Looper) error {
 		return err
 	}
 
-	// b.ShowNodeTree = true
+	b.ShowNodeTree = true
 
 	if b.ShowTreeView {
 		err := b.populateAnnotationsLabels(podList)
@@ -130,13 +121,18 @@ func (b *RowBuilder) Build(loop Looper) error {
 				rowid = b.Table.AddPlaceHolderRow()
 			}
 
-			b.walkTreeCreateRow(loop, *value)
+			totals, err := b.walkTreeCreateRow(loop, *value)
+			if err != nil {
+				return err
+			}
 
 			if b.ShowNodeTree {
 				b.info.Namespace = value.namespace
 				b.info.Name = value.name
+				b.info.ContainerType = "N"
 				b.info.TypeName = value.kind
-				partOut, _ := loop.BuildBranch(b.info)
+				// partOut, _ := loop.BuildBranch(b.info)
+				partOut := loop.Sum(totals)
 				tblOut := b.makeRow(value.indent, b.info, partOut)
 				if len(tblOut) > 0 {
 					b.Table.UpdatePlaceHolderRow(rowid, tblOut)
@@ -150,7 +146,8 @@ func (b *RowBuilder) Build(loop Looper) error {
 	return nil
 }
 
-func (b *RowBuilder) walkTreeCreateRow(loop Looper, parent node) error {
+func (b *RowBuilder) walkTreeCreateRow(loop Looper, parent node) ([][]Cell, error) {
+	var parentTotals [][]Cell
 
 	for _, value := range parent.child {
 		var totals [][]Cell
@@ -161,26 +158,30 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, parent node) error {
 		b.info.Namespace = value.namespace
 		b.info.Name = value.name
 		b.info.TypeName = value.kind
+		b.info.ContainerType = value.kindIndicator
 
 		if value.kind == "Pod" {
 			pod := value.data.pod
 			partOut, err := b.buildPodRow(loop, pod, value.indent, value.kind)
 			if err != nil {
-				return err
+				return [][]Cell{}, err
 			}
 			totals = append(totals, partOut...)
 		} else {
 			//make the row for the table heade line
 			partOut, _ := loop.BuildBranch(b.info)
+			resourceTotals, err := b.walkTreeCreateRow(loop, *value)
+			if err == nil {
+				totals = append(totals, resourceTotals...)
+			}
 			totals = append(totals, partOut)
-
-			b.walkTreeCreateRow(loop, *value)
 		}
 
 		//we have to reset these as they are changed during code run
 		b.info.Namespace = value.namespace
 		b.info.Name = value.name
 		b.info.TypeName = value.kind
+		b.info.ContainerType = value.kindIndicator
 
 		partOut := loop.Sum(totals)
 		tblOut = b.makeRow(value.indent, b.info, partOut)
@@ -191,9 +192,10 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, parent node) error {
 		b.labelNodeValue = ""
 		b.labelPodValue = ""
 		b.annotationPodValue = ""
+		parentTotals = append(parentTotals, partOut)
 	}
 
-	return nil
+	return parentTotals, nil
 }
 
 func (b *RowBuilder) buildPodRow(loop Looper, pod v1.Pod, indent int, kind string) ([][]Cell, error) {
@@ -201,7 +203,7 @@ func (b *RowBuilder) buildPodRow(loop Looper, pod v1.Pod, indent int, kind strin
 	log.Debug("Start")
 
 	log.Debug("pod.Name =", pod.Name)
-	b.info.TypeName = kind
+	// b.info.TypeName = b.info.kind
 	b.info.Pod = &pod
 	b.info.Name = pod.Name
 	b.info.Namespace = pod.Namespace
@@ -210,7 +212,6 @@ func (b *RowBuilder) buildPodRow(loop Looper, pod v1.Pod, indent int, kind strin
 	//check if we have any labels that need to be shown as columns
 	b.setValuesAnnotationLabel(pod)
 
-	// rowscommited, err = b.podLoop(2, loop, pod)
 	tblOut, err := b.podLoop(indent+1, loop, pod)
 	if err != nil {
 		return [][]Cell{}, err
@@ -458,7 +459,7 @@ func (b *RowBuilder) podLoop(indentLevel int, loop Looper, pod v1.Pod) ([][]Cell
 
 	//now show the container line
 	log.Debug("loop standard ContainerStatuses")
-	b.info.ContainerType = "S"
+	b.info.ContainerType = "C"
 	b.info.TypeName = "Container"
 	if b.LoopStatus {
 		for _, container := range pod.Status.ContainerStatuses {

@@ -33,23 +33,25 @@ type Connector struct {
 }
 
 type parentData struct {
-	name       string
-	kind       string
-	namespace  string
-	deployment a1.Deployment
-	replica    a1.ReplicaSet
-	stateful   a1.StatefulSet
-	daemon     a1.DaemonSet
-	pod        v1.Pod
+	name          string
+	kind          string
+	kindIndicator string
+	namespace     string
+	deployment    a1.Deployment
+	replica       a1.ReplicaSet
+	stateful      a1.StatefulSet
+	daemon        a1.DaemonSet
+	pod           v1.Pod
 }
 
 type node struct {
-	child     map[string]*node
-	name      string
-	kind      string
-	namespace string
-	indent    int
-	data      parentData
+	child         map[string]*node
+	name          string
+	kind          string
+	kindIndicator string
+	namespace     string
+	indent        int
+	data          parentData
 }
 
 func (n *node) getChild(name string) *node {
@@ -125,22 +127,6 @@ func (c *Connector) GetPods(podNameList []string) ([]v1.Pod, error) {
 	return c.podList, nil
 
 }
-
-// // returns a list of pods or a list with one pod when given a pod name
-// func (c *Connector) GetReplica(replicaNameList []string) ([]a1.ReplicaSet, error) {
-// 	if len(c.replicaList) == 0 {
-// 		err := c.LoadPods(replicaNameList)
-// 		return c.replicaList, err
-// 	}
-
-// 	if len(replicaNameList) > 0 {
-// 		err := c.LoadReplicaSet(replicaNameList)
-// 		return c.replicaList, err
-// 	}
-
-// 	return c.replicaList, nil
-
-// }
 
 func (c *Connector) GetPodAnnotations(podList []v1.Pod) (map[string]map[string]string, error) {
 	//
@@ -806,10 +792,11 @@ func (c *Connector) BuildOwnersList() map[string]*node {
 		nodename := pod.Spec.NodeName
 		//first create a list with the pod as the first entry
 		parentList := []parentData{{
-			name:      pod.Name,
-			namespace: pod.Namespace,
-			kind:      "Pod",
-			pod:       pod,
+			name:          pod.Name,
+			namespace:     pod.Namespace,
+			kind:          "Pod",
+			kindIndicator: "P",
+			pod:           pod,
 		}}
 		oref := pod.GetOwnerReferences()
 
@@ -821,6 +808,7 @@ func (c *Connector) BuildOwnersList() map[string]*node {
 		for i, v := range parentList {
 			child := current.getChild(v.name)
 			child.kind = v.kind
+			child.kindIndicator = v.kindIndicator
 			child.namespace = v.namespace
 			child.indent = i //- len(parentList)
 			child.data = v
@@ -837,25 +825,28 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 	//check if parent exists based on kind
 	if len(oref) == 0 {
 		current = append([]parentData{{
-			name: nodename,
-			kind: "Node",
+			name:          nodename,
+			kind:          "Node",
+			kindIndicator: "N",
 		}}, current...)
 	}
 	for _, v := range oref {
 		if v.Kind == "Node" {
 			current = append([]parentData{{
-				name: v.Name,
-				kind: v.Kind,
+				name:          v.Name,
+				kind:          v.Kind,
+				kindIndicator: "N",
 			}}, current...)
 		}
 		if v.Kind == "Deployment" {
 			deployment := c.GetDeployment(v.Name, namespace)
 			if deployment != nil {
 				current = append([]parentData{{
-					name:       v.Name,
-					kind:       v.Kind,
-					namespace:  deployment.Namespace,
-					deployment: *deployment,
+					name:          v.Name,
+					kind:          v.Kind,
+					kindIndicator: "D",
+					namespace:     deployment.Namespace,
+					deployment:    *deployment,
 				}}, current...)
 
 				return c.appendParents(current, deployment.GetOwnerReferences(), nodename, namespace)
@@ -867,10 +858,11 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 
 			if replica != nil {
 				current = append([]parentData{{
-					name:      v.Name,
-					kind:      v.Kind,
-					namespace: replica.Namespace,
-					replica:   *replica,
+					name:          v.Name,
+					kind:          v.Kind,
+					kindIndicator: "R",
+					namespace:     replica.Namespace,
+					replica:       *replica,
 				}}, current...)
 
 				return c.appendParents(current, replica.GetOwnerReferences(), nodename, namespace)
@@ -881,10 +873,11 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 			daemon := c.GetDaemonSet(v.Name, namespace)
 			if daemon != nil {
 				current = append([]parentData{{
-					name:      v.Name,
-					kind:      v.Kind,
-					namespace: daemon.Namespace,
-					daemon:    *daemon,
+					name:          v.Name,
+					kind:          v.Kind,
+					kindIndicator: "A",
+					namespace:     daemon.Namespace,
+					daemon:        *daemon,
 				}}, current...)
 
 				return c.appendParents(current, daemon.GetOwnerReferences(), nodename, namespace)
@@ -895,10 +888,11 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 			stateful := c.GetStatefulSet(v.Name, namespace)
 			if stateful != nil {
 				current = append([]parentData{{
-					name:      v.Name,
-					kind:      v.Kind,
-					namespace: stateful.Namespace,
-					stateful:  *stateful,
+					name:          v.Name,
+					kind:          v.Kind,
+					kindIndicator: "S",
+					namespace:     stateful.Namespace,
+					stateful:      *stateful,
 				}}, current...)
 
 				return c.appendParents(current, stateful.GetOwnerReferences(), nodename, namespace)
