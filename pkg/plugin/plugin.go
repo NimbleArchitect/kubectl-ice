@@ -370,7 +370,8 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("select", "", "", `Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != `)
 	cmdObj.Flags().BoolP("show-namespace", "", false, `Show the namespace column`)
 	cmdObj.Flags().BoolP("show-node", "", false, `Show the node name column`)
-	cmdObj.Flags().BoolP("show-type", "T", false, `Show the container type column`)
+	cmdObj.Flags().BoolP("show-type", "T", false, `Show the container type column, where:
+    I=init container, C=container, E=ephemerial container, P=Pod, D=Deployment, R=ReplicaSet, A=DaemonSet, S=StatefulSet, N=Node`)
 	cmdObj.Flags().BoolP("tree", "t", false, `Display tree like view instead of the standard list`)
 	cmdObj.Flags().StringP("node-label", "", "", `Show the selected node label as a column`)
 	cmdObj.Flags().StringP("pod-label", "", "", `Show the selected pod label as a column`)
