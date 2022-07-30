@@ -20,6 +20,7 @@ type commonFlags struct {
 	showNamespaceName  bool                  // shows the namespace name of each pod
 	showNodeName       bool                  // do we need to show the node name in the output
 	showTreeView       bool                  // show the table in a tree like view
+	showNodeTree       bool                  // show the tree rooted at the node level, forces showTreeView to true
 	showContainerType  bool                  // show container type column
 	byteSize           string                // sets the bytes conversion for the output size
 	outputAs           string                // how to output the table, currently only accepts json
@@ -373,6 +374,7 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().BoolP("show-type", "T", false, `Show the container type column, where:
     I=init container, C=container, E=ephemerial container, P=Pod, D=Deployment, R=ReplicaSet, A=DaemonSet, S=StatefulSet, N=Node`)
 	cmdObj.Flags().BoolP("tree", "t", false, `Display tree like view instead of the standard list`)
+	cmdObj.Flags().BoolP("node-tree", "", false, `Displayes the tree with the nodes as the root`)
 	cmdObj.Flags().StringP("node-label", "", "", `Show the selected node label as a column`)
 	cmdObj.Flags().StringP("pod-label", "", "", `Show the selected pod label as a column`)
 	cmdObj.Flags().StringP("annotation", "", "", `Show the selected annotation as a column`)
@@ -468,6 +470,15 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 		}
 	}
 
+	if cmd.Flag("node-tree") != nil {
+		if cmd.Flag("node-tree").Value.String() == "true" {
+			if len(f.sortList) != 0 {
+				return commonFlags{}, errors.New("you may not use the node-tree and sort flags together")
+			}
+			f.showNodeTree = true
+			f.showTreeView = true
+		}
+	}
 	if cmd.Flag("select") != nil {
 		if len(cmd.Flag("select").Value.String()) > 0 {
 			rawFilterString := cmd.Flag("select").Value.String()

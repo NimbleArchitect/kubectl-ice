@@ -60,6 +60,7 @@ func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
 	b.CommonFlags = commonFlagList
 
 	b.ShowTreeView = commonFlagList.showTreeView
+	b.ShowNodeTree = commonFlagList.showNodeTree
 	b.LabelNodeName = commonFlagList.labelNodeName
 	b.LabelPodName = commonFlagList.labelPodName
 	b.AnnotationPodName = commonFlagList.annotationPodName
@@ -99,8 +100,6 @@ func (b *RowBuilder) Build(loop Looper) error {
 	if err != nil {
 		return err
 	}
-
-	b.ShowNodeTree = true
 
 	if b.ShowTreeView {
 		err := b.populateAnnotationsLabels(podList)
@@ -142,6 +141,8 @@ func (b *RowBuilder) Build(loop Looper) error {
 	return nil
 }
 
+//walkTreeCreateRow - recursive function to loop over each child item along with all sub children, buildPodTree
+// is called on each child with the results passed to Sum so we can calculate parent values from the children
 func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, parent node) ([][]Cell, error) {
 	var parentTotals [][]Cell
 
@@ -160,7 +161,7 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 
 		if value.kind == "Pod" {
 			infoPod := *info
-			partOut, err := b.buildPodRow(loop, &infoPod, value.data.pod, value.indent, value.kind)
+			partOut, err := b.buildPodTree(loop, &infoPod, value.data.pod, value.indent, value.kind)
 			if err != nil {
 				return [][]Cell{}, err
 			}
@@ -192,8 +193,9 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 	return parentTotals, nil
 }
 
-func (b *RowBuilder) buildPodRow(loop Looper, info *BuilderInformation, pod v1.Pod, indent int, kind string) ([][]Cell, error) {
-	log := logger{location: "RowBuilder:buildPodRow"}
+//buildPodTree - sets info properties ready to call podLoop and then buildBranch
+func (b *RowBuilder) buildPodTree(loop Looper, info *BuilderInformation, pod v1.Pod, indent int, kind string) ([][]Cell, error) {
+	log := logger{location: "RowBuilder:buildPodTree"}
 	log.Debug("Start")
 
 	log.Debug("pod.Name =", pod.Name)
@@ -211,11 +213,6 @@ func (b *RowBuilder) buildPodRow(loop Looper, info *BuilderInformation, pod v1.P
 	if err != nil {
 		return [][]Cell{}, err
 	}
-
-	// TODO: if returning a proper filtered and sorted list from ownerTypeList dosent work then this is a backup process to follow
-	// if rowscommited <= 0 {
-	// 	b.Table.HidePlaceHolderRow(rowid)
-	// }
 
 	//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
 	tblBranch, err := loop.BuildBranch(*info)
@@ -305,7 +302,6 @@ func (b *RowBuilder) BuildContainerTable(loop Looper, info *BuilderInformation, 
 		if err != nil {
 			return err
 		}
-
 	}
 
 	if err := b.Table.SortByNames(b.CommonFlags.sortList...); err != nil {

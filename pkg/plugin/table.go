@@ -176,10 +176,6 @@ func (t *Table) Print() {
 		excludeRow := false
 		rowNum := t.rowOrder[r]
 
-		if t.hideRow[rowNum] {
-			continue
-		}
-
 		if t.data[rowNum][0].typ == 3 {
 			row = t.placeHolder[t.data[rowNum][0].phRef]
 		} else {
@@ -188,18 +184,21 @@ func (t *Table) Print() {
 		// now loop through each column the the currentl selected row
 		for col := 0; col < t.headCount; col++ {
 			idx := t.columnOrder[col]
-			if t.head[idx].hidden {
-				continue
-			}
 			cell := row[idx]
-			if len(cell.text) == 0 {
-				cell.text = "-"
-			}
-
 			// due to looping over every column in the row we only set excludeRow if it is still false
 			if !excludeRow {
 				// do we have an exclude filter set that we need to process
 				excludeRow = t.exclusionFilter(cell, idx)
+			}
+
+			//we need to be able to exclude rows even if the column is hidden, se we only skip this
+			// column after the exclusion check has bee run
+			if t.head[idx].hidden {
+				continue
+			}
+
+			if len(cell.text) == 0 {
+				cell.text = "-"
 			}
 
 			spaceCount := t.head[idx].columnLength - len([]rune(cell.text))
