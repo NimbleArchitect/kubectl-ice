@@ -176,6 +176,10 @@ func (t *Table) Print() {
 		excludeRow := false
 		rowNum := t.rowOrder[r]
 
+		if t.hideRow[rowNum] {
+			continue
+		}
+
 		if t.data[rowNum][0].typ == 3 {
 			row = t.placeHolder[t.data[rowNum][0].phRef]
 		} else {
@@ -742,22 +746,22 @@ func NewCellFloat(text string, value float64) Cell {
 	}
 }
 
-// when given a list of rows and a columnID to work with it will calculate a range and
+// when given a columnID to work with it will calculate a range and
 // returns a list of rows with values outside that range
-func (t *Table) ListOutOfRange(columnID int, rows [][]Cell) ([]int, error) {
+func (t *Table) ListOutOfRange(columnID int) ([]int, error) {
 	var upperFenceInt, lowerFenceInt int64
 	var upperFenceFloat, lowerFenceFloat float64
 
-	cellType := rows[0][columnID].typ
+	cellType := t.data[0][columnID].typ
 
 	if cellType == 0 {
 		return []int{}, errors.New("error: unable to creaate a range with strings")
 	}
 
-	orderList := make([]int, len(rows))
+	orderList := make([]int, len(t.data))
 
 	visibleRows := 0
-	for i, v := range rows {
+	for i, v := range t.data {
 		cell := v[columnID]
 		orderList[i] = i
 		if cellType != cell.typ {
@@ -774,14 +778,14 @@ func (t *Table) ListOutOfRange(columnID int, rows [][]Cell) ([]int, error) {
 
 	t.sort(orderList, columnID, true)
 	if cellType == 1 {
-		upperFenceInt, lowerFenceInt = t.getFencesInt(orderList, columnID, rows)
+		upperFenceInt, lowerFenceInt = t.getFencesInt(orderList, columnID, t.data)
 	} else {
-		upperFenceFloat, lowerFenceFloat = t.getFencesFloat(orderList, columnID, rows)
+		upperFenceFloat, lowerFenceFloat = t.getFencesFloat(orderList, columnID, t.data)
 	}
 
 	out := []int{}
 
-	for k, v := range rows {
+	for k, v := range t.data {
 		keep := false
 		cell := v[columnID]
 		if cellType == 1 {
