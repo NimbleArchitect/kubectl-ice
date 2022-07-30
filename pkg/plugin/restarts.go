@@ -138,11 +138,14 @@ func (s restarts) BuildEphemeralContainerSpec(container v1.EphemeralContainer, i
 }
 
 func (s restarts) Sum(rows [][]Cell) []Cell {
-	out := []Cell{
-		NewCellText(""),
-		NewCellText(""),
+	rowOut := make([]Cell, 1)
+
+	for _, r := range rows {
+		rowOut[0].number += r[0].number //ready
 	}
-	return out
+
+	rowOut[0].text = fmt.Sprintf("%d", rowOut[0].number)
+	return rowOut
 }
 
 func (s restarts) restartsBuildRow(info BuilderInformation, restartCount int32) []Cell {

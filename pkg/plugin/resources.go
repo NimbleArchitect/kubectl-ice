@@ -186,11 +186,9 @@ func (s *resource) BuildEphemeralContainerSpec(container v1.EphemeralContainer, 
 
 func (s *resource) Sum(rows [][]Cell) []Cell {
 	rowOut := make([]Cell, 5)
-	// fmt.Println("=== startRow ===")
 	for _, r := range rows {
 		//"USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
 		if s.ResourceType == "memory" {
-			// fmt.Println("+", r[0].number)
 			rowOut[0].number += r[0].number
 		} else {
 			if s.ShowRaw {
@@ -208,7 +206,6 @@ func (s *resource) Sum(rows [][]Cell) []Cell {
 		rowOut[1].number += r[1].number
 		rowOut[2].number += r[2].number
 	}
-	// fmt.Println("===", rowOut[0].number)
 
 	floatfmt := "%.6f"
 	typefmt := "%d"
