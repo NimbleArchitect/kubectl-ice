@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
@@ -90,14 +91,15 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 		return err
 	}
 
-	if cmd.Flag("raw").Value.String() == "true" {
-		loopinfo.ShowRaw = true
-	}
-
 	if cmd.Flag("size") != nil {
 		if len(cmd.Flag("size").Value.String()) > 0 {
 			loopinfo.BytesAs = cmd.Flag("size").Value.String()
 		}
+	}
+
+	if cmd.Flag("raw").Value.String() == "true" {
+		loopinfo.ShowRaw = true
+		loopinfo.BytesAs = "M"
 	}
 
 	table := Table{}
@@ -171,14 +173,14 @@ func (s *resource) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error)
 func (s *resource) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	metrics := s.MetricsResource[info.PodName][info.Name]
 	out := make([][]Cell, 1)
-	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.BytesAs)
+	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType)
 	return out, nil
 }
 
 func (s *resource) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	metrics := s.MetricsResource[info.PodName][info.Name]
 	out := make([][]Cell, 1)
-	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType, s.BytesAs)
+	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType)
 	return out, nil
 }
 
@@ -187,8 +189,22 @@ func (s *resource) Sum(rows [][]Cell) []Cell {
 	// fmt.Println("=== startRow ===")
 	for _, r := range rows {
 		//"USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
-		// fmt.Println("+", r[0].number)
-		rowOut[0].number += r[0].number
+		if s.ResourceType == "memory" {
+			// fmt.Println("+", r[0].number)
+			rowOut[0].number += r[0].number
+		} else {
+			if s.ShowRaw {
+				//TODO: metrics.Cpu().MilliValue() returns a number in millicores. When using --raw the value
+				// returned is in nanocores, this needs to be changed as I shouldn't be converting a string to a number :(
+				txt := r[0].text
+				if len(txt) > 1 {
+					val, _ := strconv.ParseInt(txt[:len(txt)-1], 10, 64)
+					rowOut[0].number += val
+				}
+			} else {
+				rowOut[0].number += r[0].number
+			}
+		}
 		rowOut[1].number += r[1].number
 		rowOut[2].number += r[2].number
 	}
@@ -206,7 +222,7 @@ func (s *resource) Sum(rows [][]Cell) []Cell {
 	if s.ResourceType == "memory" {
 		//everything is stored internally as kb so we need to * 1000 to get back to bytes
 		if s.ShowRaw {
-			typefmt = "%d"
+			typefmt = "%dk"
 			rowOut[0].text = fmt.Sprintf(typefmt, rowOut[0].number)
 		} else {
 			rowOut[0].text = memoryHumanReadable(rowOut[0].number*1000, s.BytesAs)
@@ -215,10 +231,10 @@ func (s *resource) Sum(rows [][]Cell) []Cell {
 		rowOut[2].text = memoryHumanReadable(rowOut[2].number, s.BytesAs)
 	} else {
 		if s.ShowRaw {
-			typefmt = "%dn"
+			rowOut[0].text = fmt.Sprintf("%dn", rowOut[0].number)
+		} else {
+			rowOut[0].text = fmt.Sprintf(typefmt, rowOut[0].number)
 		}
-		rowOut[0].text = fmt.Sprintf(typefmt, rowOut[0].number)
-		rowOut[0].text = fmt.Sprintf(typefmt, rowOut[0].number)
 		rowOut[1].text = fmt.Sprintf(typefmt, rowOut[1].number)
 		rowOut[2].text = fmt.Sprintf(typefmt, rowOut[2].number)
 	}
@@ -241,7 +257,7 @@ func (s *resource) Sum(rows [][]Cell) []Cell {
 	return rowOut
 }
 
-func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, info BuilderInformation, resource string, bytesAs string) []Cell {
+func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, info BuilderInformation, resource string) []Cell {
 	var cellList []Cell
 	var displayValue, request, limit, percentLimit, percentRequest string
 	var rawRequest, rawLimit, rawValue int64
@@ -254,6 +270,7 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 
 	if resource == "cpu" {
 		if metrics.Cpu() != nil {
+			//TODO: this should return nanocores as the display value give us nanocores when using --raw
 			rawValue = metrics.Cpu().MilliValue()
 			if s.ShowRaw {
 				displayValue = metrics.Cpu().String()
@@ -288,16 +305,15 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 				}
 			}
 		}
-
 	}
 
 	if resource == "memory" {
 		if metrics.Memory() != nil {
 			rawValue = metrics.Memory().Value() / 1000
 			if s.ShowRaw {
-				displayValue = fmt.Sprintf("%d", metrics.Memory().Value())
+				displayValue = fmt.Sprintf("%dk", metrics.Memory().Value())
 			} else {
-				displayValue = memoryHumanReadable(metrics.Memory().Value(), bytesAs)
+				displayValue = memoryHumanReadable(metrics.Memory().Value(), s.BytesAs)
 				floatfmt = "%.2f"
 			}
 
