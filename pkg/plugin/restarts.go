@@ -78,7 +78,7 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	// do we need to find the outliers, we have enough data to compute a range
 	if commonFlagList.showOddities {
-		row2Remove, err := table.ListOutOfRange(4, table.GetRows()) //3 = restarts column
+		row2Remove, err := table.ListOutOfRange(4) //3 = restarts column
 		if err != nil {
 			return err
 		}

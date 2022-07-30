@@ -125,7 +125,6 @@ func (b *RowBuilder) Build(loop Looper) error {
 				info.Name = value.name
 				info.ContainerType = "N"
 				info.TypeName = value.kind
-				// partOut, _ := loop.BuildBranch(b.info)
 				log.Debug("call loop.Sum for", info.PodName, info.Name)
 				partOut := loop.Sum(totals)
 				tblOut := b.makeFullRow(&info, value.indent, partOut)

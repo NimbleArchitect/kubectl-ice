@@ -98,7 +98,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		if !loopinfo.ShowPrevious { // restart count dosent show up when using previous flag
 			// do we need to find the outliers, we have enough data to compute a range
 			if commonFlagList.showOddities {
-				row2Remove, err := table.ListOutOfRange(builder.DefaultHeaderLen+2, table.GetRows()) //3 = restarts column
+				row2Remove, err := table.ListOutOfRange(builder.DefaultHeaderLen + 2) //3 = restarts column
 				if err != nil {
 					return err
 				}
@@ -324,23 +324,27 @@ func (s *status) Sum(rows [][]Cell) []Cell {
 
 	//loop through each row in podTotals and add the columns in each row
 	for _, r := range rows {
-		if r[0].text != "true" {
-			rowOut[0].text = r[0].text //ready
+		if r[0].text == "false" {
+			fmt.Println("1>", r[0].text)
+			// ready = false
+			rowOut[0].text = "false" //ready
 		}
-		if r[1].text != "true" {
-			rowOut[1].text = r[1].text //started
+		if r[1].text == "false" {
+			fmt.Println("2>", r[1].text)
+			rowOut[1].text = "false" //started
 		}
 		rowOut[2].number += r[2].number //restarts
-		rowOut[2].text = fmt.Sprintf("%d", rowOut[2].number)
-
-		rowOut[3].text = "" //state
-		rowOut[4].text = "" //reason
-		rowOut[5].text = "" //exit-code
-		rowOut[6].text = "" //signal
-		rowOut[7].text = "" //timestamp
-		rowOut[8].text = "" //age
-		rowOut[9].text = "" //message
 	}
+
+	rowOut[2].text = fmt.Sprintf("%d", rowOut[2].number)
+	rowOut[3].text = "" //state
+	rowOut[4].text = "" //reason
+	rowOut[5].text = "" //exit-code
+	rowOut[6].text = "" //signal
+	rowOut[7].text = "" //timestamp
+	rowOut[8].text = "" //age
+	rowOut[9].text = "" //message
+
 	return rowOut
 }
 

@@ -115,7 +115,7 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	// do we need to find the outliers, we have enough data to compute a range
 	if commonFlagList.showOddities {
-		row2Remove, err := table.ListOutOfRange(builder.DefaultHeaderLen, table.GetRows()) //1 = used column
+		row2Remove, err := table.ListOutOfRange(builder.DefaultHeaderLen) //1 = used column
 		if err != nil {
 			return err
 		}
