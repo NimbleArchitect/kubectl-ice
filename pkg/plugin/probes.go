@@ -50,7 +50,7 @@ type probeAction struct {
 	probe      *v1.Probe
 }
 
-//list details of configured liveness readiness and startup probes
+// list details of configured liveness readiness and startup probes
 func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 
 	log := logger{location: "Probes"}
@@ -188,7 +188,7 @@ func (s *probes) probesBuildRow(info BuilderInformation, action probeAction) []C
 	return cellList
 }
 
-//check each type of probe and return a list
+// check each type of probe and return a list
 func (s *probes) buildProbeList(container v1.Container) map[string][]probeAction {
 	probes := make(map[string][]probeAction)
 	if container.LivenessProbe != nil {
@@ -204,7 +204,7 @@ func (s *probes) buildProbeList(container v1.Container) map[string][]probeAction
 	return probes
 }
 
-//given a probe return an array of probeAction with the action translated to a string
+// given a probe return an array of probeAction with the action translated to a string
 func (s *probes) buildProbeAction(name string, probe *v1.Probe) []probeAction {
 	probeList := []probeAction{}
 	item := probeAction{

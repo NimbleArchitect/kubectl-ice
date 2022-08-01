@@ -552,7 +552,7 @@ func splitAndFilterList(rawSortString string, filterString string) ([]string, er
 }
 
 // splitAndFilterMatchList removes any chars not in filterList and splits the line based on values in []operator, returns a map[string]matchValue type.
-//the order of operatorList is important as the match is done on a first come first served basis
+//  the order of operatorList is important as the match is done on a first come first served basis
 func splitAndFilterMatchList(rawSortString string, filterString string, operatorList []string) (map[string]matchValue, error) {
 	// based on a whitelist approach sort just removes invalid chars,
 	// we cant check header names as we dont know them at this point

@@ -11,8 +11,8 @@ type logger struct {
 	location string
 }
 
-//given log number (int) return the prefix string (ERROR,INFO,DEBUG,etc) and a colour map
-// that can be used with fmt.Printf and friends
+// given log number (int) return the prefix string (ERROR,INFO,DEBUG,etc) and a colour map
+//  that can be used with fmt.Printf and friends
 func logGetType(logType int) (string, string) {
 
 	// Black: [30m
@@ -88,7 +88,7 @@ func (l *logger) Debug(message ...interface{}) {
 	}
 }
 
-//print the log to stdout
+// print the log to stdout
 func (l *logger) showLog(format string, prefix string, message string) {
 	if len(format) == 0 {
 		format = "%s%s"

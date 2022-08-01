@@ -140,8 +140,8 @@ func (b *RowBuilder) Build(loop Looper) error {
 	return nil
 }
 
-//walkTreeCreateRow - recursive function to loop over each child item along with all sub children, buildPodTree
-// is called on each child with the results passed to Sum so we can calculate parent values from the children
+// walkTreeCreateRow - recursive function to loop over each child item along with all sub children, buildPodTree
+//  is called on each child with the results passed to Sum so we can calculate parent values from the children
 func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, parent node) ([][]Cell, error) {
 	var parentTotals [][]Cell
 
@@ -192,7 +192,7 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 	return parentTotals, nil
 }
 
-//buildPodTree - sets info properties ready to call podLoop and then buildBranch
+// buildPodTree - sets info properties ready to call podLoop and then buildBranch
 func (b *RowBuilder) buildPodTree(loop Looper, info *BuilderInformation, pod v1.Pod, indent int, kind string) ([][]Cell, error) {
 	log := logger{location: "RowBuilder:buildPodTree"}
 	log.Debug("Start")
@@ -222,7 +222,7 @@ func (b *RowBuilder) buildPodTree(loop Looper, info *BuilderInformation, pod v1.
 	return tblOut, nil
 }
 
-//check if any labels or annotations are needed and set their values
+// check if any labels or annotations are needed and set their values
 func (b *RowBuilder) setValuesAnnotationLabel(pod v1.Pod) {
 	if b.LabelNodeName != "" {
 		b.labelNodeValue = b.annotationLabel["label"]["node"][pod.Spec.NodeName][b.LabelNodeName]
@@ -565,9 +565,11 @@ func (b *RowBuilder) makeFullRow(info *BuilderInformation, indentLevel int, colu
 			name = info.TypeName + "/" + info.Name
 		}
 		if !b.ShowNodeTree {
-			rowList = append(rowList, NewCellText(indentText(indentLevel-1, name)))
+			// rowList = append(rowList, NewCellText(indentText(indentLevel-1, name)))
+			rowList = append(rowList, NewCellTextIndent(name, indentLevel-1))
 		} else {
-			rowList = append(rowList, NewCellText(indentText(indentLevel, name)))
+			// rowList = append(rowList, NewCellText(indentText(indentLevel, name)))
+			rowList = append(rowList, NewCellTextIndent(name, indentLevel))
 		}
 
 	}

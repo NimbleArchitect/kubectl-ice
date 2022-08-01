@@ -75,7 +75,7 @@ func (n *node) getChild(name string) *node {
 	return n.child[name]
 }
 
-//load config for the k8s endpoint
+// load config for the k8s endpoint
 func (c *Connector) LoadConfig(configFlags *genericclioptions.ConfigFlags) error {
 	c.clientSet = kubernetes.Clientset{}
 	c.configFlags = configFlags
@@ -93,7 +93,7 @@ func (c *Connector) LoadConfig(configFlags *genericclioptions.ConfigFlags) error
 	return nil
 }
 
-//load config for the metrics endpoint
+// load config for the metrics endpoint
 func (c *Connector) LoadMetricConfig(configFlags *genericclioptions.ConfigFlags) error {
 	c.metricSet = metricsclientset.Clientset{}
 	c.metricFlags = configFlags
@@ -285,7 +285,7 @@ func (c *Connector) SelectMatchinghPodSpec(pods []v1.Pod) ([]v1.Pod, error) {
 	return newPodList, nil
 }
 
-//get an array of pod metrics
+// GetMetricPods get an array of pod metrics
 func (c *Connector) GetMetricPods(podNameList []string) ([]v1beta1.PodMetrics, error) {
 	podList := []v1beta1.PodMetrics{}
 	selector := metav1.ListOptions{}

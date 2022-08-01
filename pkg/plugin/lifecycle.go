@@ -153,7 +153,7 @@ func (s *lifecycle) lifecycleBuildRow(info BuilderInformation, handlerName strin
 	}
 }
 
-//check each type of probe and return a list
+// check each type of probe and return a list
 func (s *lifecycle) buildLifecycleList(lifecycle *v1.Lifecycle) map[string]lifecycleAction {
 	lifeCycleList := make(map[string]lifecycleAction)
 	if lifecycle == nil {
@@ -171,7 +171,7 @@ func (s *lifecycle) buildLifecycleList(lifecycle *v1.Lifecycle) map[string]lifec
 	return lifeCycleList
 }
 
-//given a lifecycle handler return a lifecycle action with the action translated to a string
+// given a lifecycle handler return a lifecycle action with the action translated to a string
 func (s *lifecycle) buildLifecycleAction(lifecycle *v1.LifecycleHandler) lifecycleAction {
 	item := lifecycleAction{}
 

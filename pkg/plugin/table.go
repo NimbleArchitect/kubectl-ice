@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-//sets the maximum number of spaces allowed in a column, spaces are clipped to this number
+// sets the maximum number of spaces allowed in a column, spaces are clipped to this number
 const maxLineLength = 80
 
 type matchFilter struct {
@@ -36,7 +36,8 @@ type Cell struct {
 	number int64
 	float  float64
 	typ    int // 0=string, 1=int64, 2=float64, 3=placeholder
-	phRef  int
+	phRef  int // placeholder reference id, used to track the row thats used as a placeholder
+	indent int // the number of indents required in the output
 }
 
 type Table struct {
@@ -86,6 +87,9 @@ func (t *Table) AddRow(row ...Cell) {
 
 	for i := 0; i < t.headCount; i++ {
 		strLen := len([]rune(row[i].text))
+		if row[i].indent > 0 {
+			strLen += t.indentLen(row[i].indent)
+		}
 		if strLen >= t.head[i].columnLength {
 			if (strLen + 2) > maxLineLength {
 				t.head[i].columnLength = maxLineLength
@@ -185,7 +189,7 @@ func (t *Table) Print() {
 		} else {
 			row = t.data[rowNum]
 		}
-		// now loop through each column the the currentl selected row
+		// now loop through each column in the currentl selected row
 		for col := 0; col < t.headCount; col++ {
 			idx := t.columnOrder[col]
 			cell := row[idx]
@@ -205,12 +209,13 @@ func (t *Table) Print() {
 				cell.text = "-"
 			}
 
-			spaceCount := t.head[idx].columnLength - len([]rune(cell.text))
+			celltxt := t.indentText(cell.indent, cell.text)
+			spaceCount := t.head[idx].columnLength - len([]rune(celltxt))
 			if spaceCount <= 0 {
 				spaceCount = maxLineLength
 			}
 			pad := strings.Repeat(" ", spaceCount)
-			line += fmt.Sprint(cell.text, pad)
+			line += fmt.Sprint(celltxt, pad)
 		}
 		if !excludeRow {
 			fmt.Println(strings.TrimRight(line, " "))
@@ -293,7 +298,7 @@ func (t *Table) PrintList() {
 	}
 }
 
-//prints the table as a csv including the header row. all fileds are shown and all are unsorted as
+// prints the table as a csv including the header row. all fileds are shown and all are unsorted as
 // other programs can be used to filter and sort
 func (t *Table) PrintCsv() {
 
@@ -673,7 +678,7 @@ func (t *Table) SetFilter(filter map[string]matchValue) error {
 	return nil
 }
 
-//run a pattten match, accepts * and ?
+// run a pattten match, accepts * and ?
 func strMatch(str string, pattern string) bool {
 	// shamelessly converted from c++ code on web as I was too laszy to work it out myself
 	// source: https://www.geeksforgeeks.org/wildcard-pattern-matching/
@@ -725,6 +730,19 @@ func NewCellText(text string) Cell {
 
 	return Cell{
 		text: temp,
+	}
+}
+
+func NewCellTextIndent(text string, indentLevel int) Cell {
+
+	temp := strings.Replace(text, "\r", "\\r", -1)
+	temp = strings.Replace(temp, "\f", "\\f", -1)
+	temp = strings.Replace(temp, "\n", "\\n", -1)
+	temp = strings.Replace(temp, "\t", "\\t", -1)
+
+	return Cell{
+		text:   temp,
+		indent: indentLevel,
 	}
 }
 
@@ -935,6 +953,9 @@ func (t *Table) UpdatePlaceHolderRow(id int, cellList []Cell) {
 
 	for i := 0; i < t.headCount; i++ {
 		strLen := len([]rune(cellList[i].text))
+		if cellList[i].indent > 0 {
+			strLen += t.indentLen(cellList[i].indent)
+		}
 		if strLen >= t.head[i].columnLength {
 			if (strLen + 2) > maxLineLength {
 				t.head[i].columnLength = maxLineLength
@@ -954,4 +975,42 @@ func (t *Table) HidePlaceHolderRow(id int) {
 			t.HideRows([]int{r})
 		}
 	}
+}
+
+// indentText indents the text to the specified level adds └─ for every level above 0
+func (t *Table) indentText(level int, data string) string {
+	var indent string
+
+	if level == 0 {
+		return data
+	}
+
+	if level == 1 {
+		indent = "└─"
+	}
+
+	if level >= 2 {
+		indent = strings.Repeat(" ", level) + "└─"
+	}
+
+	return fmt.Sprint(indent, data)
+}
+
+// indentLen returns the number of characters that would be indented at the provided level
+func (t *Table) indentLen(level int) int {
+	var indent int
+
+	if level == 0 {
+		return 0
+	}
+
+	if level == 1 {
+		indent = 2
+	}
+
+	if level >= 2 {
+		indent = level + 2
+	}
+
+	return indent
 }

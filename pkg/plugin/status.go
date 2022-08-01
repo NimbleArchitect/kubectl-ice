@@ -320,12 +320,10 @@ func (s *status) Sum(rows [][]Cell) []Cell {
 	//loop through each row in podTotals and add the columns in each row
 	for _, r := range rows {
 		if r[0].text == "false" {
-			fmt.Println("1>", r[0].text)
 			// ready = false
 			rowOut[0].text = "false" //ready
 		}
 		if r[1].text == "false" {
-			fmt.Println("2>", r[1].text)
 			rowOut[1].text = "false" //started
 		}
 		rowOut[2].number += r[2].number //restarts

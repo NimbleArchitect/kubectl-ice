@@ -50,10 +50,10 @@ type addRowTest struct {
 }
 
 var addRowTests = []addRowTest{
-	{[]Cell{NewCellText("one")}, 1, 5, [][]Cell{{Cell{"one", 0, 0, 0, 0}}}},
-	{[]Cell{NewCellText("two")}, 2, 5, [][]Cell{{Cell{"one", 0, 0, 0, 0}}, {Cell{"two", 0, 0, 0, 0}}}},
-	{[]Cell{NewCellText("three")}, 3, 7, [][]Cell{{Cell{"one", 0, 0, 0, 0}}, {Cell{"two", 0, 0, 0, 0}}, {Cell{"three", 0, 0, 0, 0}}}},
-	{[]Cell{NewCellText("four"), NewCellText("extra"), NewCellText("larger")}, 4, 7, [][]Cell{{Cell{"one", 0, 0, 0, 0}}, {Cell{"two", 0, 0, 0, 0}}, {Cell{"three", 0, 0, 0, 0}}, {Cell{"four", 0, 0, 0, 0}, Cell{"extra", 0, 0, 0, 0}, Cell{"larger", 0, 0, 0, 0}}}},
+	{[]Cell{NewCellText("one")}, 1, 5, [][]Cell{{Cell{"one", 0, 0, 0, 0, 0}}}},
+	{[]Cell{NewCellText("two")}, 2, 5, [][]Cell{{Cell{"one", 0, 0, 0, 0, 0}}, {Cell{"two", 0, 0, 0, 0, 0}}}},
+	{[]Cell{NewCellText("three")}, 3, 7, [][]Cell{{Cell{"one", 0, 0, 0, 0, 0}}, {Cell{"two", 0, 0, 0, 0, 0}}, {Cell{"three", 0, 0, 0, 0, 0}}}},
+	{[]Cell{NewCellText("four"), NewCellText("extra"), NewCellText("larger")}, 4, 7, [][]Cell{{Cell{"one", 0, 0, 0, 0, 0}}, {Cell{"two", 0, 0, 0, 0, 0}}, {Cell{"three", 0, 0, 0, 0, 0}}, {Cell{"four", 0, 0, 0, 0, 0}, Cell{"extra", 0, 0, 0, 0, 0}, Cell{"larger", 0, 0, 0, 0, 0}}}},
 }
 
 func TestAddRow(t *testing.T) {

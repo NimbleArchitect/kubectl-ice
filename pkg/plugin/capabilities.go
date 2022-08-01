@@ -40,7 +40,7 @@ var capabilitiesExample = `  # List container capabilities from pods
   # List container capabilities info from all pods where the pod label app is either web or mail
   %[1]s capabilities -l "app in (web,mail)"`
 
-//list details of configured liveness readiness and startup capabilities
+// list details of configured liveness readiness and startup capabilities
 func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 	// var columnInfo containerInfomation
 	// var podname []string

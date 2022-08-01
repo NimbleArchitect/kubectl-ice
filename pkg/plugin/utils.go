@@ -77,7 +77,7 @@ func memoryHumanReadable(memorySize int64, displayAs string) string {
 	return outVal
 }
 
-//checks if number is NaN, always returns a valid number
+// checks if number is NaN, always returns a valid number
 func validateFloat64(number float64) float64 {
 	if number != number {
 		return 0.0
@@ -126,22 +126,4 @@ func portAsString(port intstr.IntOrString) string {
 	}
 
 	return ""
-}
-
-func indentText(level int, data ...string) string {
-	var indent string
-
-	if level == 0 {
-		indent = ""
-	}
-
-	if level == 1 {
-		indent = "└─"
-	}
-
-	if level >= 2 {
-		indent = strings.Repeat(" ", level) + "└─"
-	}
-
-	return fmt.Sprint(indent, strings.Join(data, ""))
 }

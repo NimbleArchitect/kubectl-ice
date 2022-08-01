@@ -41,7 +41,7 @@ var securityExample = `  # List container security info from pods
   # List container security info from all pods where the pod label app is either web or mail
   %[1]s security -l "app in (web,mail)"`
 
-//list details of configured liveness readiness and startup security
+// list details of configured liveness readiness and startup security
 func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
 
 	log := logger{location: "Security"}
