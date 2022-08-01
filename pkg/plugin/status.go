@@ -276,7 +276,6 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 	restarts := fmt.Sprintf("%d", container.RestartCount)
 	rawRestarts = int64(container.RestartCount)
 
-	// TODO: pods dont show when they dont have an owner :(  this needs fixing
 	s.pRestarts += rawRestarts
 	s.pRestartsText = fmt.Sprintf("%d", s.pRestarts)
 
@@ -290,10 +289,6 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 		rawAge := time.Since(startTime)
 		age = duration.HumanDuration(rawAge)
 	}
-
-	// if info.TreeView {
-	// 	cellList = info.BuildTreeCell(cellList)
-	// }
 
 	// READY STARTED RESTARTS STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
 	cellList = append(cellList,

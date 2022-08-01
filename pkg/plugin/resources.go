@@ -2,10 +2,10 @@ package plugin
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
+	apires "k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	v1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 )
@@ -188,21 +188,7 @@ func (s *resource) Sum(rows [][]Cell) []Cell {
 	rowOut := make([]Cell, 5)
 	for _, r := range rows {
 		//"USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
-		if s.ResourceType == "memory" {
-			rowOut[0].number += r[0].number
-		} else {
-			if s.ShowRaw {
-				//TODO: metrics.Cpu().MilliValue() returns a number in millicores. When using --raw the value
-				// returned is in nanocores, this needs to be changed as I shouldn't be converting a string to a number :(
-				txt := r[0].text
-				if len(txt) > 1 {
-					val, _ := strconv.ParseInt(txt[:len(txt)-1], 10, 64)
-					rowOut[0].number += val
-				}
-			} else {
-				rowOut[0].number += r[0].number
-			}
-		}
+		rowOut[0].number += r[0].number
 		rowOut[1].number += r[1].number
 		rowOut[2].number += r[2].number
 	}
@@ -267,19 +253,23 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 
 	if resource == "cpu" {
 		if metrics.Cpu() != nil {
-			//TODO: this should return nanocores as the display value give us nanocores when using --raw
-			rawValue = metrics.Cpu().MilliValue()
 			if s.ShowRaw {
+				//this returns nanocores as the display value when using --raw
 				displayValue = metrics.Cpu().String()
+				rawValue = metrics.Cpu().ScaledValue(apires.Nano)
+				rawLimit = res.Limits.Cpu().ScaledValue(apires.Nano)
+				rawRequest = res.Requests.Cpu().ScaledValue(apires.Nano)
+				limit = fmt.Sprintf("%dn", rawLimit)
+				request = fmt.Sprintf("%dn", rawRequest)
 			} else {
 				displayValue = fmt.Sprintf("%dm", metrics.Cpu().MilliValue())
+				rawValue = metrics.Cpu().MilliValue()
+				rawLimit = res.Limits.Cpu().MilliValue()
+				rawRequest = res.Requests.Cpu().MilliValue()
+				limit = fmt.Sprintf("%dm", rawLimit)
+				request = fmt.Sprintf("%dm", rawRequest)
 				floatfmt = "%.2f"
 			}
-
-			rawLimit = res.Limits.Cpu().MilliValue()
-			limit = fmt.Sprintf("%dm", rawLimit)
-			rawRequest = res.Requests.Cpu().MilliValue()
-			request = fmt.Sprintf("%dm", rawRequest)
 
 			if cpuVal := metrics.Cpu().AsApproximateFloat64(); cpuVal > 0 {
 				// check cpu limits has a value
