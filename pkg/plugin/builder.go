@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"errors"
+
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -35,6 +37,8 @@ type RowBuilder struct {
 	DefaultHeaderLen   int
 
 	annotationLabel map[string]map[string]map[string]map[string]string
+	head            []string
+	filter          []matchFilter
 }
 
 type BuilderInformation struct {
@@ -125,7 +129,6 @@ func (b *RowBuilder) Build(loop Looper) error {
 				info.Name = value.name
 				info.ContainerType = "N"
 				info.TypeName = value.kind
-				log.Debug("call loop.Sum for", info.PodName, info.Name)
 				if len(totals) > 0 {
 					partOut, _ := loop.BuildBranch(info, totals)
 					tblOut := b.makeFullRow(&info, value.indent, partOut)
@@ -195,7 +198,11 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 
 			if len(tblBranch) > 0 {
 				tblOut := b.makeFullRow(info, value.indent, tblBranch)
-				b.Table.UpdatePlaceHolderRow(rowid, tblOut)
+				if b.matchShouldExclude(tblOut) {
+					b.Table.HidePlaceHolderRow(rowid)
+				} else {
+					b.Table.UpdatePlaceHolderRow(rowid, tblOut)
+				}
 			}
 			totals = append(totals, tblBranch)
 		}
@@ -206,6 +213,18 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 	}
 
 	return totals, nil
+}
+
+// matchShouldExclude checks the match filter and returns true if the row should be excluded from output
+func (b *RowBuilder) matchShouldExclude(tblOut []Cell) bool {
+
+	// ***********************************
+	// TODO: finish this off it needs to come from  table.go - exclusionFilter func
+	//   dont forcet to swap SetFilter out in the LoadHeaders func
+	// ***********************************
+
+	// add row to table
+	return false
 }
 
 // check if any labels or annotations are needed and set their values
@@ -321,7 +340,10 @@ func (b *RowBuilder) LoadHeaders(loop Looper, info *BuilderInformation) error {
 
 	log.Debug("len(b.FilterList) =", len(b.FilterList))
 	if len(b.FilterList) >= 1 {
+		b.head = tblHead // we need a local copy of the header for filters to work
+		// TODO: swap SetFilter out with the one below
 		err := b.Table.SetFilter(b.FilterList)
+		// err := b.setFilter(b.FilterList)
 		if err != nil {
 			return err
 		}
@@ -332,6 +354,82 @@ func (b *RowBuilder) LoadHeaders(loop Looper, info *BuilderInformation) error {
 	log.Debug("len(hideColumns) =", len(hideColumns))
 	for _, id := range hideColumns {
 		b.Table.HideColumn(defaultHeaderLen + id)
+	}
+
+	return nil
+}
+
+// takes a filter as a string to exclude matching rows from the Print function
+// filter is in the form COLUMN_NAME OPERATOR VALUE, where operator can be one of <,>,<=,>=,!=,=,==
+func (b *RowBuilder) setFilter(filter map[string]matchValue) error {
+	for words, match := range filter {
+		// the smallest header name is T making a valid string "T=0"
+		if len([]rune(words)) < 1 {
+			continue
+		}
+
+		found := false
+		columnName := ""
+		operator := ""
+		value := ""
+
+		if len(match.operator) > 0 && len(words) > 0 {
+			columnName = words
+			operator = match.operator
+			value = match.value
+			found = true
+		}
+
+		if found {
+			idx := -1
+			for i := 0; i < len(b.head); i++ {
+				if columnName == b.head[i] {
+					idx = i
+					break
+				}
+			}
+
+			if idx == -1 {
+				return errors.New("invalid column name specified")
+			}
+
+			switch operator {
+			case "=":
+				fallthrough
+			case "==":
+				b.filter[idx].comparison = 0
+				b.filter[idx].compareEql = true
+
+			case "<=":
+				b.filter[idx].comparison = 2
+				b.filter[idx].compareEql = true
+
+			case ">=":
+				b.filter[idx].comparison = 1
+				b.filter[idx].compareEql = true
+
+			case "<":
+				b.filter[idx].comparison = 2
+
+			case ">":
+				b.filter[idx].comparison = 1
+
+			case "!=":
+				b.filter[idx].comparison = 3
+				b.filter[idx].compareEql = false
+
+			default:
+				return errors.New("invalid operator found")
+			}
+
+			if len(value) <= 0 {
+				return errors.New("invalid value specified for filter")
+			}
+
+			b.filter[idx].value = value
+			b.filter[idx].set = true
+		}
+
 	}
 
 	return nil
@@ -372,7 +470,6 @@ func (b *RowBuilder) setVisibleColumns(info *BuilderInformation) {
 // PodLoop given a pod we loop over all containers adding to the table as we go
 //  returns a copy of rows added and nil on success
 func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, indentLevel int) ([][]Cell, error) {
-	var total int
 	var podRowsOut [][]Cell
 
 	log := logger{location: "RowBuilder:PodLoop"}
@@ -397,8 +494,9 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 				}
 				for _, row := range allRows {
 					rowsOut := b.makeFullRow(&info, indentLevel, row)
-					total += len(rowsOut)
-					b.Table.AddRow(rowsOut...)
+					if !b.matchShouldExclude(rowsOut) {
+						b.Table.AddRow(rowsOut...)
+					}
 				}
 				podRowsOut = append(podRowsOut, allRows...)
 			}
@@ -419,8 +517,9 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 				}
 				for _, row := range allRows {
 					rowsOut := b.makeFullRow(&info, indentLevel, row)
-					total += len(rowsOut)
-					b.Table.AddRow(rowsOut...)
+					if !b.matchShouldExclude(rowsOut) {
+						b.Table.AddRow(rowsOut...)
+					}
 				}
 				podRowsOut = append(podRowsOut, allRows...)
 			}
@@ -445,8 +544,9 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 			}
 			for _, row := range allRows {
 				rowsOut := b.makeFullRow(&info, indentLevel, row)
-				total += len(rowsOut)
-				b.Table.AddRow(rowsOut...)
+				if !b.matchShouldExclude(rowsOut) {
+					b.Table.AddRow(rowsOut...)
+				}
 			}
 			podRowsOut = append(podRowsOut, allRows...)
 		}
@@ -466,8 +566,9 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 			}
 			for _, row := range allRows {
 				rowsOut := b.makeFullRow(&info, indentLevel, row)
-				total += len(rowsOut)
-				b.Table.AddRow(rowsOut...)
+				if !b.matchShouldExclude(rowsOut) {
+					b.Table.AddRow(rowsOut...)
+				}
 			}
 			podRowsOut = append(podRowsOut, allRows...)
 		}
@@ -491,8 +592,9 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 			}
 			for _, row := range allRows {
 				rowsOut := b.makeFullRow(&info, indentLevel, row)
-				total += len(rowsOut)
-				b.Table.AddRow(rowsOut...)
+				if !b.matchShouldExclude(rowsOut) {
+					b.Table.AddRow(rowsOut...)
+				}
 			}
 			podRowsOut = append(podRowsOut, allRows...)
 		}
@@ -513,8 +615,9 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 			}
 			for _, row := range allRows {
 				rowsOut := b.makeFullRow(&info, indentLevel, row)
-				total += len(rowsOut)
-				b.Table.AddRow(rowsOut...)
+				if !b.matchShouldExclude(rowsOut) {
+					b.Table.AddRow(rowsOut...)
+				}
 			}
 			podRowsOut = append(podRowsOut, allRows...)
 		}
