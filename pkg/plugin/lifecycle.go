@@ -107,21 +107,13 @@ func (s *lifecycle) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *lifecycle) BuildBranch(info BuilderInformation) ([]Cell, error) {
+func (s *lifecycle) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),
 	}
 	return out, nil
-}
-
-func (s *lifecycle) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
-	return []Cell{
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-	}, nil
 }
 
 func (s *lifecycle) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
@@ -137,11 +129,6 @@ func (s *lifecycle) BuildEphemeralContainerSpec(container v1.EphemeralContainer,
 	out := [][]Cell{}
 	return out, nil
 
-}
-
-func (s *lifecycle) Sum(rows [][]Cell) []Cell {
-	rowOut := make([]Cell, 3)
-	return rowOut
 }
 
 func (s *lifecycle) lifecycleBuildRow(info BuilderInformation, handlerName string, lifecycles lifecycleAction) []Cell {

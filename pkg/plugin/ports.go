@@ -103,7 +103,7 @@ func (s *ports) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *ports) BuildBranch(info BuilderInformation) ([]Cell, error) {
+func (s *ports) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),
@@ -111,15 +111,6 @@ func (s *ports) BuildBranch(info BuilderInformation) ([]Cell, error) {
 		NewCellText(""),
 	}
 	return out, nil
-}
-
-func (s *ports) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
-	return []Cell{
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-	}, nil
 }
 
 func (s *ports) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
@@ -136,11 +127,6 @@ func (s *ports) BuildEphemeralContainerSpec(container v1.EphemeralContainer, inf
 		out = append(out, s.portsBuildRow(info, port))
 	}
 	return out, nil
-}
-
-func (s *ports) Sum(rows [][]Cell) []Cell {
-	rowOut := make([]Cell, 4)
-	return rowOut
 }
 
 func (s *ports) portsBuildRow(info BuilderInformation, port v1.ContainerPort) []Cell {

@@ -32,7 +32,7 @@ type Connector struct {
 	deploymentList map[string][]a1.Deployment  //list of Deployments
 }
 
-type parentData struct {
+type ParentData struct {
 	name          string
 	kind          string
 	kindIndicator string
@@ -44,17 +44,17 @@ type parentData struct {
 	pod           v1.Pod
 }
 
-type node struct {
-	child         map[string]*node
+type LeafNode struct {
+	child         map[string]*LeafNode
 	name          string
 	kind          string
 	kindIndicator string
 	namespace     string
 	indent        int
-	data          parentData
+	data          ParentData
 }
 
-func (n *node) getChild(name string) *node {
+func (n *LeafNode) getChild(name string) *LeafNode {
 
 	for k, v := range n.child {
 		if k == name {
@@ -64,9 +64,9 @@ func (n *node) getChild(name string) *node {
 	}
 
 	//if we got here we dont have a match so we create a new entry
-	child := node{
+	child := LeafNode{
 		name:  name,
-		child: make(map[string]*node),
+		child: make(map[string]*LeafNode),
 	}
 
 	// and add it as a child
@@ -783,15 +783,15 @@ func (c *Connector) LoadStatefulSet(statefulNameList []string, namespace string)
 	}
 }
 
-func (c *Connector) BuildOwnersList() map[string]*node {
+func (c *Connector) BuildOwnersList() map[string]*LeafNode {
 
-	children := make(map[string]*node)
-	rootnode := node{child: children}
+	children := make(map[string]*LeafNode)
+	rootnode := LeafNode{child: children}
 
 	for _, pod := range c.podList {
 		nodename := pod.Spec.NodeName
 		//first create a list with the pod as the first entry
-		parentList := []parentData{{
+		parentList := []ParentData{{
 			name:          pod.Name,
 			namespace:     pod.Namespace,
 			kind:          "Pod",
@@ -821,10 +821,10 @@ func (c *Connector) BuildOwnersList() map[string]*node {
 
 }
 
-func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerReference, nodename string, namespace string) []parentData {
+func (c *Connector) appendParents(current []ParentData, oref []metav1.OwnerReference, nodename string, namespace string) []ParentData {
 	//check if parent exists based on kind
 	if len(oref) == 0 {
-		current = append([]parentData{{
+		current = append([]ParentData{{
 			name:          nodename,
 			kind:          "Node",
 			kindIndicator: "N",
@@ -832,7 +832,7 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 	}
 	for _, v := range oref {
 		if v.Kind == "Node" {
-			current = append([]parentData{{
+			current = append([]ParentData{{
 				name:          v.Name,
 				kind:          v.Kind,
 				kindIndicator: "N",
@@ -841,7 +841,7 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 		if v.Kind == "Deployment" {
 			deployment := c.GetDeployment(v.Name, namespace)
 			if deployment != nil {
-				current = append([]parentData{{
+				current = append([]ParentData{{
 					name:          v.Name,
 					kind:          v.Kind,
 					kindIndicator: "D",
@@ -857,7 +857,7 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 			replica := c.GetReplicaSet(v.Name, namespace)
 
 			if replica != nil {
-				current = append([]parentData{{
+				current = append([]ParentData{{
 					name:          v.Name,
 					kind:          v.Kind,
 					kindIndicator: "R",
@@ -872,7 +872,7 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 		if v.Kind == "DaemonSet" {
 			daemon := c.GetDaemonSet(v.Name, namespace)
 			if daemon != nil {
-				current = append([]parentData{{
+				current = append([]ParentData{{
 					name:          v.Name,
 					kind:          v.Kind,
 					kindIndicator: "A",
@@ -887,7 +887,7 @@ func (c *Connector) appendParents(current []parentData, oref []metav1.OwnerRefer
 		if v.Kind == "StatefulSet" {
 			stateful := c.GetStatefulSet(v.Name, namespace)
 			if stateful != nil {
-				current = append([]parentData{{
+				current = append([]ParentData{{
 					name:          v.Name,
 					kind:          v.Kind,
 					kindIndicator: "S",

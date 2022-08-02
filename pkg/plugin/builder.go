@@ -5,14 +5,12 @@ import (
 )
 
 type Looper interface {
-	BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error)
-	BuildBranch(info BuilderInformation) ([]Cell, error)
+	BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error)
 	BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error)
 	BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error)
 	BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error)
 	Headers() []string
 	HideColumns(info BuilderInformation) []int
-	Sum(rows [][]Cell) []Cell
 }
 
 type RowBuilder struct {
@@ -40,7 +38,9 @@ type RowBuilder struct {
 }
 
 type BuilderInformation struct {
-	Pod     *v1.Pod
+	// Pod  *v1.Pod
+	Data ParentData
+
 	PodName string
 	// ContainerName string // container name
 	ContainerType string // single letter type id
@@ -126,7 +126,7 @@ func (b *RowBuilder) Build(loop Looper) error {
 				info.ContainerType = "N"
 				info.TypeName = value.kind
 				log.Debug("call loop.Sum for", info.PodName, info.Name)
-				partOut := loop.Sum(totals)
+				partOut, _ := loop.BuildBranch(info, totals)
 				tblOut := b.makeFullRow(&info, value.indent, partOut)
 				if len(tblOut) > 0 {
 					b.Table.UpdatePlaceHolderRow(rowid, tblOut)
@@ -142,84 +142,82 @@ func (b *RowBuilder) Build(loop Looper) error {
 
 // walkTreeCreateRow - recursive function to loop over each child item along with all sub children, buildPodTree
 //  is called on each child with the results passed to Sum so we can calculate parent values from the children
-func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, parent node) ([][]Cell, error) {
-	var parentTotals [][]Cell
+func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, parent LeafNode) ([][]Cell, error) {
+	var totals [][]Cell
 
 	log := logger{location: "RowBuilder:walkTreeCreateRow"}
 	log.Debug("Start")
 
 	for _, value := range parent.child {
-		var totals [][]Cell
-		var tblOut []Cell
+		var partOut []Cell
+		var err error
 
 		rowid := b.Table.AddPlaceHolderRow()
 		info.Namespace = value.namespace
 		info.Name = value.name
 		info.TypeName = value.kind
 		info.ContainerType = value.kindIndicator
+		info.Data = value.data
 
 		if value.kind == "Pod" {
 			infoPod := *info
-			partOut, err := b.buildPodTree(loop, &infoPod, value.data.pod, value.indent, value.kind)
+			partOut, err = b.buildPodTree(loop, &infoPod, value.indent, value.kind)
 			if err != nil {
 				return [][]Cell{}, err
 			}
-			totals = append(totals, partOut...)
 		} else {
-			//make the row for the table heade line
+			//make the row for the table header line
 			infoSet := *info
-			partOut, _ := loop.BuildBranch(infoSet)
 			resourceTotals, err := b.walkTreeCreateRow(loop, &infoSet, *value)
 			if err == nil {
-				totals = append(totals, resourceTotals...)
+				partOut, _ = loop.BuildBranch(infoSet, resourceTotals)
 			}
-			totals = append(totals, partOut)
 		}
 
-		log.Debug("call loop.Sum for", info.PodName, info.Name)
-		partOut := loop.Sum(totals)
-		tblOut = b.makeFullRow(info, value.indent, partOut)
+		tblOut := b.makeFullRow(info, value.indent, partOut)
 		if len(tblOut) > 0 {
 			b.Table.UpdatePlaceHolderRow(rowid, tblOut)
 		}
+		totals = append(totals, partOut)
 
 		b.labelNodeValue = ""
 		b.labelPodValue = ""
 		b.annotationPodValue = ""
-		parentTotals = append(parentTotals, partOut)
 	}
 
-	return parentTotals, nil
+	return totals, nil
 }
 
 // buildPodTree - sets info properties ready to call podLoop and then buildBranch
-func (b *RowBuilder) buildPodTree(loop Looper, info *BuilderInformation, pod v1.Pod, indent int, kind string) ([][]Cell, error) {
+func (b *RowBuilder) buildPodTree(loop Looper, info *BuilderInformation, indent int, kind string) ([]Cell, error) {
 	log := logger{location: "RowBuilder:buildPodTree"}
 	log.Debug("Start")
 
-	log.Debug("pod.Name =", pod.Name)
-	info.Pod = &pod
-	info.PodName = pod.Name
-	info.Namespace = pod.Namespace
-	info.NodeName = pod.Spec.NodeName
-	info.ContainerType = "P"
-	info.TypeName = kind
+	log.Debug("pod.Name =", info.Data.pod.Name)
+	infoPod := *info
+	// infoPod.Pod = &pod
+	infoPod.PodName = info.Data.pod.Name
+	infoPod.Namespace = info.Data.pod.Namespace
+	infoPod.NodeName = info.Data.pod.Spec.NodeName
+	infoPod.ContainerType = "P"
+	infoPod.TypeName = kind
 
 	//check if we have any labels that need to be shown as columns
-	b.setValuesAnnotationLabel(pod)
-	infoPod := *info
-	tblOut, err := b.podLoop(loop, infoPod, pod, indent+1)
+	b.setValuesAnnotationLabel(info.Data.pod)
+	// infoPod := *info
+	tblOut, err := b.podLoop(loop, infoPod, info.Data.pod, indent+1)
 	if err != nil {
-		return [][]Cell{}, err
+		return []Cell{}, err
 	}
 
 	//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-	tblBranch, err := loop.BuildBranch(*info)
+	tblBranch, err := loop.BuildBranch(infoPod, tblOut)
 	if err != nil {
-		return [][]Cell{}, err
+		return []Cell{}, err
 	}
-	tblOut = append(tblOut, tblBranch)
-	return tblOut, nil
+	// tblOut = append(tblOut, tblBranch)
+	// return tblOut, nil
+	return tblBranch, nil
 }
 
 // check if any labels or annotations are needed and set their values
@@ -287,7 +285,8 @@ func (b *RowBuilder) BuildContainerTable(loop Looper, info *BuilderInformation, 
 	for _, pod := range podList {
 		log.Debug("pod.Name =", pod.Name)
 		infoPod := *info
-		infoPod.Pod = &pod
+		//infoPod.Pod = &pod
+		infoPod.Data.pod = pod
 		infoPod.PodName = pod.Name
 		infoPod.Namespace = pod.Namespace
 		infoPod.NodeName = pod.Spec.NodeName

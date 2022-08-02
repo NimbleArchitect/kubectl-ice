@@ -103,19 +103,12 @@ func (s *image) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *image) BuildBranch(info BuilderInformation) ([]Cell, error) {
+func (s *image) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),
 	}
 	return out, nil
-}
-
-func (s *image) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
-	return []Cell{
-		NewCellText(""),
-		NewCellText(""),
-	}, nil
 }
 
 func (s *image) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
@@ -128,11 +121,6 @@ func (s *image) BuildEphemeralContainerSpec(container v1.EphemeralContainer, inf
 	out := make([][]Cell, 1)
 	out[0] = s.imageBuildRow(info, container.Image, string(container.ImagePullPolicy))
 	return out, nil
-}
-
-func (s *image) Sum(rows [][]Cell) []Cell {
-	rowOut := make([]Cell, 2)
-	return rowOut
 }
 
 func (s *image) imageBuildRow(info BuilderInformation, imageName string, pullPolicy string) []Cell {

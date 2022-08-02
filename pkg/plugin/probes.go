@@ -119,7 +119,7 @@ func (s *probes) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *probes) BuildBranch(info BuilderInformation) ([]Cell, error) {
+func (s *probes) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),
@@ -131,19 +131,6 @@ func (s *probes) BuildBranch(info BuilderInformation) ([]Cell, error) {
 		NewCellText(""),
 	}
 	return out, nil
-}
-
-func (s *probes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
-	return []Cell{
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-	}, nil
 }
 
 func (s *probes) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
@@ -160,11 +147,6 @@ func (s *probes) BuildContainerSpec(container v1.Container, info BuilderInformat
 func (s *probes) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
 	return out, nil
-}
-
-func (s *probes) Sum(rows [][]Cell) []Cell {
-	rowOut := make([]Cell, 8)
-	return rowOut
 }
 
 func (s *probes) probesBuildRow(info BuilderInformation, action probeAction) []Cell {

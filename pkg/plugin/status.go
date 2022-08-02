@@ -163,53 +163,54 @@ func (s *status) HideColumns(info BuilderInformation) []int {
 		// hide AGE, MESSAGE
 		hideColumns = append(hideColumns, 7, 9)
 	}
-	// }
 
 	return hideColumns
 }
 
-func (s *status) BuildBranch(info BuilderInformation) ([]Cell, error) {
+func (s *status) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
+	rowOut := make([]Cell, 10)
 
-	out := []Cell{
-		NewCellText(""),   //ready
-		NewCellText(""),   //started
-		NewCellInt("", 0), //restarts
-		NewCellText(""),   //state
-		NewCellText(""),   //reason
-		NewCellText(""),   //exit-code
-		NewCellText(""),   //signal
-		NewCellText(""),   //timestamp
-		NewCellText(""),   //age
-		NewCellText(""),   //message
+	// rowOut[0] //ready
+	// rowOut[1] //started
+	// rowOut[2] //restarts
+	// rowOut[3] //state
+	// rowOut[4] //reason
+	// rowOut[5] //exit-code
+	// rowOut[6] //signal
+	// rowOut[7] //timestamp
+	// rowOut[8] //age
+	// rowOut[9] //message
+
+	rowOut[0].text = "true"
+	rowOut[1].text = "true"
+
+	//loop through each row in podTotals and add the columns in each row
+	for _, r := range rows {
+		if r[0].text == "false" {
+			// ready = false
+			rowOut[0].text = "false" //ready
+		}
+		if r[1].text == "false" {
+			rowOut[1].text = "false" //started
+		}
+		rowOut[2].number += r[2].number //restarts
+
 	}
 
-	return out, nil
-}
+	rowOut[2].typ = 1
+	rowOut[2].text = fmt.Sprintf("%d", rowOut[2].number)
 
-func (s *status) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
-	var age string
-	var timestamp string
-
-	phase := string(pod.Status.Phase)
-	if pod.Status.StartTime != nil {
-		starttime := pod.Status.StartTime.Time
-		timestamp = starttime.Format(timestampFormat)
-		rawAge := time.Since(starttime)
-		age = duration.HumanDuration(rawAge)
+	switch info.TypeName {
+	case "Pod":
+		rawAge := time.Since(info.Data.pod.CreationTimestamp.Time)
+		rowOut[3].text = string(info.Data.pod.Status.Phase)                      //state
+		rowOut[4].text = info.Data.pod.Status.Reason                             //reason
+		rowOut[7].text = info.Data.pod.CreationTimestamp.Format(timestampFormat) //timestamp
+		rowOut[8].text = duration.HumanDuration(rawAge)                          //age
+		rowOut[9].text = info.Data.pod.Status.Message                            //message
 	}
 
-	return []Cell{
-		NewCellText(""),                       //ready
-		NewCellText(""),                       //started
-		NewCellInt("0", 0),                    //restarts
-		NewCellText(strings.TrimSpace(phase)), //state
-		NewCellText(pod.Status.Reason),        //reason
-		NewCellText(""),                       //exit-code
-		NewCellText(""),                       //signal
-		NewCellText(timestamp),                //timestamp
-		NewCellText(age),                      //age
-		NewCellText(""),                       //message
-	}, nil
+	return rowOut, nil
 }
 
 func (s *status) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
@@ -309,36 +310,6 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 	out := make([][]Cell, 1)
 	out[0] = cellList
 	return out, nil
-}
-
-func (s *status) Sum(rows [][]Cell) []Cell {
-	rowOut := make([]Cell, 10)
-
-	rowOut[0].text = "true"
-	rowOut[1].text = "true"
-
-	//loop through each row in podTotals and add the columns in each row
-	for _, r := range rows {
-		if r[0].text == "false" {
-			// ready = false
-			rowOut[0].text = "false" //ready
-		}
-		if r[1].text == "false" {
-			rowOut[1].text = "false" //started
-		}
-		rowOut[2].number += r[2].number //restarts
-	}
-
-	rowOut[2].text = fmt.Sprintf("%d", rowOut[2].number)
-	rowOut[3].text = "" //state
-	rowOut[4].text = "" //reason
-	rowOut[5].text = "" //exit-code
-	rowOut[6].text = "" //signal
-	rowOut[7].text = "" //timestamp
-	rowOut[8].text = "" //age
-	rowOut[9].text = "" //message
-
-	return rowOut
 }
 
 // Removes the pod name and container name from the status message as its already in the output table

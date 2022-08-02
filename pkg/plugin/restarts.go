@@ -114,17 +114,18 @@ func (s restarts) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s restarts) BuildBranch(info BuilderInformation) ([]Cell, error) {
-	out := []Cell{
-		NewCellText(""),
-	}
-	return out, nil
-}
+func (s restarts) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
+	rowOut := make([]Cell, 1)
 
-func (s restarts) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
-	return []Cell{
-		NewCellText(""),
-	}, nil
+	switch info.TypeName {
+	case "Pod":
+		for _, r := range rows {
+			rowOut[0].number += r[0].number //ready
+		}
+		rowOut[0].text = fmt.Sprintf("%d", rowOut[0].number)
+	}
+
+	return rowOut, nil
 }
 
 func (s restarts) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
@@ -135,17 +136,6 @@ func (s restarts) BuildContainerSpec(container v1.Container, info BuilderInforma
 func (s restarts) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
 	return out, nil
-}
-
-func (s restarts) Sum(rows [][]Cell) []Cell {
-	rowOut := make([]Cell, 1)
-
-	for _, r := range rows {
-		rowOut[0].number += r[0].number //ready
-	}
-
-	rowOut[0].text = fmt.Sprintf("%d", rowOut[0].number)
-	return rowOut
 }
 
 func (s restarts) restartsBuildRow(info BuilderInformation, restartCount int32) []Cell {

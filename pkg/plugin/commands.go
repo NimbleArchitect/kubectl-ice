@@ -104,19 +104,11 @@ func (s *commands) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *commands) BuildBranch(info BuilderInformation) ([]Cell, error) {
+func (s *commands) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
 	out := []Cell{
 		NewCellText(""),
 		NewCellText("")}
 	return out, nil
-}
-
-// func podStatsProcessBuildRow(pod v1.Pod, info containerInfomation) []Cell {
-func (s *commands) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
-	return []Cell{
-		NewCellText(""),
-		NewCellText(""),
-	}, nil
 }
 
 func (s *commands) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
@@ -137,11 +129,6 @@ func (s *commands) BuildEphemeralContainerSpec(container v1.EphemeralContainer, 
 	out := make([][]Cell, 1)
 	out[0] = s.commandsBuildRow(cmdLine, info)
 	return out, nil
-}
-
-func (s *commands) Sum(rows [][]Cell) []Cell {
-	rowOut := make([]Cell, 2)
-	return rowOut
 }
 
 func (s *commands) commandsBuildRow(cmdLine commandLine, info BuilderInformation) []Cell {

@@ -122,70 +122,7 @@ func (s *security) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *security) BuildBranch(info BuilderInformation) ([]Cell, error) {
-	var out []Cell
-	if s.ShowSELinuxOptions {
-		out = []Cell{
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-		}
-	} else {
-		out = []Cell{
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-		}
-	}
-
-	return out, nil
-}
-
-func (s *security) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
-	if s.ShowSELinuxOptions {
-		return []Cell{
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-		}, nil
-	} else {
-		return []Cell{
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-		}, nil
-	}
-}
-
-func (s *security) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
-	out := make([][]Cell, 1)
-	if s.ShowSELinuxOptions {
-		out[0] = s.seLinuxBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
-	} else {
-		out[0] = s.securityBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
-	}
-	return out, nil
-}
-
-func (s *security) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
-	out := make([][]Cell, 1)
-	if s.ShowSELinuxOptions {
-		out[0] = s.seLinuxBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
-	} else {
-		out[0] = s.securityBuildRow(info, container.SecurityContext, info.Pod.Spec.SecurityContext)
-	}
-	return out, nil
-}
-
-func (s *security) Sum(rows [][]Cell) []Cell {
+func (s *security) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
 	var rowOut []Cell
 
 	if s.ShowSELinuxOptions {
@@ -193,7 +130,27 @@ func (s *security) Sum(rows [][]Cell) []Cell {
 	} else {
 		rowOut = make([]Cell, 6)
 	}
-	return rowOut
+	return rowOut, nil
+}
+
+func (s *security) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+	out := make([][]Cell, 1)
+	if s.ShowSELinuxOptions {
+		out[0] = s.seLinuxBuildRow(info, container.SecurityContext, info.Data.pod.Spec.SecurityContext)
+	} else {
+		out[0] = s.securityBuildRow(info, container.SecurityContext, info.Data.pod.Spec.SecurityContext)
+	}
+	return out, nil
+}
+
+func (s *security) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+	out := make([][]Cell, 1)
+	if s.ShowSELinuxOptions {
+		out[0] = s.seLinuxBuildRow(info, container.SecurityContext, info.Data.pod.Spec.SecurityContext)
+	} else {
+		out[0] = s.securityBuildRow(info, container.SecurityContext, info.Data.pod.Spec.SecurityContext)
+	}
+	return out, nil
 }
 
 func (s *security) securityBuildRow(info BuilderInformation, csc *v1.SecurityContext, psc *v1.PodSecurityContext) []Cell {

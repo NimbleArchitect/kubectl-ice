@@ -149,43 +149,9 @@ func (s *resource) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *resource) BuildBranch(info BuilderInformation) ([]Cell, error) {
-	out := []Cell{
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-	}
-	return out, nil
-}
-
-func (s *resource) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
-	return []Cell{
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-	}, nil
-}
-
-func (s *resource) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
-	metrics := s.MetricsResource[info.PodName][info.Name]
-	out := make([][]Cell, 1)
-	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType)
-	return out, nil
-}
-
-func (s *resource) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
-	metrics := s.MetricsResource[info.PodName][info.Name]
-	out := make([][]Cell, 1)
-	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType)
-	return out, nil
-}
-
-func (s *resource) Sum(rows [][]Cell) []Cell {
+func (s *resource) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
 	rowOut := make([]Cell, 5)
+
 	for _, r := range rows {
 		//"USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
 		rowOut[0].number += r[0].number
@@ -237,7 +203,22 @@ func (s *resource) Sum(rows [][]Cell) []Cell {
 			rowOut[3].float = val
 		}
 	}
-	return rowOut
+
+	return rowOut, nil
+}
+
+func (s *resource) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+	metrics := s.MetricsResource[info.PodName][info.Name]
+	out := make([][]Cell, 1)
+	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType)
+	return out, nil
+}
+
+func (s *resource) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+	metrics := s.MetricsResource[info.PodName][info.Name]
+	out := make([][]Cell, 1)
+	out[0] = s.statsProcessTableRow(container.Resources, metrics, info, s.ResourceType)
+	return out, nil
 }
 
 func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.ResourceList, info BuilderInformation, resource string) []Cell {

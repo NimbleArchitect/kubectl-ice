@@ -121,7 +121,7 @@ func (s *volumes) HideColumns(info BuilderInformation) []int {
 	return []int{}
 }
 
-func (s *volumes) BuildBranch(info BuilderInformation) ([]Cell, error) {
+func (s *volumes) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
 	var out []Cell
 
 	if !s.ShowVolumeDevice {
@@ -133,7 +133,6 @@ func (s *volumes) BuildBranch(info BuilderInformation) ([]Cell, error) {
 			NewCellText(""),
 			NewCellText(""),
 		}
-
 	} else {
 		out = []Cell{
 			NewCellText(""),
@@ -144,34 +143,17 @@ func (s *volumes) BuildBranch(info BuilderInformation) ([]Cell, error) {
 	return out, nil
 }
 
-func (s *volumes) BuildPod(pod v1.Pod, info BuilderInformation) ([]Cell, error) {
-	if !s.ShowVolumeDevice {
-		return []Cell{
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-			NewCellText(""),
-		}, nil
-	} else {
-		return []Cell{
-			NewCellText(""),
-			NewCellText(""),
-		}, nil
-	}
-}
-
 func (s *volumes) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
+	Pod := info.Data.pod
 	if !s.ShowVolumeDevice {
-		podVolumes := s.createVolumeMap(info.Pod.Spec.Volumes)
+		podVolumes := s.createVolumeMap(Pod.Spec.Volumes)
 		for _, mount := range container.VolumeMounts {
 			out = append(out, s.volumesBuildRow(info, podVolumes, mount))
 		}
 	} else {
 		for _, mount := range container.VolumeDevices {
-			out = append(out, s.mountsBuildRow(info, mount))
+			out = append(out, s.mountsBuildRow(mount))
 		}
 	}
 	return out, nil
@@ -180,27 +162,16 @@ func (s *volumes) BuildContainerSpec(container v1.Container, info BuilderInforma
 func (s *volumes) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
 	out := [][]Cell{}
 	if !s.ShowVolumeDevice {
-		podVolumes := s.createVolumeMap(info.Pod.Spec.Volumes)
+		podVolumes := s.createVolumeMap(info.Data.pod.Spec.Volumes)
 		for _, mount := range container.VolumeMounts {
 			out = append(out, s.volumesBuildRow(info, podVolumes, mount))
 		}
 	} else {
 		for _, mount := range container.VolumeDevices {
-			out = append(out, s.mountsBuildRow(info, mount))
+			out = append(out, s.mountsBuildRow(mount))
 		}
 	}
 	return out, nil
-}
-
-func (s *volumes) Sum(rows [][]Cell) []Cell {
-	var rowOut []Cell
-
-	if !s.ShowVolumeDevice {
-		rowOut = make([]Cell, 6)
-	} else {
-		rowOut = make([]Cell, 2)
-	}
-	return rowOut
 }
 
 func (s *volumes) createVolumeMap(volumes []v1.Volume) map[string]map[string]Cell {
@@ -343,10 +314,6 @@ func (s *volumes) volumesBuildRow(info BuilderInformation, podVolumes map[string
 		backing = volume["backing"]
 	}
 
-	// if info.TreeView {
-	// 	cellList = info.BuildTreeCell(cellList)
-	// }
-
 	cellList = append(cellList,
 		NewCellText(mount.Name),
 		volumeType,
@@ -358,12 +325,8 @@ func (s *volumes) volumesBuildRow(info BuilderInformation, podVolumes map[string
 	return cellList
 }
 
-func (s *volumes) mountsBuildRow(info BuilderInformation, mountInfo v1.VolumeDevice) []Cell {
+func (s *volumes) mountsBuildRow(mountInfo v1.VolumeDevice) []Cell {
 	var cellList []Cell
-
-	// if info.TreeView {
-	// 	cellList = info.BuildTreeCell(cellList)
-	// }
 
 	cellList = append(cellList,
 		NewCellText(mountInfo.Name),
