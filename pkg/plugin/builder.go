@@ -151,7 +151,7 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 	log.Debug("Start")
 
 	for _, value := range parent.child {
-		var partOut []Cell
+		var partOut [][]Cell
 		var err error
 
 		rowid := b.Table.AddPlaceHolderRow()
@@ -163,29 +163,41 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 
 		if value.kind == "Pod" {
 			infoPod := *info
-			partOut, err = b.buildPodTree(loop, &infoPod, value.indent, value.kind)
+			infoPod.PodName = value.data.pod.Name
+			infoPod.NodeName = value.data.pod.Spec.NodeName
+
+			//check if we have any labels that need to be shown as columns
+			b.setValuesAnnotationLabel(info.Data.pod)
+			// infoPod := *info
+			partOut, err = b.podLoop(loop, infoPod, value.data.pod, value.indent+1)
 			if err != nil {
 				return [][]Cell{}, err
 			}
 		} else {
 			//make the row for the table header line
 			infoSet := *info
-			resourceTotals, err := b.walkTreeCreateRow(loop, &infoSet, *value)
-			if err == nil {
-				if len(resourceTotals) > 0 {
-					partOut, err = loop.BuildBranch(infoSet, resourceTotals)
-				}
-			}
+			partOut, err = b.walkTreeCreateRow(loop, &infoSet, *value)
 		}
 
+		if err != nil {
+			return [][]Cell{}, err
+		}
+
+		infoSet := *info
 		if len(partOut) == 0 {
 			b.Table.HidePlaceHolderRow(rowid)
 		} else {
-			tblOut := b.makeFullRow(info, value.indent, partOut)
-			if len(tblOut) > 0 {
+			//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+			tblBranch, err := loop.BuildBranch(infoSet, partOut)
+			if err != nil {
+				return [][]Cell{}, err
+			}
+
+			if len(tblBranch) > 0 {
+				tblOut := b.makeFullRow(info, value.indent, tblBranch)
 				b.Table.UpdatePlaceHolderRow(rowid, tblOut)
 			}
-			totals = append(totals, partOut)
+			totals = append(totals, tblBranch)
 		}
 
 		b.labelNodeValue = ""
@@ -194,42 +206,6 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 	}
 
 	return totals, nil
-}
-
-// buildPodTree - sets info properties ready to call podLoop and then buildBranch
-func (b *RowBuilder) buildPodTree(loop Looper, info *BuilderInformation, indent int, kind string) ([]Cell, error) {
-	var tblBranch []Cell
-
-	log := logger{location: "RowBuilder:buildPodTree"}
-	log.Debug("Start")
-
-	log.Debug("pod.Name =", info.Data.pod.Name)
-	infoPod := *info
-	// infoPod.Pod = &pod
-	infoPod.PodName = info.Data.pod.Name
-	infoPod.Namespace = info.Data.pod.Namespace
-	infoPod.NodeName = info.Data.pod.Spec.NodeName
-	infoPod.ContainerType = "P"
-	infoPod.TypeName = kind
-
-	//check if we have any labels that need to be shown as columns
-	b.setValuesAnnotationLabel(info.Data.pod)
-	// infoPod := *info
-	tblOut, err := b.podLoop(loop, infoPod, info.Data.pod, indent+1)
-	if err != nil {
-		return []Cell{}, err
-	}
-
-	if len(tblOut) > 0 {
-		//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-		tblBranch, err = loop.BuildBranch(infoPod, tblOut)
-		if err != nil {
-			return []Cell{}, err
-		}
-	}
-	// tblOut = append(tblOut, tblBranch)
-	// return tblOut, nil
-	return tblBranch, nil
 }
 
 // check if any labels or annotations are needed and set their values

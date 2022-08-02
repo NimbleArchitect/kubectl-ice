@@ -200,7 +200,7 @@ func (t *Table) Print() {
 			}
 
 			//we need to be able to exclude rows even if the column is hidden, se we only skip this
-			// column after the exclusion check has bee run
+			// column after the exclusion check has been run
 			if t.head[idx].hidden {
 				continue
 			}
