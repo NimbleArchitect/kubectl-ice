@@ -3,27 +3,13 @@ package plugin
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
 // sets the maximum number of spaces allowed in a column, spaces are clipped to this number
 const maxLineLength = 80
 
-type matchFilter struct {
-	value      string
-	comparison int  // 1:>, 2:<, 3:!
-	compareEql bool // true:==, true:<=, true:>=
-	set        bool
-}
-
-type matchValue struct {
-	operator string
-	value    string
-}
-
 type headerRow struct {
-	filter       matchFilter
 	columnLength int
 	columnType   int // 0:string, 1:int
 	hidden       bool
@@ -193,15 +179,9 @@ func (t *Table) Print() {
 		for col := 0; col < t.headCount; col++ {
 			idx := t.columnOrder[col]
 			cell := row[idx]
-			// due to looping over every column in the row we only set excludeRow if it is still false
-			if !excludeRow {
-				// do we have an exclude filter set that we need to process
-				excludeRow = t.exclusionFilter(cell, idx)
-			}
 
-			//we need to be able to exclude rows even if the column is hidden, se we only skip this
-			// column after the exclusion check has been run
 			if t.head[idx].hidden {
+				// dont process the row if its hidden
 				continue
 			}
 
@@ -467,212 +447,6 @@ func (t *Table) SortByNames(name ...string) error {
 			ascend := !columnDescend[i]
 			t.sort(t.rowOrder, columnIds[i], ascend)
 		}
-	}
-
-	return nil
-}
-
-// check if matchWord should be excluded using the given filter idx
-// return true if matchWord should be excluded and false all other times
-func (t *Table) exclusionFilter(matchCell Cell, idx int) bool {
-	var fValue float64
-	var iValue int64
-
-	exclude := true
-	filter := t.head[idx].filter
-
-	// do we have an exclude filter set that we need to process
-	if !filter.set {
-		return false
-	}
-
-	if t.head[idx].columnType == 0 {
-		exclude = canExcludeMatchString(filter, matchCell.text, filter.value)
-	}
-
-	if t.head[idx].columnType == 1 {
-		//convert filter.value to number
-		iValue, _ = strconv.ParseInt(filter.value, 10, 64)
-
-		exclude = canExcludeMatchInt(filter, matchCell.number, iValue)
-	}
-
-	if t.head[idx].columnType == 2 {
-		//convert filter.value to float
-		fValue, _ = strconv.ParseFloat(filter.value, 64)
-
-		exclude = canExcludeMatchFloat(filter, matchCell.float, fValue)
-	}
-	return exclude
-}
-
-func canExcludeMatchString(filter matchFilter, val1 string, val2 string) bool {
-	//equals
-	if filter.compareEql {
-		if strMatch(val1, val2) {
-			return false
-		}
-	}
-
-	// not
-	if filter.comparison == 3 {
-		if !strMatch(val1, val2) {
-			return false
-		}
-	}
-
-	// bigger
-	if filter.comparison == 1 {
-		if val1 > val2 {
-			return false
-		}
-	}
-
-	// smaller
-	if filter.comparison == 2 {
-		if val1 < val2 {
-			return false
-		}
-	}
-
-	return true
-}
-
-func canExcludeMatchInt(filter matchFilter, val1 int64, val2 int64) bool {
-	//equals
-	if filter.compareEql {
-		if val1 == val2 {
-			return false
-		}
-	}
-
-	//not equals
-	if filter.comparison == 3 {
-		if val1 != val2 {
-			return false
-		}
-	}
-
-	// bigger
-	if filter.comparison == 1 {
-		if val1 > val2 {
-			return false
-		}
-	}
-
-	// smaller
-	if filter.comparison == 2 {
-		if val1 < val2 {
-			return false
-		}
-	}
-
-	return true
-}
-
-func canExcludeMatchFloat(filter matchFilter, val1 float64, val2 float64) bool {
-	//equals
-	if filter.compareEql {
-		if val1 == val2 {
-			return false
-		}
-	}
-
-	//not equals
-	if filter.comparison == 3 {
-		if val1 != val2 {
-			return false
-		}
-	}
-
-	// bigger
-	if filter.comparison == 1 {
-		if val1 > val2 {
-			return false
-		}
-	}
-
-	// smaller
-	if filter.comparison == 2 {
-		if val1 < val2 {
-			return false
-		}
-	}
-
-	return true
-}
-
-// takes a filter as a string to exclude matching rows from the Print function
-// filter is in the form COLUMN_NAME OPERATOR VALUE, where operator can be one of <,>,<=,>=,!=,=,==
-func (t *Table) SetFilter(filter map[string]matchValue) error {
-	for words, match := range filter {
-		// the smallest header name is T making a valid string "T=0"
-		if len([]rune(words)) < 1 {
-			continue
-		}
-
-		found := false
-		columnName := ""
-		operator := ""
-		value := ""
-
-		if len(match.operator) > 0 && len(words) > 0 {
-			columnName = words
-			operator = match.operator
-			value = match.value
-			found = true
-		}
-
-		if found {
-			idx := -1
-			for i := 0; i < len(t.head); i++ {
-				if columnName == t.head[i].title {
-					idx = i
-					break
-				}
-			}
-
-			if idx == -1 {
-				return errors.New("invalid column name specified")
-			}
-
-			switch operator {
-			case "=":
-				fallthrough
-			case "==":
-				t.head[idx].filter.comparison = 0
-				t.head[idx].filter.compareEql = true
-
-			case "<=":
-				t.head[idx].filter.comparison = 2
-				t.head[idx].filter.compareEql = true
-
-			case ">=":
-				t.head[idx].filter.comparison = 1
-				t.head[idx].filter.compareEql = true
-
-			case "<":
-				t.head[idx].filter.comparison = 2
-
-			case ">":
-				t.head[idx].filter.comparison = 1
-
-			case "!=":
-				t.head[idx].filter.comparison = 3
-				t.head[idx].filter.compareEql = false
-
-			default:
-				return errors.New("invalid operator found")
-			}
-
-			if len(value) <= 0 {
-				return errors.New("invalid value specified for filter")
-			}
-
-			t.head[idx].filter.value = value
-			t.head[idx].filter.set = true
-		}
-
 	}
 
 	return nil

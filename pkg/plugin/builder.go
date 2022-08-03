@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"errors"
+	"strconv"
 
 	v1 "k8s.io/api/core/v1"
 )
@@ -53,6 +54,18 @@ type BuilderInformation struct {
 	Name          string // objects name
 	TreeView      bool
 	TypeName      string // k8s kind
+}
+
+type matchFilter struct {
+	value      string
+	comparison int  // 1:>, 2:<, 3:!
+	compareEql bool // true:==, true:<=, true:>=
+	set        bool
+}
+
+type matchValue struct {
+	operator string
+	value    string
 }
 
 // SetFlagsFrom sets the common flags to match the values retrieved from the passed object
@@ -217,13 +230,46 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 
 // matchShouldExclude checks the match filter and returns true if the row should be excluded from output
 func (b *RowBuilder) matchShouldExclude(tblOut []Cell) bool {
+	var fValue float64
+	var iValue int64
 
-	// ***********************************
-	// TODO: finish this off it needs to come from  table.go - exclusionFilter func
-	//   dont forcet to swap SetFilter out in the LoadHeaders func
-	// ***********************************
+	exclude := true
 
-	// add row to table
+	if len(b.FilterList) == 0 {
+		return false
+	}
+
+	for idx, cell := range tblOut {
+		filter := b.filter[idx]
+
+		// do we have an exclude filter set that we need to process
+		if !filter.set {
+			continue
+		}
+
+		if cell.typ == 0 {
+			exclude = b.canExcludeMatchString(filter, cell.text, filter.value)
+		}
+
+		if cell.typ == 1 {
+			//convert filter.value to number
+			iValue, _ = strconv.ParseInt(filter.value, 10, 64)
+
+			exclude = b.canExcludeMatchInt(filter, cell.number, iValue)
+		}
+
+		if cell.typ == 2 {
+			//convert filter.value to float
+			fValue, _ = strconv.ParseFloat(filter.value, 64)
+
+			exclude = b.canExcludeMatchFloat(filter, cell.float, fValue)
+		}
+
+		if exclude {
+			return true
+		}
+	}
+
 	return false
 }
 
@@ -342,8 +388,9 @@ func (b *RowBuilder) LoadHeaders(loop Looper, info *BuilderInformation) error {
 	if len(b.FilterList) >= 1 {
 		b.head = tblHead // we need a local copy of the header for filters to work
 		// TODO: swap SetFilter out with the one below
-		err := b.Table.SetFilter(b.FilterList)
-		// err := b.setFilter(b.FilterList)
+		// err := b.Table.SetFilter(b.FilterList)
+		b.filter = make([]matchFilter, len(b.head))
+		err := b.setFilter(b.FilterList)
 		if err != nil {
 			return err
 		}
@@ -735,4 +782,100 @@ func (b *RowBuilder) getDefaultCells(info *BuilderInformation) []Cell {
 			NewCellText(info.Name),
 		}
 	}
+}
+
+func (b RowBuilder) canExcludeMatchString(filter matchFilter, val1 string, val2 string) bool {
+	//equals
+	if filter.compareEql {
+		if strMatch(val1, val2) {
+			return false
+		}
+	}
+
+	// not
+	if filter.comparison == 3 {
+		if !strMatch(val1, val2) {
+			return false
+		}
+	}
+
+	// bigger
+	if filter.comparison == 1 {
+		if val1 > val2 {
+			return false
+		}
+	}
+
+	// smaller
+	if filter.comparison == 2 {
+		if val1 < val2 {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (b RowBuilder) canExcludeMatchInt(filter matchFilter, val1 int64, val2 int64) bool {
+	//equals
+	if filter.compareEql {
+		if val1 == val2 {
+			return false
+		}
+	}
+
+	//not equals
+	if filter.comparison == 3 {
+		if val1 != val2 {
+			return false
+		}
+	}
+
+	// bigger
+	if filter.comparison == 1 {
+		if val1 > val2 {
+			return false
+		}
+	}
+
+	// smaller
+	if filter.comparison == 2 {
+		if val1 < val2 {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (b RowBuilder) canExcludeMatchFloat(filter matchFilter, val1 float64, val2 float64) bool {
+	//equals
+	if filter.compareEql {
+		if val1 == val2 {
+			return false
+		}
+	}
+
+	//not equals
+	if filter.comparison == 3 {
+		if val1 != val2 {
+			return false
+		}
+	}
+
+	// bigger
+	if filter.comparison == 1 {
+		if val1 > val2 {
+			return false
+		}
+	}
+
+	// smaller
+	if filter.comparison == 2 {
+		if val1 < val2 {
+			return false
+		}
+	}
+
+	return true
 }
