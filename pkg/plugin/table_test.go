@@ -18,7 +18,7 @@ type tableSetHeaderTest struct {
 }
 
 var tableSetHeaderTests = []tableSetHeaderTest{
-	{[]string{"a", "b"}, 2, []int{0, 1}, []headerRow{{matchFilter{"", 0, false, false}, 3, 0, false, 0, "a"}, {matchFilter{"", 0, false, false}, 3, 0, false, 0, "b"}}},
+	{[]string{"a", "b"}, 2, []int{0, 1}, []headerRow{{3, 0, false, 0, "a"}, {3, 0, false, 0, "b"}}},
 }
 
 func TestTableSetHeader(t *testing.T) {
@@ -111,11 +111,11 @@ type hideColumnTest struct {
 	expected []headerRow
 }
 
-// []headerRow{{matchFilter{"", 0, false, false}, 3, 0, false, 0, "a"}, {matchFilter{"", 0, false, false}, 3, 0, false, 0, "b"}}}
+// []headerRow{{ 3, 0, false, 0, "a"}, { 3, 0, false, 0, "b"}}}
 var hideColumnTests = []hideColumnTest{
-	{2, []headerRow{{matchFilter{"", 0, false, false}, 3, 0, false, 0, "A"}, {matchFilter{"", 0, false, false}, 3, 0, false, 0, "B"}, {matchFilter{"", 0, false, false}, 3, 0, true, 0, "C"}}},
-	{2, []headerRow{{matchFilter{"", 0, false, false}, 3, 0, false, 0, "A"}, {matchFilter{"", 0, false, false}, 3, 0, false, 0, "B"}, {matchFilter{"", 0, false, false}, 3, 0, true, 0, "C"}}},
-	{0, []headerRow{{matchFilter{"", 0, false, false}, 3, 0, true, 0, "A"}, {matchFilter{"", 0, false, false}, 3, 0, false, 0, "B"}, {matchFilter{"", 0, false, false}, 3, 0, true, 0, "C"}}},
+	{2, []headerRow{{3, 0, false, 0, "A"}, {3, 0, false, 0, "B"}, {3, 0, true, 0, "C"}}},
+	{2, []headerRow{{3, 0, false, 0, "A"}, {3, 0, false, 0, "B"}, {3, 0, true, 0, "C"}}},
+	{0, []headerRow{{3, 0, true, 0, "A"}, {3, 0, false, 0, "B"}, {3, 0, true, 0, "C"}}},
 }
 
 func TestHideColumn(t *testing.T) {
