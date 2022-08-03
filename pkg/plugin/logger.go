@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-var logDebug bool
+var LogDebug bool
 var dontUseColour bool = true
 
 type logger struct {
@@ -72,7 +72,7 @@ func (l *logger) Error(message ...interface{}) {
 
 func (l *logger) Debug(message ...interface{}) {
 	// need to set colours here
-	if logDebug {
+	if LogDebug {
 		id := 3
 		logPrefix, logColour := logGetType(id)
 

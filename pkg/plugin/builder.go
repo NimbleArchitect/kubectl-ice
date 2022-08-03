@@ -70,7 +70,6 @@ type matchValue struct {
 
 // SetFlagsFrom sets the common flags to match the values retrieved from the passed object
 func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
-
 	log := logger{location: "RowBuilder:SetFlagsFrom"}
 	log.Debug("Start")
 
@@ -140,7 +139,7 @@ func (b *RowBuilder) Build(loop Looper) error {
 			if b.ShowNodeTree {
 				info.Namespace = value.namespace
 				info.Name = value.name
-				info.ContainerType = "N"
+				info.ContainerType = TypeIDNode
 				info.TypeName = value.kind
 				if len(totals) > 0 {
 					partOut, _ := loop.BuildBranch(info, totals)
@@ -344,8 +343,8 @@ func (b *RowBuilder) BuildContainerTable(loop Looper, info *BuilderInformation, 
 		infoPod.PodName = pod.Name
 		infoPod.Namespace = pod.Namespace
 		infoPod.NodeName = pod.Spec.NodeName
-		infoPod.ContainerType = "P"
-		infoPod.TypeName = "Pod"
+		infoPod.ContainerType = TypeIDPod
+		infoPod.TypeName = TypeNamePod
 
 		// check if we have any labels that need to be shown as columns
 		b.setValuesAnnotationLabel(pod)
@@ -524,8 +523,8 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 
 	if b.ShowInitContainers {
 		log.Debug("loop init ContainerStatuses")
-		info.ContainerType = "I"
-		info.TypeName = "InitContainer"
+		info.ContainerType = TypeIDInitContainer
+		info.TypeName = TypeNameInitContainer
 		if b.LoopStatus {
 			for _, container := range pod.Status.InitContainerStatuses {
 				// should the container be processed
@@ -575,7 +574,7 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 
 	// now show the container line
 	log.Debug("loop standard ContainerStatuses")
-	info.ContainerType = "C"
+	info.ContainerType = TypeIDContainer
 	info.TypeName = "Container"
 	if b.LoopStatus {
 		for _, container := range pod.Status.ContainerStatuses {
@@ -622,8 +621,8 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 	}
 
 	log.Debug("loop ephemeral ContainerStatuses")
-	info.ContainerType = "E"
-	info.TypeName = "EphemeralContainer"
+	info.ContainerType = TypeIDEphemeralContainer
+	info.TypeName = TypeNameEphemeralContainer
 	if b.LoopStatus {
 		for _, container := range pod.Status.EphemeralContainerStatuses {
 			// should the container be processed

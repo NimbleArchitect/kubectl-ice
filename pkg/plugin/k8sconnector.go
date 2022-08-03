@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	a1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -17,6 +18,32 @@ import (
 	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
+const TypeIDContainer string = "C"
+const TypeNameContainer string = "Container"
+const TypeIDInitContainer string = "I"
+const TypeNameInitContainer string = "InitContainer"
+const TypeIDEphemeralContainer string = "E"
+const TypeNameEphemeralContainer string = "EphemeralContainer"
+const TypeIDPod string = "P"
+const TypeNamePod string = "Pod"
+const TypeIDNode string = "N"
+const TypeNameNode string = "Node"
+const TypeIDDeployment string = "D"
+const TypeNameDeployment string = "Deployment"
+const TypeIDReplicaSet string = "R"
+const TypeNameReplicaSet string = "ReplicaSet"
+const TypeIDDaemonSet string = "A"
+const TypeNameDaemonSet string = "DaemonSet"
+const TypeIDStatefulSet string = "S"
+const TypeNameStatefulSet string = "StatefulSet"
+const TypeIDJob string = "J"
+const TypeNameJob string = "Job"
+const TypeIDCronJob string = "O"
+const TypeNameCronJob string = "CronJob"
+
+// const TypeID string= ""
+// const TypeName string = ""
+
 type Connector struct {
 	clientSet      kubernetes.Clientset
 	metricSet      metricsclientset.Clientset
@@ -25,11 +52,13 @@ type Connector struct {
 	metricFlags    *genericclioptions.ConfigFlags
 	configMapArray map[string]map[string]string
 	setNameSpace   string
-	podList        []v1.Pod                    // List of Pods
-	replicaList    map[string][]a1.ReplicaSet  // list of ReplicaSets
-	daemonList     map[string][]a1.DaemonSet   // list of DaemonSets
-	statefulList   map[string][]a1.StatefulSet // list of StatefulSet
-	deploymentList map[string][]a1.Deployment  // list of Deployments
+	podList        []v1.Pod                     // List of Pods
+	replicaList    map[string][]a1.ReplicaSet   // list of ReplicaSets
+	daemonList     map[string][]a1.DaemonSet    // list of DaemonSets
+	statefulList   map[string][]a1.StatefulSet  // list of StatefulSet
+	deploymentList map[string][]a1.Deployment   // list of Deployments
+	jobList        map[string][]batchv1.Job     // list of k8s Jobs
+	cronJobList    map[string][]batchv1.CronJob // list of k8s CronJobs
 }
 
 type ParentData struct {
@@ -41,6 +70,8 @@ type ParentData struct {
 	replica       a1.ReplicaSet
 	stateful      a1.StatefulSet
 	daemon        a1.DaemonSet
+	job           batchv1.Job
+	cronjob       batchv1.CronJob
 	pod           v1.Pod
 }
 
@@ -780,6 +811,140 @@ func (c *Connector) LoadStatefulSet(statefulNameList []string, namespace string)
 	}
 }
 
+func (c *Connector) GetJob(jobName string, namespace string) *batchv1.Job {
+	var cj []batchv1.Job
+
+	if _, ok := c.jobList[namespace]; ok {
+		cj = c.jobList[namespace]
+	} else {
+		c.LoadJob([]string{}, namespace)
+		if _, ok := c.jobList[namespace]; ok {
+			cj = c.jobList[namespace]
+		}
+	}
+
+	for _, j := range cj {
+		if j.Name == jobName {
+			return &j
+		}
+	}
+	return nil
+}
+
+func (c *Connector) LoadJob(jobNameList []string, namespace string) error {
+	log := logger{location: "k8sconnector:LoadJob"}
+	log.Debug("Start")
+
+	selector := metav1.ListOptions{}
+	if len(c.jobList[namespace]) == 0 {
+		c.jobList = make(map[string][]batchv1.Job)
+	}
+
+	if len(jobNameList) > 0 {
+		// single pod
+		for _, name := range jobNameList {
+			j, err := c.clientSet.BatchV1().Jobs(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+			if err == nil {
+				list := append(c.jobList[namespace], *j)
+				c.jobList[namespace] = list
+			} else {
+				return fmt.Errorf("failed to retrieve Job from server: %w", err)
+			}
+		}
+
+		return nil
+	}
+
+	// multi pods
+	if len(c.Flags.labels) > 0 {
+		selector.LabelSelector = c.Flags.labels
+	}
+
+	j, err := c.clientSet.BatchV1().Jobs(namespace).List(context.TODO(), selector)
+
+	if err == nil {
+		if len(j.Items) == 0 {
+			return errors.New("no Jobs found in default namespace")
+		} else {
+			if len(c.Flags.matchSpecList) > 0 {
+				return err
+			} else {
+				c.jobList[namespace] = append(c.jobList[namespace], j.Items...)
+				return nil
+			}
+		}
+	} else {
+		return fmt.Errorf("failed to retrieve Job list from server: %w", err)
+	}
+}
+
+func (c *Connector) GetCronJob(jobName string, namespace string) *batchv1.CronJob {
+	var cj []batchv1.CronJob
+
+	if _, ok := c.cronJobList[namespace]; ok {
+		cj = c.cronJobList[namespace]
+	} else {
+		c.LoadCronJob([]string{}, namespace)
+		if _, ok := c.cronJobList[namespace]; ok {
+			cj = c.cronJobList[namespace]
+		}
+	}
+
+	for _, j := range cj {
+		if j.Name == jobName {
+			return &j
+		}
+	}
+	return nil
+}
+
+func (c *Connector) LoadCronJob(jobNameList []string, namespace string) error {
+	log := logger{location: "k8sconnector:LoadCronJob"}
+	log.Debug("Start")
+
+	selector := metav1.ListOptions{}
+	if len(c.cronJobList[namespace]) == 0 {
+		c.cronJobList = make(map[string][]batchv1.CronJob)
+	}
+
+	if len(jobNameList) > 0 {
+		// single pod
+		for _, name := range jobNameList {
+			j, err := c.clientSet.BatchV1().CronJobs(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+			if err == nil {
+				list := append(c.cronJobList[namespace], *j)
+				c.cronJobList[namespace] = list
+			} else {
+				return fmt.Errorf("failed to retrieve CronJob from server: %w", err)
+			}
+		}
+
+		return nil
+	}
+
+	// multi pods
+	if len(c.Flags.labels) > 0 {
+		selector.LabelSelector = c.Flags.labels
+	}
+
+	j, err := c.clientSet.BatchV1().CronJobs(namespace).List(context.TODO(), selector)
+
+	if err == nil {
+		if len(j.Items) == 0 {
+			return errors.New("no CronJobs found in default namespace")
+		} else {
+			if len(c.Flags.matchSpecList) > 0 {
+				return err
+			} else {
+				c.cronJobList[namespace] = append(c.cronJobList[namespace], j.Items...)
+				return nil
+			}
+		}
+	} else {
+		return fmt.Errorf("failed to retrieve CronJob list from server: %w", err)
+	}
+}
+
 func (c *Connector) BuildOwnersList() []*LeafNode {
 
 	rootnode := LeafNode{child: []*LeafNode{}}
@@ -790,8 +955,8 @@ func (c *Connector) BuildOwnersList() []*LeafNode {
 		parentList := []ParentData{{
 			name:          pod.Name,
 			namespace:     pod.Namespace,
-			kind:          "Pod",
-			kindIndicator: "P",
+			kind:          TypeNamePod,
+			kindIndicator: TypeIDPod,
 			pod:           pod,
 		}}
 		oref := pod.GetOwnerReferences()
@@ -818,82 +983,111 @@ func (c *Connector) BuildOwnersList() []*LeafNode {
 }
 
 func (c *Connector) appendParents(current []ParentData, oref []metav1.OwnerReference, nodename string, namespace string) []ParentData {
+	log := logger{location: "k8sconnector:appendParents"}
+	log.Debug("Start")
+
 	// check if parent exists based on kind
 	if len(oref) == 0 {
+		//if is dosent force it to nodename from the pod spec
 		current = append([]ParentData{{
 			name:          nodename,
-			kind:          "Node",
-			kindIndicator: "N",
+			kind:          TypeNameNode,
+			kindIndicator: TypeIDNode,
 		}}, current...)
 	}
 	for _, v := range oref {
-		if v.Kind == "Node" {
+		log.Debug("v.Kind", v.Kind)
+		if v.Kind == TypeNameNode {
 			current = append([]ParentData{{
 				name:          v.Name,
 				kind:          v.Kind,
-				kindIndicator: "N",
+				kindIndicator: TypeIDNode,
 			}}, current...)
 		}
-		if v.Kind == "Deployment" {
+		if v.Kind == TypeNameDeployment {
 			deployment := c.GetDeployment(v.Name, namespace)
 			if deployment != nil {
 				current = append([]ParentData{{
 					name:          v.Name,
 					kind:          v.Kind,
-					kindIndicator: "D",
+					kindIndicator: TypeIDDeployment,
 					namespace:     deployment.Namespace,
 					deployment:    *deployment,
 				}}, current...)
 
 				return c.appendParents(current, deployment.GetOwnerReferences(), nodename, namespace)
-
 			}
 		}
-		if v.Kind == "ReplicaSet" {
+		if v.Kind == TypeNameReplicaSet {
 			replica := c.GetReplicaSet(v.Name, namespace)
 
 			if replica != nil {
 				current = append([]ParentData{{
 					name:          v.Name,
 					kind:          v.Kind,
-					kindIndicator: "R",
+					kindIndicator: TypeIDReplicaSet,
 					namespace:     replica.Namespace,
 					replica:       *replica,
 				}}, current...)
 
 				return c.appendParents(current, replica.GetOwnerReferences(), nodename, namespace)
 			}
-
 		}
-		if v.Kind == "DaemonSet" {
+		if v.Kind == TypeNameDaemonSet {
 			daemon := c.GetDaemonSet(v.Name, namespace)
 			if daemon != nil {
 				current = append([]ParentData{{
 					name:          v.Name,
 					kind:          v.Kind,
-					kindIndicator: "A",
+					kindIndicator: TypeIDDaemonSet,
 					namespace:     daemon.Namespace,
 					daemon:        *daemon,
 				}}, current...)
 
 				return c.appendParents(current, daemon.GetOwnerReferences(), nodename, namespace)
 			}
-
 		}
-		if v.Kind == "StatefulSet" {
+		if v.Kind == TypeNameStatefulSet {
 			stateful := c.GetStatefulSet(v.Name, namespace)
 			if stateful != nil {
 				current = append([]ParentData{{
 					name:          v.Name,
 					kind:          v.Kind,
-					kindIndicator: "S",
+					kindIndicator: TypeIDStatefulSet,
 					namespace:     stateful.Namespace,
 					stateful:      *stateful,
 				}}, current...)
 
 				return c.appendParents(current, stateful.GetOwnerReferences(), nodename, namespace)
 			}
+		}
+		if v.Kind == TypeNameJob {
+			job := c.GetJob(v.Name, namespace)
+			if job != nil {
+				current = append([]ParentData{{
+					name:          v.Name,
+					kind:          v.Kind,
+					kindIndicator: TypeIDJob,
+					namespace:     job.Namespace,
+					job:           *job,
+				}}, current...)
 
+				return c.appendParents(current, job.GetOwnerReferences(), nodename, namespace)
+			}
+		}
+		if v.Kind == TypeNameCronJob {
+			job := c.GetCronJob(v.Name, namespace)
+			if job != nil {
+				current = append([]ParentData{{
+					name:          v.Name,
+					kind:          v.Kind,
+					kindIndicator: TypeNameCronJob,
+					namespace:     job.Namespace,
+					cronjob:       *job,
+				}}, current...)
+
+				return c.appendParents(current, job.GetOwnerReferences(), nodename, namespace)
+			}
 		}
 	}
 

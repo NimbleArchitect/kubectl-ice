@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/NimbleArchitect/kubectl-ice/pkg/plugin"
 	"github.com/spf13/cobra"
@@ -35,6 +36,11 @@ func RootCmd() *cobra.Command {
 	}
 
 	cobra.OnInitialize(initConfig)
+
+	if strings.ToLower(os.Getenv("ICE_LOG")) == "debug" {
+		plugin.LogDebug = true
+	}
+
 	plugin.InitSubCommands(cmd)
 
 	return cmd
