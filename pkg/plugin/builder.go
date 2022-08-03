@@ -147,6 +147,8 @@ func (b *RowBuilder) Build(loop Looper) error {
 					tblOut := b.makeFullRow(&info, value.indent, partOut)
 					if len(tblOut) > 0 {
 						b.Table.UpdatePlaceHolderRow(rowid, tblOut)
+					} else {
+						b.Table.HidePlaceHolderRow(rowid)
 					}
 				}
 			}
