@@ -65,7 +65,7 @@ func Environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	builder.Connection = &connect
 	builder.SetFlagsFrom(commonFlagList)
 
-	//we need the connection details so we can translate the environment variables
+	// we need the connection details so we can translate the environment variables
 	loopinfo.Connection = &connect
 
 	if cmd.Flag("translate").Value.String() == "true" {
@@ -152,19 +152,19 @@ func (s *environment) envBuildRow(info BuilderInformation, env v1.EnvVar, connec
 			configName = env.ValueFrom.SecretKeyRef.LocalObjectReference.Name
 			key = env.ValueFrom.SecretKeyRef.Key
 			envValue = "SECRETMAP:" + configName + " KEY:" + key
-			translate = false //never translate secrets
+			translate = false // never translate secrets
 		}
 
 		if env.ValueFrom.FieldRef != nil {
 			configName = env.ValueFrom.FieldRef.FieldPath
 			envValue = "FIELDREF:" + configName
-			translate = false //we cant translate FieldRef at the minute
+			translate = false // we cant translate FieldRef at the minute
 		}
 
 		if env.ValueFrom.ResourceFieldRef != nil {
 			configName = env.ValueFrom.ResourceFieldRef.Resource
 			envValue = "RESOURCE:" + configName
-			translate = false //we cant translate resourceFieldRef at the moment
+			translate = false // we cant translate resourceFieldRef at the moment
 		}
 
 		if translate {

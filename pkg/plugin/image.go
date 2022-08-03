@@ -42,9 +42,6 @@ var imageExample = `  # List containers image info from pods
   %[1]s image -l "app in (web,mail)"`
 
 func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	// var columnInfo containerInfomation
-	// var podname []string
-
 	log := logger{location: "Image"}
 	log.Debug("Start")
 
@@ -125,10 +122,6 @@ func (s *image) BuildEphemeralContainerSpec(container v1.EphemeralContainer, inf
 
 func (s *image) imageBuildRow(info BuilderInformation, imageName string, pullPolicy string) []Cell {
 	var cellList []Cell
-
-	// if info.TreeView {
-	// 	cellList = info.BuildTreeCell(cellList)
-	// }
 
 	cellList = append(cellList,
 		NewCellText(pullPolicy),

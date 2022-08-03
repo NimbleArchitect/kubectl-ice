@@ -98,7 +98,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		if !loopinfo.ShowPrevious { // restart count dosent show up when using previous flag
 			// do we need to find the outliers, we have enough data to compute a range
 			if commonFlagList.showOddities {
-				row2Remove, err := table.ListOutOfRange(builder.DefaultHeaderLen + 2) //3 = restarts column
+				row2Remove, err := table.ListOutOfRange(builder.DefaultHeaderLen + 2) // 3 = restarts column
 				if err != nil {
 					return err
 				}
@@ -116,8 +116,8 @@ type status struct {
 	ShowPrevious bool
 	ShowDetails  bool
 
-	pNotReady     bool //Ready - we use the inverted term so the code makes more sense
-	pStopped      bool //Started - we use the inverted term so the code makes more sense
+	pNotReady     bool // Ready - we use the inverted term so the code makes more sense
+	pStopped      bool // Started - we use the inverted term so the code makes more sense
 	pRestarts     int64
 	pRestartsText string
 }
@@ -146,7 +146,7 @@ func (s *status) BuildEphemeralContainerSpec(container v1.EphemeralContainer, in
 }
 
 func (s *status) HideColumns(info BuilderInformation) []int {
-	//"READY","STARTED","RESTARTS","STATE","REASON","EXIT-CODE","SIGNAL","TIMESTAMP","AGE","MESSAGE",
+	// "READY","STARTED","RESTARTS","STATE","REASON","EXIT-CODE","SIGNAL","TIMESTAMP","AGE","MESSAGE",
 	var hideColumns []int
 
 	if s.ShowDetails {
@@ -170,30 +170,30 @@ func (s *status) HideColumns(info BuilderInformation) []int {
 func (s *status) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
 	rowOut := make([]Cell, 10)
 
-	// rowOut[0] //ready
-	// rowOut[1] //started
-	// rowOut[2] //restarts
-	// rowOut[3] //state
-	// rowOut[4] //reason
-	// rowOut[5] //exit-code
-	// rowOut[6] //signal
-	// rowOut[7] //timestamp
-	// rowOut[8] //age
-	// rowOut[9] //message
+	// rowOut[0] // ready
+	// rowOut[1] // started
+	// rowOut[2] // restarts
+	// rowOut[3] // state
+	// rowOut[4] // reason
+	// rowOut[5] // exit-code
+	// rowOut[6] // signal
+	// rowOut[7] // timestamp
+	// rowOut[8] // age
+	// rowOut[9] // message
 
 	rowOut[0].text = "true"
 	rowOut[1].text = "true"
 
-	//loop through each row in podTotals and add the columns in each row
+	// loop through each row in podTotals and add the columns in each row
 	for _, r := range rows {
 		if r[0].text == "false" {
 			// ready = false
-			rowOut[0].text = "false" //ready
+			rowOut[0].text = "false" // ready
 		}
 		if r[1].text == "false" {
-			rowOut[1].text = "false" //started
+			rowOut[1].text = "false" // started
 		}
-		rowOut[2].number += r[2].number //restarts
+		rowOut[2].number += r[2].number // restarts
 
 	}
 
@@ -203,11 +203,15 @@ func (s *status) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, er
 	switch info.TypeName {
 	case "Pod":
 		rawAge := time.Since(info.Data.pod.CreationTimestamp.Time)
-		rowOut[3].text = string(info.Data.pod.Status.Phase)                      //state
-		rowOut[4].text = info.Data.pod.Status.Reason                             //reason
-		rowOut[7].text = info.Data.pod.CreationTimestamp.Format(timestampFormat) //timestamp
-		rowOut[8].text = duration.HumanDuration(rawAge)                          //age
-		rowOut[9].text = info.Data.pod.Status.Message                            //message
+		if info.Data.pod.DeletionTimestamp == nil {
+			rowOut[3].text = string(info.Data.pod.Status.Phase) // state
+		} else {
+			rowOut[3].text = "Terminating" // state
+		}
+		rowOut[4].text = info.Data.pod.Status.Reason                             // reason
+		rowOut[7].text = info.Data.pod.CreationTimestamp.Format(timestampFormat) // timestamp
+		rowOut[8].text = duration.HumanDuration(rawAge)                          // age
+		rowOut[9].text = info.Data.pod.Status.Message                            // message
 	}
 
 	return rowOut, nil
@@ -283,7 +287,7 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 	// remove pod and container name from the message string
 	message = s.trimStatusMessage(message, info.PodName, info.Name)
 
-	//we can only show the age if we have a start time some states dont have said starttime so we have to skip them
+	// we can only show the age if we have a start time some states dont have said starttime so we have to skip them
 	if skipAgeCalculation {
 		age = ""
 	} else {

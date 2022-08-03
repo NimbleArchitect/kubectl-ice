@@ -25,11 +25,11 @@ type Connector struct {
 	metricFlags    *genericclioptions.ConfigFlags
 	configMapArray map[string]map[string]string
 	setNameSpace   string
-	podList        []v1.Pod                    //List of Pods
-	replicaList    map[string][]a1.ReplicaSet  //list of ReplicaSets
-	daemonList     map[string][]a1.DaemonSet   //list of DaemonSets
-	statefulList   map[string][]a1.StatefulSet //list of StatefulSet
-	deploymentList map[string][]a1.Deployment  //list of Deployments
+	podList        []v1.Pod                    // List of Pods
+	replicaList    map[string][]a1.ReplicaSet  // list of ReplicaSets
+	daemonList     map[string][]a1.DaemonSet   // list of DaemonSets
+	statefulList   map[string][]a1.StatefulSet // list of StatefulSet
+	deploymentList map[string][]a1.Deployment  // list of Deployments
 }
 
 type ParentData struct {
@@ -45,7 +45,7 @@ type ParentData struct {
 }
 
 type LeafNode struct {
-	child         map[string]*LeafNode
+	child         []*LeafNode
 	name          string
 	kind          string
 	kindIndicator string
@@ -56,23 +56,23 @@ type LeafNode struct {
 
 func (n *LeafNode) getChild(name string) *LeafNode {
 
-	for k, v := range n.child {
-		if k == name {
-			//return matching child if we have it
+	for _, v := range n.child {
+		if v.name == name {
+			// return matching child if we have it
 			return v
 		}
 	}
 
-	//if we got here we dont have a match so we create a new entry
+	// if we got here we dont have a match so we create a new entry
 	child := LeafNode{
 		name:  name,
-		child: make(map[string]*LeafNode),
+		child: []*LeafNode{},
 	}
 
-	// and add it as a child
-	n.child[name] = &child
+	// and append it as a sibling
+	n.child = append(n.child, &child)
 
-	return n.child[name]
+	return &child
 }
 
 // load config for the k8s endpoint
@@ -227,7 +227,7 @@ func (c *Connector) GetNodes(nodeNameList []string) ([]v1.Node, error) {
 func (c *Connector) SelectMatchinghPodSpec(pods []v1.Pod) ([]v1.Pod, error) {
 	var newPodList []v1.Pod
 
-	//grab and compare the field name to the user suppilied string as the user may have typed all in caps
+	// grab and compare the field name to the user suppilied string as the user may have typed all in caps
 	includeList := make(map[string]matchValue)
 
 	fields := reflect.VisibleFields(reflect.TypeOf(v1.Pod{}.Spec))
@@ -235,7 +235,7 @@ func (c *Connector) SelectMatchinghPodSpec(pods []v1.Pod) ([]v1.Pod, error) {
 		isValid := false
 
 		name := strings.ToUpper(field.Name)
-		//restrict to basic types (string, int, bool)
+		// restrict to basic types (string, int, bool)
 		switch field.Type.String() {
 		case "string", "*string":
 			fallthrough
@@ -568,7 +568,6 @@ func (c *Connector) LoadReplicaSet(replicaNameList []string, namespace string) e
 			return errors.New("no ReplicaSet found in default namespace")
 		} else {
 			if len(c.Flags.matchSpecList) > 0 {
-				// c.replicaList, err = c.SelectMatchinghPodSpec(rs.Items)
 				return err
 			} else {
 				c.replicaList[namespace] = append(c.replicaList[namespace], rs.Items...)
@@ -636,10 +635,8 @@ func (c *Connector) LoadDeployment(deploymentNameList []string, namespace string
 			return errors.New("no Deployment found in default namespace")
 		} else {
 			if len(c.Flags.matchSpecList) > 0 {
-				// c.deploymentList, err = c.SelectMatchinghPodSpec(rs.Items)
 				return err
 			} else {
-				// c.deploymentList = pods.Items
 				c.deploymentList[namespace] = append(c.deploymentList[namespace], d.Items...)
 				return nil
 			}
@@ -783,14 +780,13 @@ func (c *Connector) LoadStatefulSet(statefulNameList []string, namespace string)
 	}
 }
 
-func (c *Connector) BuildOwnersList() map[string]*LeafNode {
+func (c *Connector) BuildOwnersList() []*LeafNode {
 
-	children := make(map[string]*LeafNode)
-	rootnode := LeafNode{child: children}
+	rootnode := LeafNode{child: []*LeafNode{}}
 
 	for _, pod := range c.podList {
 		nodename := pod.Spec.NodeName
-		//first create a list with the pod as the first entry
+		// first create a list with the pod as the first entry
 		parentList := []ParentData{{
 			name:          pod.Name,
 			namespace:     pod.Namespace,
@@ -800,19 +796,19 @@ func (c *Connector) BuildOwnersList() map[string]*LeafNode {
 		}}
 		oref := pod.GetOwnerReferences()
 
-		//then append each owner to the begining of the list, this way we end up with a list that runs from Node to Pod
+		// then append each owner to the begining of the list, this way we end up with a list that runs from Node to Pod
 		parentList = c.appendParents(parentList, oref, nodename, pod.Namespace)
 
 		// finally we can loop through the above list adding children to the tree where they are needed and using child nodes if they already exist
-		current := rootnode
+		current := &rootnode
 		for i, v := range parentList {
 			child := current.getChild(v.name)
 			child.kind = v.kind
 			child.kindIndicator = v.kindIndicator
 			child.namespace = v.namespace
-			child.indent = i //- len(parentList)
+			child.indent = i
 			child.data = v
-			current = *child
+			current = child
 		}
 
 	}
@@ -822,7 +818,7 @@ func (c *Connector) BuildOwnersList() map[string]*LeafNode {
 }
 
 func (c *Connector) appendParents(current []ParentData, oref []metav1.OwnerReference, nodename string, namespace string) []ParentData {
-	//check if parent exists based on kind
+	// check if parent exists based on kind
 	if len(oref) == 0 {
 		current = append([]ParentData{{
 			name:          nodename,

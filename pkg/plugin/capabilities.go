@@ -42,16 +42,12 @@ var capabilitiesExample = `  # List container capabilities from pods
 
 // list details of configured liveness readiness and startup capabilities
 func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
-	// var columnInfo containerInfomation
-	// var podname []string
-
 	log := logger{location: "Capabilities"}
 	log.Debug("Start")
 
 	loopinfo := capabilities{}
 	builder := RowBuilder{}
 	builder.LoopSpec = true
-	// builder.ShowPodName = true
 	builder.ShowInitContainers = true
 	builder.PodName = args
 
@@ -70,7 +66,7 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 
 	table := Table{}
 	builder.Table = &table
-	// columnInfo.table = &table
+
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	builder.Build(&loopinfo)
@@ -122,7 +118,6 @@ func (s *capabilities) BuildEphemeralContainerSpec(container v1.EphemeralContain
 }
 
 func (s *capabilities) capabilitiesBuildRow(securityContext *v1.SecurityContext, info BuilderInformation) []Cell {
-	// func capabilitiesBuildRow(securityContext *v1.SecurityContext, info containerInfomation) []Cell {
 	var cellList []Cell
 
 	capAdd := ""
@@ -147,16 +142,6 @@ func (s *capabilities) capabilitiesBuildRow(securityContext *v1.SecurityContext,
 			}
 		}
 	}
-
-	// capDrop := container.SecurityContext.Capabilities.Drop
-
-	// if info.treeView {
-	// 	cellList = buildTreeCell(info, cellList)
-	// }
-
-	// if info.TreeView {
-	// 	cellList = info.BuildTreeCell(cellList)
-	// }
 
 	cellList = append(cellList,
 		NewCellText(capAdd),

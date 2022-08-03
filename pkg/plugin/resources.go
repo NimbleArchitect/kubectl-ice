@@ -153,7 +153,7 @@ func (s *resource) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, 
 	rowOut := make([]Cell, 5)
 
 	for _, r := range rows {
-		//"USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
+		// "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
 		rowOut[0].number += r[0].number
 		rowOut[1].number += r[1].number
 		rowOut[2].number += r[2].number
@@ -169,7 +169,7 @@ func (s *resource) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, 
 	}
 
 	if s.ResourceType == "memory" {
-		//everything is stored internally as kb so we need to * 1000 to get back to bytes
+		// everything is stored internally as kb so we need to * 1000 to get back to bytes
 		if s.ShowRaw {
 			typefmt = "%dk"
 			rowOut[0].text = fmt.Sprintf(typefmt, rowOut[0].number)
@@ -190,14 +190,14 @@ func (s *resource) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, 
 
 	if rowOut[0].number > 0 {
 		if rowOut[1].number > 0.0 {
-			//calc % request
+			// calc % request
 			val := validateFloat64(float64(rowOut[0].number) / float64(rowOut[1].number) * 100)
 			rowOut[4].text = fmt.Sprintf(floatfmt, val)
 			rowOut[4].float = val
 		}
 
 		if rowOut[2].number > 0.0 {
-			//calc % limit
+			// calc % limit
 			val := validateFloat64(float64(rowOut[0].number) / float64(rowOut[2].number) * 100)
 			rowOut[3].text = fmt.Sprintf(floatfmt, val)
 			rowOut[3].float = val
@@ -235,7 +235,7 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 	if resource == "cpu" {
 		if metrics.Cpu() != nil {
 			if s.ShowRaw {
-				//this returns nanocores as the display value when using --raw
+				// this returns nanocores as the display value when using --raw
 				displayValue = metrics.Cpu().String()
 				rawValue = metrics.Cpu().ScaledValue(apires.Nano)
 				rawLimit = res.Limits.Cpu().ScaledValue(apires.Nano)

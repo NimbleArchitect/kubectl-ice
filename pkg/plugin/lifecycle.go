@@ -162,14 +162,14 @@ func (s *lifecycle) buildLifecycleList(lifecycle *v1.Lifecycle) map[string]lifec
 func (s *lifecycle) buildLifecycleAction(lifecycle *v1.LifecycleHandler) lifecycleAction {
 	item := lifecycleAction{}
 
-	//translate Exec action
+	// translate Exec action
 	if lifecycle.Exec != nil {
 		item.actionName = "Exec"
 		item.action = strings.Join(lifecycle.Exec.Command, " ")
 		return item
 	}
 
-	//translate HTTP action
+	// translate HTTP action
 	if lifecycle.HTTPGet != nil {
 		item.actionName = "HTTPGet"
 		actionStr := ""
@@ -191,7 +191,7 @@ func (s *lifecycle) buildLifecycleAction(lifecycle *v1.LifecycleHandler) lifecyc
 		return item
 	}
 
-	//translate TCPSocket action
+	// translate TCPSocket action
 	if lifecycle.TCPSocket != nil {
 		item.actionName = "TCPSocket"
 		actionStr := ""

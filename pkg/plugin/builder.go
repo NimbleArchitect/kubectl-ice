@@ -20,20 +20,20 @@ type RowBuilder struct {
 	Connection         *Connector
 	Table              *Table
 	CommonFlags        commonFlags
-	PodName            []string //list of pod names to retrieve
-	LoopStatus         bool     //do we need to loop over v1.Pod.Status.ContainerStatus
-	LoopSpec           bool     //should we loop over v1.Pod.Spec.Containers
+	PodName            []string // list of pod names to retrieve
+	LoopStatus         bool     // do we need to loop over v1.Pod.Status.ContainerStatus
+	LoopSpec           bool     // should we loop over v1.Pod.Spec.Containers
 	LabelNodeName      string
 	labelNodeValue     string
 	LabelPodName       string
 	labelPodValue      string
 	AnnotationPodName  string
 	annotationPodValue string
-	ShowTreeView       bool //show the standard tree view with the resource sets as the root
+	ShowTreeView       bool // show the standard tree view with the resource sets as the root
 	ShowPodName        bool
 	ShowInitContainers bool
 	ShowContainerType  bool
-	ShowNodeTree       bool                  //show the tree view with the nodes at the root level rather than just the resource sets at root
+	ShowNodeTree       bool                  // show the tree view with the nodes at the root level rather than just the resource sets at root
 	FilterList         map[string]matchValue // used to filter out rows from the table during Print function
 	DefaultHeaderLen   int
 
@@ -182,15 +182,14 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 			infoPod.PodName = value.data.pod.Name
 			infoPod.NodeName = value.data.pod.Spec.NodeName
 
-			//check if we have any labels that need to be shown as columns
+			// check if we have any labels that need to be shown as columns
 			b.setValuesAnnotationLabel(info.Data.pod)
-			// infoPod := *info
 			partOut, err = b.podLoop(loop, infoPod, value.data.pod, value.indent+1)
 			if err != nil {
 				return [][]Cell{}, err
 			}
 		} else {
-			//make the row for the table header line
+			// make the row for the table header line
 			infoSet := *info
 			partOut, err = b.walkTreeCreateRow(loop, &infoSet, *value)
 		}
@@ -203,7 +202,7 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 		if len(partOut) == 0 {
 			b.Table.HidePlaceHolderRow(rowid)
 		} else {
-			//do we need to show the pod line: Pod/foo-6f67dcc579-znb55
+			// do we need to show the pod line: Pod/foo-6f67dcc579-znb55
 			tblBranch, err := loop.BuildBranch(infoSet, partOut)
 			if err != nil {
 				return [][]Cell{}, err
@@ -252,14 +251,14 @@ func (b *RowBuilder) matchShouldExclude(tblOut []Cell) bool {
 		}
 
 		if cell.typ == 1 {
-			//convert filter.value to number
+			// convert filter.value to number
 			iValue, _ = strconv.ParseInt(filter.value, 10, 64)
 
 			exclude = b.canExcludeMatchInt(filter, cell.number, iValue)
 		}
 
 		if cell.typ == 2 {
-			//convert filter.value to float
+			// convert filter.value to float
 			fValue, _ = strconv.ParseFloat(filter.value, 64)
 
 			exclude = b.canExcludeMatchFloat(filter, cell.float, fValue)
@@ -338,7 +337,7 @@ func (b *RowBuilder) BuildContainerTable(loop Looper, info *BuilderInformation, 
 	for _, pod := range podList {
 		log.Debug("pod.Name =", pod.Name)
 		infoPod := *info
-		//we havent come from a tree list so we need to set infoPod.Data.pod manually
+		// we havent come from a tree list so we need to set infoPod.Data.pod manually
 		infoPod.Data.pod = pod
 		infoPod.PodName = pod.Name
 		infoPod.Namespace = pod.Namespace
@@ -346,7 +345,7 @@ func (b *RowBuilder) BuildContainerTable(loop Looper, info *BuilderInformation, 
 		infoPod.ContainerType = "P"
 		infoPod.TypeName = "Pod"
 
-		//check if we have any labels that need to be shown as columns
+		// check if we have any labels that need to be shown as columns
 		b.setValuesAnnotationLabel(pod)
 
 		_, err := b.podLoop(loop, infoPod, pod, 0)
@@ -387,8 +386,7 @@ func (b *RowBuilder) LoadHeaders(loop Looper, info *BuilderInformation) error {
 	log.Debug("len(b.FilterList) =", len(b.FilterList))
 	if len(b.FilterList) >= 1 {
 		b.head = tblHead // we need a local copy of the header for filters to work
-		// TODO: swap SetFilter out with the one below
-		// err := b.Table.SetFilter(b.FilterList)
+
 		b.filter = make([]matchFilter, len(b.head))
 		err := b.setFilter(b.FilterList)
 		if err != nil {
@@ -492,7 +490,7 @@ func (b *RowBuilder) setVisibleColumns(info *BuilderInformation) {
 	}
 
 	if info.TreeView {
-		//only hide the nodename in tree view
+		// only hide the nodename in tree view
 		if !b.CommonFlags.showNodeName {
 			b.Table.HideColumn(2)
 		}
@@ -533,7 +531,7 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 				if skipContainerName(b.CommonFlags, container.Name) {
 					continue
 				}
-				// info.ContainerName = container.Name
+
 				info.Name = container.Name
 				allRows, err := loop.BuildContainerStatus(container, info)
 				if err != nil {
@@ -556,7 +554,7 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 				if skipContainerName(b.CommonFlags, container.Name) {
 					continue
 				}
-				// info.ContainerName = container.Name
+
 				info.Name = container.Name
 				allRows, err := loop.BuildContainerSpec(container, info)
 				if err != nil {
@@ -573,7 +571,7 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 		}
 	}
 
-	//now show the container line
+	// now show the container line
 	log.Debug("loop standard ContainerStatuses")
 	info.ContainerType = "C"
 	info.TypeName = "Container"
@@ -631,7 +629,7 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 				continue
 			}
 			log.Debug("processing -", container.Name)
-			// info.ContainerName = container.Name
+
 			info.Name = container.Name
 			allRows, err := loop.BuildContainerStatus(container, info)
 			if err != nil {
@@ -654,7 +652,7 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 				continue
 			}
 			log.Debug("processing -", container.Name)
-			// info.ContainerName = container.Name
+
 			info.Name = container.Name
 			allRows, err := loop.BuildEphemeralContainerSpec(container, info)
 			if err != nil {
@@ -695,17 +693,15 @@ func (b *RowBuilder) makeFullRow(info *BuilderInformation, indentLevel int, colu
 
 	if info.TreeView {
 		name := ""
-		//default cells dont have name column, need to add it in tree view
+		// default cells dont have name column, need to add it in tree view
 		if len(info.TypeName) == 0 {
 			name = info.Name
 		} else {
 			name = info.TypeName + "/" + info.Name
 		}
 		if !b.ShowNodeTree {
-			// rowList = append(rowList, NewCellText(indentText(indentLevel-1, name)))
 			rowList = append(rowList, NewCellTextIndent(name, indentLevel-1))
 		} else {
-			// rowList = append(rowList, NewCellText(indentText(indentLevel, name)))
 			rowList = append(rowList, NewCellTextIndent(name, indentLevel))
 		}
 
@@ -728,8 +724,8 @@ func (b *RowBuilder) getDefaultHead(info *BuilderInformation) []string {
 
 	log.Debug("b.info.TreeView =", info.TreeView)
 	if info.TreeView {
-		//in tree view we only create the namespace and nodename columns, the name colume is created outside of this
-		// function so we have full control over its contents
+		// in tree view we only create the namespace and nodename columns, the name colume is created outside of this
+		//  function so we have full control over its contents
 		headList = []string{
 			"T", "NAMESPACE", "NODE",
 		}
@@ -785,7 +781,7 @@ func (b *RowBuilder) getDefaultCells(info *BuilderInformation) []Cell {
 }
 
 func (b RowBuilder) canExcludeMatchString(filter matchFilter, val1 string, val2 string) bool {
-	//equals
+	// equals
 	if filter.compareEql {
 		if strMatch(val1, val2) {
 			return false
@@ -817,14 +813,14 @@ func (b RowBuilder) canExcludeMatchString(filter matchFilter, val1 string, val2 
 }
 
 func (b RowBuilder) canExcludeMatchInt(filter matchFilter, val1 int64, val2 int64) bool {
-	//equals
+	// equals
 	if filter.compareEql {
 		if val1 == val2 {
 			return false
 		}
 	}
 
-	//not equals
+	// not equals
 	if filter.comparison == 3 {
 		if val1 != val2 {
 			return false
@@ -849,14 +845,14 @@ func (b RowBuilder) canExcludeMatchInt(filter matchFilter, val1 int64, val2 int6
 }
 
 func (b RowBuilder) canExcludeMatchFloat(filter matchFilter, val1 float64, val2 float64) bool {
-	//equals
+	// equals
 	if filter.compareEql {
 		if val1 == val2 {
 			return false
 		}
 	}
 
-	//not equals
+	// not equals
 	if filter.comparison == 3 {
 		if val1 != val2 {
 			return false

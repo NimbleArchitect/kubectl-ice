@@ -27,7 +27,7 @@ func skipContainerName(flagList commonFlags, containerName string) bool {
 
 }
 
-//returns a memory multiplier that matches the byteType string
+// returns a memory multiplier that matches the byteType string
 func memoryGetUnitLst(byteType string) (int64, string) {
 	// Ki | Mi | Gi | Ti | Pi | Ei = 1024 = 1Ki
 	// m "" k | M | G | T | P | E = 1000 = 1k
@@ -107,7 +107,7 @@ func outputTableAs(t Table, outType string) {
 // takes a port object and returns either the number or the name as a string with a proceeding :
 // returns empty string if port is empty
 func portAsString(port intstr.IntOrString) string {
-	//port number provided
+	// port number provided
 	if port.Type == 0 {
 		if port.IntVal > 0 {
 			return fmt.Sprintf(":%d", port.IntVal)
@@ -116,7 +116,7 @@ func portAsString(port intstr.IntOrString) string {
 		}
 	}
 
-	//port name provided
+	// port name provided
 	if port.Type == 1 {
 		if len(port.StrVal) > 0 {
 			return ":" + port.StrVal

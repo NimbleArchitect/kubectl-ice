@@ -39,21 +39,21 @@ func logGetType(logType int) (string, string) {
 	)
 
 	switch logType {
-	case 1: //error
+	case 1: // error
 		return "ERROR", ErrorColour
-	case 2: //info
+	case 2: // info
 		return "INFO", InfoColour
-	case 3: //debug
+	case 3: // debug
 		return "DEBUG", DebugColour
-	case 6: //stdin
+	case 6: // stdin
 		return "STDIN", StdinColour
-	case 7: //stdout
+	case 7: // stdout
 		return "STDOUT", StdoutColour
-	case 8: //stderr
+	case 8: // stderr
 		return "STRERR", StderrColour
 	}
 
-	//default catch-all
+	// default catch-all
 	return "UNKNOWN", NoColour
 }
 
@@ -62,7 +62,7 @@ func (l *logger) Error(message ...interface{}) {
 	logPrefix, logColour := logGetType(id)
 
 	msg := fmt.Sprintln(message...)
-	//dump the message out to the screen
+	// dump the message out to the screen
 	if dontUseColour {
 		l.showLog("", logPrefix+": ", msg)
 	} else {
@@ -71,7 +71,7 @@ func (l *logger) Error(message ...interface{}) {
 }
 
 func (l *logger) Debug(message ...interface{}) {
-	//need to set colours here
+	// need to set colours here
 	if logDebug {
 		id := 3
 		logPrefix, logColour := logGetType(id)
@@ -79,7 +79,7 @@ func (l *logger) Debug(message ...interface{}) {
 		msg := fmt.Sprintln(message...)
 		prefix := logPrefix + ":" + l.location + ": "
 
-		//dump the message out to the screen
+		// dump the message out to the screen
 		if dontUseColour {
 			l.showLog("", prefix, msg)
 		} else {

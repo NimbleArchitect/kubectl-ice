@@ -120,7 +120,7 @@ func (s restarts) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, e
 	switch info.TypeName {
 	case "Pod":
 		for _, r := range rows {
-			rowOut[0].number += r[0].number //ready
+			rowOut[0].number += r[0].number // ready
 		}
 		rowOut[0].text = fmt.Sprintf("%d", rowOut[0].number)
 	}

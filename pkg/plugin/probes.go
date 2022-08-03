@@ -194,14 +194,14 @@ func (s *probes) buildProbeAction(name string, probe *v1.Probe) []probeAction {
 		probe:     probe,
 	}
 
-	//translate Exec action
+	// translate Exec action
 	if probe.Exec != nil {
 		item.actionName = "Exec"
 		item.action = strings.Join(probe.Exec.Command, " ")
 		probeList = append(probeList, item)
 	}
 
-	//translate HTTP action
+	// translate HTTP action
 	if probe.HTTPGet != nil {
 		item.actionName = "HTTPGet"
 		actionStr := ""
@@ -223,7 +223,7 @@ func (s *probes) buildProbeAction(name string, probe *v1.Probe) []probeAction {
 		probeList = append(probeList, item)
 	}
 
-	//translate GRPC action
+	// translate GRPC action
 	if probe.GRPC != nil {
 		item.actionName = "GRPC"
 		if probe.GRPC.Service == nil {
@@ -235,7 +235,7 @@ func (s *probes) buildProbeAction(name string, probe *v1.Probe) []probeAction {
 		probeList = append(probeList, item)
 	}
 
-	//translate TCPSocket action
+	// translate TCPSocket action
 	if probe.TCPSocket != nil {
 		item.actionName = "TCPSocket"
 		actionStr := ""

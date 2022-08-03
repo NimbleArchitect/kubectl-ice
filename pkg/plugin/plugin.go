@@ -15,7 +15,7 @@ type commonFlags struct {
 	container          string                // name of the container to search for
 	filterList         map[string]matchValue // used to filter out rows form the table during Print function
 	labels             string                // k8s pod labels
-	showInitContainers bool                  //currently only for mem and cpu sub commands, placed here incase its needed in the future for others
+	showInitContainers bool                  // currently only for mem and cpu sub commands, placed here incase its needed in the future for others
 	showOddities       bool                  // this isnt really common but it does show up across 3+ commands and im lazy
 	showNamespaceName  bool                  // shows the namespace name of each pod
 	showNodeName       bool                  // do we need to show the node name in the output
@@ -24,8 +24,8 @@ type commonFlags struct {
 	showContainerType  bool                  // show container type column
 	byteSize           string                // sets the bytes conversion for the output size
 	outputAs           string                // how to output the table, currently only accepts json
-	sortList           []string              //column names to sort on when table.Print() is called
-	matchSpecList      map[string]matchValue //filter pods based on matches to the v1.Pods.Spec fields
+	sortList           []string              // column names to sort on when table.Print() is called
+	matchSpecList      map[string]matchValue // filter pods based on matches to the v1.Pods.Spec fields
 	labelNodeName      string
 	labelPodName       string
 	annotationPodName  string
@@ -49,7 +49,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
 	rootCmd.SetHelpTemplate(helpTemplate)
 
-	//capabilities
+	// capabilities
 	var cmdCapabilities = &cobra.Command{
 		Use:     "capabilities",
 		Short:   capabilitiesShort,
@@ -69,7 +69,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdCapabilities)
 	rootCmd.AddCommand(cmdCapabilities)
 
-	//commands
+	// commands
 	var cmdCommands = &cobra.Command{
 		Use:     "command",
 		Short:   commandsShort,
@@ -89,7 +89,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdCommands)
 	rootCmd.AddCommand(cmdCommands)
 
-	//cpu
+	// cpu
 	var cmdCPU = &cobra.Command{
 		Use:     "cpu",
 		Short:   resourceShort("cpu"),
@@ -111,7 +111,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdCPU)
 	rootCmd.AddCommand(cmdCPU)
 
-	//environment
+	// environment
 	var cmdEnvironment = &cobra.Command{
 		Use:     "environment",
 		Short:   environmentShort,
@@ -132,7 +132,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdEnvironment)
 	rootCmd.AddCommand(cmdEnvironment)
 
-	//ip
+	// ip
 	var cmdIP = &cobra.Command{
 		Use:     "ip",
 		Short:   ipShort,
@@ -151,7 +151,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdIP)
 	rootCmd.AddCommand(cmdIP)
 
-	//image
+	// image
 	var cmdImage = &cobra.Command{
 		Use:     "image",
 		Short:   imageShort,
@@ -171,7 +171,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdImage)
 	rootCmd.AddCommand(cmdImage)
 
-	//lifecycle
+	// lifecycle
 	var cmdLifecycle = &cobra.Command{
 		Use:     "lifecycle",
 		Short:   lifecycleShort,
@@ -191,7 +191,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdLifecycle)
 	rootCmd.AddCommand(cmdLifecycle)
 
-	//memory
+	// memory
 	var cmdMemory = &cobra.Command{
 		Use:     "memory",
 		Short:   resourceShort("memory"),
@@ -216,7 +216,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdMemory)
 	rootCmd.AddCommand(cmdMemory)
 
-	//ports
+	// ports
 	var cmdPorts = &cobra.Command{
 		Use:     "ports",
 		Short:   portsShort,
@@ -236,7 +236,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdPorts)
 	rootCmd.AddCommand(cmdPorts)
 
-	//probes
+	// probes
 	var cmdProbes = &cobra.Command{
 		Use:     "probes",
 		Short:   probesShort,
@@ -256,7 +256,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdProbes)
 	rootCmd.AddCommand(cmdProbes)
 
-	//restarts
+	// restarts
 	var cmdRestart = &cobra.Command{
 		Use:     "restarts",
 		Short:   restartsShort,
@@ -278,7 +278,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdRestart)
 	rootCmd.AddCommand(cmdRestart)
 
-	//security
+	// security
 	var cmdSecurity = &cobra.Command{
 		Use:     "security",
 		Short:   securityShort,
@@ -299,7 +299,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	addCommonFlags(cmdSecurity)
 	rootCmd.AddCommand(cmdSecurity)
 
-	//status
+	// status
 	var cmdStatus = &cobra.Command{
 		Use:     "status",
 		Short:   statusShort,
@@ -322,11 +322,11 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	cmdStatus.Flags().BoolP("details", "d", false, `Display the timestamp instead of age along with the message column`)
 	cmdStatus.Flags().BoolP("oddities", "", false, odditiesShort)
 	cmdStatus.Flags().BoolP("previous", "p", false, "Show previous state")
-	//TODO: check if I can add labels for service/replicaset/configmap etc.
+	// TODO: check if I can add labels for service/replicaset/configmap etc.
 	addCommonFlags(cmdStatus)
 	rootCmd.AddCommand(cmdStatus)
 
-	//version
+	// version
 	var cmdVersion = &cobra.Command{
 		Use:   "version",
 		Short: versionsShort,
@@ -337,7 +337,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	rootCmd.AddCommand(cmdVersion)
 
-	//volumes
+	// volumes
 	var cmdVolume = &cobra.Command{
 		Use:     "volumes",
 		Short:   volumesShort,

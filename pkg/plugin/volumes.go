@@ -268,7 +268,7 @@ func (s *volumes) decodeVolumeType(volType string, volume v1.VolumeSource) map[s
 
 	case "Projected":
 		tmp := ""
-		//TODO: needs reworking it looks fuggly
+		// TODO: needs reworking it looks fuggly
 		for _, val := range volume.Projected.Sources {
 			if val.ConfigMap != nil {
 				tmp += val.ConfigMap.Name + ","
