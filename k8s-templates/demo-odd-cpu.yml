@@ -52,7 +52,6 @@ spec:
             cpu: "1"
             memory: 256M
 
-          
       volumes:
       - name: app
         configMap:

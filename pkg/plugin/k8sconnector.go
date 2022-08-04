@@ -1081,7 +1081,7 @@ func (c *Connector) appendParents(current []ParentData, oref []metav1.OwnerRefer
 				current = append([]ParentData{{
 					name:          v.Name,
 					kind:          v.Kind,
-					kindIndicator: TypeNameCronJob,
+					kindIndicator: TypeIDCronJob,
 					namespace:     job.Namespace,
 					cronjob:       *job,
 				}}, current...)
