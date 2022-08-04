@@ -44,10 +44,8 @@ type RowBuilder struct {
 
 type BuilderInformation struct {
 	// Pod  *v1.Pod
-	Data ParentData
-
-	PodName string
-	// ContainerName string // container name
+	Data          ParentData
+	PodName       string
 	ContainerType string // single letter type id
 	Namespace     string
 	NodeName      string
@@ -200,25 +198,21 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 		}
 
 		infoSet := *info
-		if len(partOut) == 0 {
-			b.Table.HidePlaceHolderRow(rowid)
-		} else {
-			// do we need to show the pod line: Pod/foo-6f67dcc579-znb55
-			tblBranch, err := loop.BuildBranch(infoSet, partOut)
-			if err != nil {
-				return [][]Cell{}, err
-			}
 
-			if len(tblBranch) > 0 {
-				tblOut := b.makeFullRow(info, value.indent, tblBranch)
-				if b.matchShouldExclude(tblOut) {
-					b.Table.HidePlaceHolderRow(rowid)
-				} else {
-					b.Table.UpdatePlaceHolderRow(rowid, tblOut)
-					totals = append(totals, tblBranch)
-				}
+		tblBranch, err := loop.BuildBranch(infoSet, partOut)
+		if err != nil {
+			return [][]Cell{}, err
+		} else {
+			tblOut := b.makeFullRow(&infoSet, value.indent, tblBranch)
+
+			if b.matchShouldExclude(tblOut) {
+				b.Table.HidePlaceHolderRow(rowid)
+			} else {
+				b.Table.UpdatePlaceHolderRow(rowid, tblOut)
+				totals = append(totals, tblBranch)
 			}
 		}
+		// }
 
 		b.labelNodeValue = ""
 		b.labelPodValue = ""
