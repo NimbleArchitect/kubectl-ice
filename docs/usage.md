@@ -89,6 +89,8 @@ Aliases:
 
 Flags:
       --annotation string              Show the selected annotation as a column
+  -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -M, --match-only string              Filters out results but only calculates up visible rows
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
@@ -146,6 +148,8 @@ Aliases:
 
 Flags:
       --annotation string              Show the selected annotation as a column
+  -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -M, --match-only string              Filters out results but only calculates up visible rows
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
@@ -201,6 +205,8 @@ Usage:
 Flags:
       --annotation string              Show the selected annotation as a column
   -i, --include-init                   include init container(s) in the output, by default init containers are hidden
+  -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -M, --match-only string              Filters out results but only calculates up visible rows
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
       --oddities                       show only the outlier rows that dont fall within the computed range
@@ -260,6 +266,8 @@ Aliases:
 
 Flags:
       --annotation string              Show the selected annotation as a column
+  -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -M, --match-only string              Filters out results but only calculates up visible rows
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
@@ -318,6 +326,8 @@ Aliases:
 
 Flags:
       --annotation string              Show the selected annotation as a column
+  -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -M, --match-only string              Filters out results but only calculates up visible rows
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
@@ -372,6 +382,8 @@ Usage:
 
 Flags:
       --annotation string              Show the selected annotation as a column
+  -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -M, --match-only string              Filters out results but only calculates up visible rows
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
@@ -418,6 +430,8 @@ Aliases:
 Flags:
       --annotation string              Show the selected annotation as a column
   -i, --include-init                   include init container(s) in the output, by default init containers are hidden
+  -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -M, --match-only string              Filters out results but only calculates up visible rows
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
       --oddities                       show only the outlier rows that dont fall within the computed range
@@ -478,6 +492,8 @@ Aliases:
 
 Flags:
       --annotation string              Show the selected annotation as a column
+  -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -M, --match-only string              Filters out results but only calculates up visible rows
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
@@ -535,6 +551,8 @@ Aliases:
 
 Flags:
       --annotation string              Show the selected annotation as a column
+  -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -M, --match-only string              Filters out results but only calculates up visible rows
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
@@ -592,6 +610,8 @@ Aliases:
 
 Flags:
       --annotation string              Show the selected annotation as a column
+  -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -M, --match-only string              Filters out results but only calculates up visible rows
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
       --oddities                       show only the outlier rows that dont fall within the computed range
@@ -650,6 +670,8 @@ Aliases:
 
 Flags:
       --annotation string              Show the selected annotation as a column
+  -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -M, --match-only string              Filters out results but only calculates up visible rows
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
@@ -709,6 +731,8 @@ Aliases:
 Flags:
       --annotation string              Show the selected annotation as a column
   -d, --details                        Display the timestamp instead of age along with the message column
+  -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -M, --match-only string              Filters out results but only calculates up visible rows
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
       --oddities                       show only the outlier rows that dont fall within the computed range
@@ -772,6 +796,8 @@ Aliases:
 Flags:
       --annotation string              Show the selected annotation as a column
   -d, --device                         show raw block device mappings within a container
+  -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
+  -M, --match-only string              Filters out results but only calculates up visible rows
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
   -o, --output string                  Output format, currently csv, list, json and yaml are supported
