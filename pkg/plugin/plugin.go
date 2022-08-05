@@ -26,6 +26,7 @@ type commonFlags struct {
 	outputAs           string                // how to output the table, currently only accepts json
 	sortList           []string              // column names to sort on when table.Print() is called
 	matchSpecList      map[string]matchValue // filter pods based on matches to the v1.Pods.Spec fields
+	calcMatchOnly      bool                  // should we calculate up only the rows that match
 	labelNodeName      string
 	labelPodName       string
 	annotationPodName  string
@@ -367,7 +368,8 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("container", "c", "", `Container name. If omitted show all containers in the pod`)
 	cmdObj.Flags().StringP("sort", "", "", `Sort by column`)
 	cmdObj.Flags().StringP("output", "o", "", `Output format, currently csv, list, json and yaml are supported`)
-	cmdObj.Flags().StringP("match", "", "", `Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != `)
+	cmdObj.Flags().StringP("match", "m", "", `Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != `)
+	cmdObj.Flags().StringP("match-only", "M", "", `Filters out results but only calculates up visible rows`)
 	cmdObj.Flags().StringP("select", "", "", `Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != `)
 	cmdObj.Flags().BoolP("show-namespace", "", false, `Show the namespace column`)
 	cmdObj.Flags().BoolP("show-node", "", false, `Show the node name column`)
@@ -451,13 +453,21 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 		}
 	}
 
+	rawMatchString := ""
 	if cmd.Flag("match") != nil {
 		if len(cmd.Flag("match").Value.String()) > 0 {
-			rawMatchString := cmd.Flag("match").Value.String()
-			f.filterList, err = splitAndFilterMatchList(rawMatchString, "ABCDEFGHIJKLMNOPQRSTUVWXYZ!%-.0123456789<>=*?", []string{"<=", ">=", "!=", "==", "=", "<", ">"})
-			if err != nil {
-				return commonFlags{}, err
-			}
+			rawMatchString = cmd.Flag("match").Value.String()
+		}
+	} else if cmd.Flag("match-only") != nil {
+		if len(cmd.Flag("match-only").Value.String()) > 0 {
+			rawMatchString = cmd.Flag("match-only").Value.String()
+			f.calcMatchOnly = true
+		}
+	}
+	if len(rawMatchString) > 0 {
+		f.filterList, err = splitAndFilterMatchList(rawMatchString, "ABCDEFGHIJKLMNOPQRSTUVWXYZ!%-.0123456789<>=*?", []string{"<=", ">=", "!=", "==", "=", "<", ">"})
+		if err != nil {
+			return commonFlags{}, err
 		}
 	}
 

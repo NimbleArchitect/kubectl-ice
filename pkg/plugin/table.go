@@ -38,7 +38,7 @@ type Table struct {
 	placeHolderID int
 }
 
-// sets the header row to the specified array of strings
+// SetHeader sets the header row to the specified array of strings
 // headerRow is always reinitilized to empty before headers are added
 func (t *Table) SetHeader(headItem ...string) {
 
@@ -62,7 +62,7 @@ func (t *Table) SetHeader(headItem ...string) {
 	t.headCount = len(headItem)
 }
 
-// Adds a new row to the end of the table, accepts an array of strings
+// AddRow Adds a new row to the end of the table, accepts an array of strings
 func (t *Table) AddRow(row ...Cell) {
 	log := logger{location: "Table:AddRow"}
 	log.Debug("Start")
@@ -98,7 +98,7 @@ func (t *Table) AddRow(row ...Cell) {
 
 }
 
-//  changes the order of columns displayed in the table, specifying a subset of the column
+// Order changes the order of columns displayed in the table, specifying a subset of the column
 // numbers will place those at the front in the order specified all other columns remain untouched
 func (t *Table) Order(items ...int) {
 	// rather then reordering all columns we have an order array that we can loop through
@@ -122,7 +122,7 @@ func (t *Table) Order(items ...int) {
 
 }
 
-// select the column number to hide, columns numbers are the unsorted column number
+// HideColumn select the column number to hide, columns numbers are the unsorted column number
 func (t *Table) HideColumn(columnNumber int) {
 	log := logger{location: "Table:HideColumn"}
 	log.Debug("Start")
@@ -137,7 +137,7 @@ func (t *Table) HideColumn(columnNumber int) {
 	}
 }
 
-// prints the table on the terminal, taking the column order and visibiliy into account
+// Print outputs the table on the terminal, taking the column order and visibiliy into account
 func (t *Table) Print() {
 	headLine := ""
 	// loop through all headers and make a single line properly spaced
@@ -204,7 +204,7 @@ func (t *Table) Print() {
 
 }
 
-// Prints the table on the terminal as json, all fileds are shown and all are unsorted as
+// PrintJson outputs the table on the terminal as json, all fileds are shown and all are unsorted as
 // programs like jq can be used to filter and sort
 func (t *Table) PrintJson() {
 	// loop through each row
@@ -237,7 +237,7 @@ func (t *Table) PrintJson() {
 
 }
 
-// Prints the table on the terminal as yaml, all fileds are shown and all are unsorted as
+// PrintYaml outputs the table on the terminal as yaml, all fileds are shown and all are unsorted as
 // other programs can be used to filter and sort
 func (t *Table) PrintYaml() {
 	// loop through each row
@@ -261,7 +261,7 @@ func (t *Table) PrintYaml() {
 
 }
 
-// prints the key and value on a single line by its self. all fileds are shown and all are unsorted as
+// PrintList outputs the key and value on a single line by its self. all fileds are shown and all are unsorted as
 // other programs can be used to filter and sort
 func (t *Table) PrintList() {
 	// loop through each row
@@ -278,7 +278,7 @@ func (t *Table) PrintList() {
 	}
 }
 
-// prints the table as a csv including the header row. all fileds are shown and all are unsorted as
+// PrintCsv outputs the table as a csv including the header row. all fileds are shown and all are unsorted as
 // other programs can be used to filter and sort
 func (t *Table) PrintCsv() {
 
@@ -323,8 +323,8 @@ func (t *Table) PrintCsv() {
 	}
 }
 
-// Sort via the column number, uses the full column count including hidden columns
-// sort function can be run multiple times and is cumalitive
+// sort Sorts via the column number, uses the full column count including hidden columns
+//  function can be run multiple times and is cumalitive
 func (t *Table) sort(list []int, columnNumber int, ascending bool) {
 	// rather then reordering all rows we have an order array that we can loop through
 	// sort contains the actual row number to use next
@@ -398,7 +398,7 @@ func (t *Table) sort(list []int, columnNumber int, ascending bool) {
 
 }
 
-// given a , seperated list of names match them to actual headers and sort each one in order
+// SortByNames given a , seperated list of names match them to actual headers and sort each one in order
 // by default sorts in ascending to revers use ! in front of the header name
 // returns error on fail and nil otherwise
 func (t *Table) SortByNames(name ...string) error {
@@ -452,9 +452,9 @@ func (t *Table) SortByNames(name ...string) error {
 	return nil
 }
 
-// run a pattten match, accepts * and ?
+// strMatch run a pattten match, accepts * and ?
 func strMatch(str string, pattern string) bool {
-	// shamelessly converted from c++ code on web as I was too laszy to work it out myself
+	// shamelessly converted from c++ code on web as I was too lazy to work it out myself
 	// source: https://www.geeksforgeeks.org/wildcard-pattern-matching/
 
 	n := len(str)
@@ -494,7 +494,7 @@ func strMatch(str string, pattern string) bool {
 	return lookup[n][m]
 }
 
-// quick wrapper to return a cell object containing the given string
+// NewCellText quick wrapper to return a cell object containing the given string
 func NewCellText(text string) Cell {
 
 	temp := strings.Replace(text, "\r", "\\r", -1)
@@ -507,6 +507,8 @@ func NewCellText(text string) Cell {
 	}
 }
 
+// NewCellTextIndent creates a text cell with an indentation indicator, this dosen't actually indent the cell it just
+//   tells table.go Print to indent it for us
 func NewCellTextIndent(text string, indentLevel int) Cell {
 
 	temp := strings.Replace(text, "\r", "\\r", -1)
@@ -520,7 +522,7 @@ func NewCellTextIndent(text string, indentLevel int) Cell {
 	}
 }
 
-// quick wrapper to return a cell object containing the given string and int
+// NewCellInt quick wrapper to return a cell object containing the given string and int
 func NewCellInt(text string, value int64) Cell {
 	return Cell{
 		text:   text,
@@ -529,7 +531,7 @@ func NewCellInt(text string, value int64) Cell {
 	}
 }
 
-// quick wrapper to return a cell object containing the given string float
+// NewCellFloat quick wrapper to return a cell object containing the given string float
 func NewCellFloat(text string, value float64) Cell {
 	return Cell{
 		text:  text,
@@ -538,7 +540,7 @@ func NewCellFloat(text string, value float64) Cell {
 	}
 }
 
-// when given a columnID to work with it will calculate a range and
+// ListOutOfRange when given a columnID to work with it will calculate a range and
 // returns a list of rows with values outside that range
 func (t *Table) ListOutOfRange(columnID int) ([]int, error) {
 	var upperFenceInt, lowerFenceInt int64
@@ -603,31 +605,31 @@ func (t *Table) ListOutOfRange(columnID int) ([]int, error) {
 	return out, nil
 }
 
-// does what it says on the tin
+// GetRows does what it says on the tin
 func (t *Table) GetRows() [][]Cell {
 	return t.data
 }
 
-// just sets the hide row flag, used by the print function to exclude the row from the output
+// HideRows just sets the hide row flag, used by the print function to exclude the row from the output
 func (t *Table) HideRows(rowID []int) {
 	for _, v := range rowID {
 		t.hideRow[v] = true
 	}
 }
 
-// given the current order and a list of rows caluclate the upper and lower boundy exclusion limit for the selected columnID
+// getFencesInt given the current order and a list of rows caluclate the upper and lower boundy exclusion limit for the selected columnID
 func (t *Table) getFencesInt(orderList []int, columnID int, rows [][]Cell) (int64, int64) {
 	upper, lower := t.getFencesBoundarys(orderList, columnID, rows, 1)
 	return upper.(int64), lower.(int64)
 }
 
-// given the current order and a list of rows caluclate the upper and lower boundy exclusion limit for the selected columnID
+// getFencesFloat given the current order and a list of rows caluclate the upper and lower boundy exclusion limit for the selected columnID
 func (t *Table) getFencesFloat(orderList []int, columnID int, rows [][]Cell) (float64, float64) {
 	upper, lower := t.getFencesBoundarys(orderList, columnID, rows, 2)
 	return upper.(float64), lower.(float64)
 }
 
-// the actual function to caluclate the upper and lower boundy exclusion limit
+// getFencesBoundarys the actual function to caluclate the upper and lower boundy exclusion limit
 func (t *Table) getFencesBoundarys(orderList []int, columnID int, rows [][]Cell, cellType int) (interface{}, interface{}) {
 	// find middle of the list
 	var q1Int, q3Int, iqrInt int64
@@ -741,6 +743,7 @@ func (t *Table) UpdatePlaceHolderRow(id int, cellList []Cell) {
 	t.placeHolder[id] = cellList
 }
 
+// HidePlaceHolderRow matches the placeholder id to an actual row number and calls HideRows to hide the row
 func (t *Table) HidePlaceHolderRow(id int) {
 	for r := 0; r < len(t.data); r++ {
 		rowNum := t.rowOrder[r]

@@ -35,6 +35,7 @@ type RowBuilder struct {
 	ShowContainerType  bool
 	ShowNodeTree       bool                  // show the tree view with the nodes at the root level rather than just the resource sets at root
 	FilterList         map[string]matchValue // used to filter out rows from the table during Print function
+	CalcFiltered       bool                  // the filterd out rows are included in the branch calculations
 	DefaultHeaderLen   int
 
 	annotationLabel map[string]map[string]map[string]map[string]string
@@ -79,6 +80,7 @@ func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
 	b.LabelPodName = commonFlagList.labelPodName
 	b.AnnotationPodName = commonFlagList.annotationPodName
 	b.FilterList = b.CommonFlags.filterList
+	b.CalcFiltered = b.CommonFlags.calcMatchOnly
 
 	// we always show the pod name by default
 	b.ShowPodName = true
@@ -209,6 +211,12 @@ func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, pa
 				b.Table.HidePlaceHolderRow(rowid)
 			} else {
 				b.Table.UpdatePlaceHolderRow(rowid, tblOut)
+				if b.CalcFiltered {
+					totals = append(totals, tblBranch)
+				}
+			}
+			if !b.CalcFiltered {
+				//dont add up the filtered out rows
 				totals = append(totals, tblBranch)
 			}
 		}
