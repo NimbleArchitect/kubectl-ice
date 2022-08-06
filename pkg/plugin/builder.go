@@ -131,6 +131,7 @@ func (b *RowBuilder) Build(loop Looper) error {
 				rowid = b.Table.AddPlaceHolderRow()
 			}
 
+			info.NodeName = value.name
 			totals, err := b.walkTreeCreateRow(loop, &info, *value)
 			if err != nil {
 				return err
@@ -141,6 +142,7 @@ func (b *RowBuilder) Build(loop Looper) error {
 				info.Name = value.name
 				info.ContainerType = TypeIDNode
 				info.TypeName = value.kind
+				info.NodeName = ""
 				if len(totals) > 0 {
 					partOut, _ := loop.BuildBranch(info, totals)
 					tblOut := b.makeFullRow(&info, value.indent, partOut)
@@ -163,7 +165,6 @@ func (b *RowBuilder) Build(loop Looper) error {
 //  is called on each child with the results passed to Sum so we can calculate parent values from the children
 func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, parent LeafNode) ([][]Cell, error) {
 	var totals [][]Cell
-
 	log := logger{location: "RowBuilder:walkTreeCreateRow"}
 	log.Debug("Start")
 

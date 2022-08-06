@@ -458,7 +458,8 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 		if len(cmd.Flag("match").Value.String()) > 0 {
 			rawMatchString = cmd.Flag("match").Value.String()
 		}
-	} else if cmd.Flag("match-only") != nil {
+	}
+	if cmd.Flag("match-only") != nil {
 		if len(cmd.Flag("match-only").Value.String()) > 0 {
 			rawMatchString = cmd.Flag("match-only").Value.String()
 			f.calcMatchOnly = true
