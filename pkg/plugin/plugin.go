@@ -169,6 +169,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdImage.Flags())
+	cmdImage.Flags().BoolP("id", "", false, "Show running containers id")
 	addCommonFlags(cmdImage)
 	rootCmd.AddCommand(cmdImage)
 

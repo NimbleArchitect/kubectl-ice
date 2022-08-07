@@ -65,6 +65,11 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	connect.Flags = commonFlagList
 	builder.SetFlagsFrom(commonFlagList)
 
+	if cmd.Flag("id").Value.String() == "true" {
+		log.Debug("loopinfo.ShowID = true")
+		loopinfo.ShowID = true
+	}
+
 	table := Table{}
 	builder.Table = &table
 	builder.CommonFlags = commonFlagList
@@ -82,11 +87,12 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 }
 
 type image struct {
+	ShowID bool
 }
 
 func (s *image) Headers() []string {
 	return []string{
-		"PULL", "IMAGEID", "IMAGE",
+		"PULL", "IMAGEID", "CONTAINERID", "IMAGE",
 	}
 }
 
@@ -99,11 +105,17 @@ func (s *image) BuildEphemeralContainerStatus(container v1.ContainerStatus, info
 }
 
 func (s *image) HideColumns(info BuilderInformation) []int {
-	return []int{}
+	var hideColumns []int
+
+	if !s.ShowID {
+		hideColumns = append(hideColumns, 2)
+	}
+	return hideColumns
 }
 
 func (s *image) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
 	out := []Cell{
+		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),
@@ -125,21 +137,25 @@ func (s *image) BuildEphemeralContainerSpec(container v1.EphemeralContainer, inf
 
 func (s *image) imageBuildRow(info BuilderInformation, imageName string, pullPolicy string) []Cell {
 	var imageID string
+	var containerID string
 	var cellList []Cell
 
 	for _, status := range info.Data.pod.Status.InitContainerStatuses {
 		if status.Image == imageName {
 			imageID = status.ImageID
+			containerID = status.ContainerID
 		}
 	}
 	for _, status := range info.Data.pod.Status.ContainerStatuses {
 		if status.Image == imageName {
 			imageID = status.ImageID
+			containerID = status.ContainerID
 		}
 	}
 	for _, status := range info.Data.pod.Status.EphemeralContainerStatuses {
 		if status.Image == imageName {
 			imageID = status.ImageID
+			containerID = status.ContainerID
 		}
 	}
 
@@ -150,6 +166,7 @@ func (s *image) imageBuildRow(info BuilderInformation, imageName string, pullPol
 	cellList = append(cellList,
 		NewCellText(pullPolicy),
 		NewCellText(imageID),
+		NewCellText(containerID),
 		NewCellText(imageName),
 	)
 
