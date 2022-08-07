@@ -22,7 +22,7 @@ ice lists detailed information about the containers present inside a
 * Tree view adds each container in a pod, then each pod in a replica or stateful set etc, all the way up to the node level
 * Selectors work just like they do with the standard kubectl command
 * Sortable output columns
-* Can list all containers from all pods across all namespaces
+* List all the containers in a kubernetes pod including Init and Ephemeral containers
 * Include or exclude rows from output using the match flag, useful to exclude containers with low memory or cpu usage
 * List only cpu and memory results that dont fall within range using the oddities flag
 * Also displays information on init and ephemerial containers
