@@ -323,6 +323,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	cmdStatus.Flags().BoolP("details", "d", false, `Display the timestamp instead of age along with the message column`)
 	cmdStatus.Flags().BoolP("oddities", "", false, odditiesShort)
 	cmdStatus.Flags().BoolP("previous", "p", false, "Show previous state")
+	cmdStatus.Flags().BoolP("id", "", false, "Show running containers id")
 	// TODO: check if I can add labels for service/replicaset/configmap etc.
 	addCommonFlags(cmdStatus)
 	rootCmd.AddCommand(cmdStatus)

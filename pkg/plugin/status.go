@@ -87,6 +87,11 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 		builder.ShowContainerType = true
 	}
 
+	if cmd.Flag("id").Value.String() == "true" {
+		log.Debug("loopinfo.ShowID = true")
+		loopinfo.ShowID = true
+	}
+
 	table := Table{}
 	builder.Table = &table
 	log.Debug("commonFlagList.showTreeView =", commonFlagList.showTreeView)
@@ -115,6 +120,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 type status struct {
 	ShowPrevious bool
 	ShowDetails  bool
+	ShowID       bool // container id
 
 	pNotReady     bool // Ready - we use the inverted term so the code makes more sense
 	pStopped      bool // Started - we use the inverted term so the code makes more sense
@@ -132,6 +138,7 @@ func (s *status) Headers() []string {
 		"REASON",
 		"EXIT-CODE",
 		"SIGNAL",
+		"ID",
 		"TIMESTAMP",
 		"AGE",
 		"MESSAGE",
@@ -146,29 +153,38 @@ func (s *status) BuildEphemeralContainerSpec(container v1.EphemeralContainer, in
 }
 
 func (s *status) HideColumns(info BuilderInformation) []int {
-	// "READY","STARTED","RESTARTS","STATE","REASON","EXIT-CODE","SIGNAL","TIMESTAMP","AGE","MESSAGE",
+	// "READY","STARTED","RESTARTS","STATE","REASON","EXIT-CODE","SIGNAL","ID","TIMESTAMP","AGE","MESSAGE",
 	var hideColumns []int
 
 	if s.ShowDetails {
-		hideColumns = append(hideColumns, 8)
-	}
-
-	if s.ShowPrevious {
-		// remove "READY STARTED RESTARTS AGE" leaving the following
-		//  "STATE REASON EXIT-CODE SIGNAL TIMESTAMP MESSAGE"
-		hideColumns = append(hideColumns, 0, 1, 2, 8)
-	}
-
-	if len(hideColumns) == 0 {
-		// hide AGE, MESSAGE
 		hideColumns = append(hideColumns, 7, 9)
 	}
 
+	if s.ShowPrevious {
+		// remove "READY STARTED RESTARTS ID AGE" leaving the following
+		//  "STATE REASON EXIT-CODE SIGNAL TIMESTAMP MESSAGE"
+		hideColumns = append(hideColumns, 0, 1, 2, 7, 9)
+	}
+
+	if len(hideColumns) == 0 {
+		// hide ID TIMESTAMP, MESSAGE
+		hideColumns = append(hideColumns, 7, 8, 10)
+	}
+
+	if s.ShowID {
+		tmpColumns := []int{}
+		for _, v := range hideColumns {
+			if v != 7 { // 7 = COLUMN ID
+				tmpColumns = append(tmpColumns, v)
+			}
+		}
+		hideColumns = tmpColumns
+	}
 	return hideColumns
 }
 
 func (s *status) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
-	rowOut := make([]Cell, 10)
+	rowOut := make([]Cell, 11)
 
 	// rowOut[0] // ready
 	// rowOut[1] // started
@@ -177,9 +193,10 @@ func (s *status) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, er
 	// rowOut[4] // reason
 	// rowOut[5] // exit-code
 	// rowOut[6] // signal
-	// rowOut[7] // timestamp
-	// rowOut[8] // age
-	// rowOut[9] // message
+	// rowOut[7] // id
+	// rowOut[8] // timestamp
+	// rowOut[9] // age
+	// rowOut[10] // message
 
 	rowOut[0].text = "true"
 	rowOut[1].text = "true"
@@ -209,9 +226,9 @@ func (s *status) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, er
 			rowOut[3].text = "Terminating" // state
 		}
 		rowOut[4].text = info.Data.pod.Status.Reason                             // reason
-		rowOut[7].text = info.Data.pod.CreationTimestamp.Format(timestampFormat) // timestamp
-		rowOut[8].text = duration.HumanDuration(rawAge)                          // age
-		rowOut[9].text = info.Data.pod.Status.Message                            // message
+		rowOut[8].text = info.Data.pod.CreationTimestamp.Format(timestampFormat) // timestamp
+		rowOut[9].text = duration.HumanDuration(rawAge)                          // age
+		rowOut[10].text = info.Data.pod.Status.Message                           // message
 	}
 
 	return rowOut, nil
@@ -231,6 +248,7 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 	var age string
 	var state v1.ContainerState
 	var rawExitCode, rawSignal, rawRestarts int64
+	// var id string
 
 	log := logger{location: "Status:BuildContainerStatus"}
 	log.Debug("Start")
@@ -295,6 +313,8 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 		age = duration.HumanDuration(rawAge)
 	}
 
+	// container.ContainerID
+
 	// READY STARTED RESTARTS STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
 	cellList = append(cellList,
 		NewCellText(ready),
@@ -304,6 +324,7 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 		NewCellText(reason),
 		NewCellInt(exitCode, rawExitCode),
 		NewCellInt(signal, rawSignal),
+		NewCellText(container.ContainerID),
 		NewCellText(startedAt),
 		NewCellText(age),
 		NewCellText(message),
