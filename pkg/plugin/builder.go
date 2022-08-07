@@ -37,6 +37,7 @@ type RowBuilder struct {
 	FilterList         map[string]matchValue // used to filter out rows from the table during Print function
 	CalcFiltered       bool                  // the filterd out rows are included in the branch calculations
 	DefaultHeaderLen   int
+	InputFilename      string //filename to be used as the source instead of reading pod information from k8s api
 
 	annotationLabel map[string]map[string]map[string]map[string]string
 	head            []string
@@ -81,6 +82,7 @@ func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
 	b.AnnotationPodName = commonFlagList.annotationPodName
 	b.FilterList = b.CommonFlags.filterList
 	b.CalcFiltered = b.CommonFlags.calcMatchOnly
+	b.InputFilename = b.CommonFlags.inputFilename
 
 	// we always show the pod name by default
 	b.ShowPodName = true
@@ -101,6 +103,7 @@ func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
 
 // Build
 func (b *RowBuilder) Build(loop Looper) error {
+	var podList []v1.Pod
 
 	log := logger{location: "RowBuilder:Build"}
 	log.Debug("Start")
@@ -112,7 +115,13 @@ func (b *RowBuilder) Build(loop Looper) error {
 		return err
 	}
 
-	podList, err := b.Connection.GetPods(b.PodName)
+	// TODO: make if statment so we can load from -f flag
+	if len(b.InputFilename) == 0 {
+		podList, err = b.Connection.GetPods(b.PodName)
+	} else {
+		podList, err = loadYaml(b.InputFilename)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -525,10 +534,11 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 	log.Debug("Start")
 
 	if b.ShowInitContainers {
-		log.Debug("loop init ContainerStatuses")
+		log.Debug("loop init Container")
 		info.ContainerType = TypeIDInitContainer
 		info.TypeName = TypeNameInitContainer
 		if b.LoopStatus {
+			log.Debug("processing LoopStatus")
 			for _, container := range pod.Status.InitContainerStatuses {
 				// should the container be processed
 				log.Debug("processing -", container.Name)
@@ -552,6 +562,7 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 		}
 
 		if b.LoopSpec {
+			log.Debug("processing LoopSpec")
 			for _, container := range pod.Spec.InitContainers {
 				// should the container be processed
 				log.Debug("processing -", container.Name)
@@ -576,10 +587,11 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 	}
 
 	// now show the container line
-	log.Debug("loop standard ContainerStatuses")
+	log.Debug("loop standard Container")
 	info.ContainerType = TypeIDContainer
 	info.TypeName = "Container"
 	if b.LoopStatus {
+		log.Debug("processing LoopStatus")
 		for _, container := range pod.Status.ContainerStatuses {
 			// should the container be processed
 			if skipContainerName(b.CommonFlags, container.Name) {
@@ -602,9 +614,11 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 	}
 
 	if b.LoopSpec {
+		log.Debug("processing LoopSpec")
 		for _, container := range pod.Spec.Containers {
 			// should the container be processed
 			if skipContainerName(b.CommonFlags, container.Name) {
+				log.Debug("Skipping container:", container.Name)
 				continue
 			}
 			log.Debug("processing -", container.Name)
@@ -623,10 +637,11 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 		}
 	}
 
-	log.Debug("loop ephemeral ContainerStatuses")
+	log.Debug("loop ephemeral Container")
 	info.ContainerType = TypeIDEphemeralContainer
 	info.TypeName = TypeNameEphemeralContainer
 	if b.LoopStatus {
+		log.Debug("processing LoopStatus")
 		for _, container := range pod.Status.EphemeralContainerStatuses {
 			// should the container be processed
 			if skipContainerName(b.CommonFlags, container.Name) {
@@ -650,6 +665,7 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 	}
 
 	if b.LoopSpec {
+		log.Debug("processing LoopSpec")
 		for _, container := range pod.Spec.EphemeralContainers {
 			// should the container be processed
 			if skipContainerName(b.CommonFlags, container.Name) {

@@ -27,6 +27,7 @@ type commonFlags struct {
 	sortList           []string              // column names to sort on when table.Print() is called
 	matchSpecList      map[string]matchValue // filter pods based on matches to the v1.Pods.Spec fields
 	calcMatchOnly      bool                  // should we calculate up only the rows that match
+	inputFilename      string                // filename to read pod information from, rather than the k8s api
 	labelNodeName      string
 	labelPodName       string
 	annotationPodName  string
@@ -382,6 +383,7 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("node-label", "", "", `Show the selected node label as a column`)
 	cmdObj.Flags().StringP("pod-label", "", "", `Show the selected pod label as a column`)
 	cmdObj.Flags().StringP("annotation", "", "", `Show the selected annotation as a column`)
+	cmdObj.Flags().StringP("filename", "f", "", `read pod information from this yaml file instead`)
 }
 
 func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
@@ -527,6 +529,11 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 	if cmd.Flag("annotation").Value.String() != "" {
 		annotation := cmd.Flag("annotation").Value.String()
 		f.annotationPodName = annotation
+	}
+
+	if cmd.Flag("filename").Value.String() != "" {
+		inputFilename := cmd.Flag("filename").Value.String()
+		f.inputFilename = inputFilename
 	}
 
 	return f, nil
