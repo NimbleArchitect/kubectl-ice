@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -84,7 +86,7 @@ type image struct {
 
 func (s *image) Headers() []string {
 	return []string{
-		"PULL", "IMAGE",
+		"PULL", "IMAGEID", "IMAGE",
 	}
 }
 
@@ -104,6 +106,7 @@ func (s *image) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, err
 	out := []Cell{
 		NewCellText(""),
 		NewCellText(""),
+		NewCellText(""),
 	}
 	return out, nil
 }
@@ -121,10 +124,32 @@ func (s *image) BuildEphemeralContainerSpec(container v1.EphemeralContainer, inf
 }
 
 func (s *image) imageBuildRow(info BuilderInformation, imageName string, pullPolicy string) []Cell {
+	var imageID string
 	var cellList []Cell
+
+	for _, status := range info.Data.pod.Status.InitContainerStatuses {
+		if status.Image == imageName {
+			imageID = status.ImageID
+		}
+	}
+	for _, status := range info.Data.pod.Status.ContainerStatuses {
+		if status.Image == imageName {
+			imageID = status.ImageID
+		}
+	}
+	for _, status := range info.Data.pod.Status.EphemeralContainerStatuses {
+		if status.Image == imageName {
+			imageID = status.ImageID
+		}
+	}
+
+	if val := strings.Split(imageID, "@"); len(val) == 2 {
+		imageID = val[1]
+	}
 
 	cellList = append(cellList,
 		NewCellText(pullPolicy),
+		NewCellText(imageID),
 		NewCellText(imageName),
 	)
 
