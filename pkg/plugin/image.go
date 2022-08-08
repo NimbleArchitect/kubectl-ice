@@ -92,7 +92,7 @@ type image struct {
 
 func (s *image) Headers() []string {
 	return []string{
-		"PULL", "IMAGEID", "CONTAINERID", "IMAGE",
+		"PULL", "IMAGEID", "CONTAINERID", "IMAGE", "TAG",
 	}
 }
 
@@ -108,18 +108,15 @@ func (s *image) HideColumns(info BuilderInformation) []int {
 	var hideColumns []int
 
 	if !s.ShowID {
-		hideColumns = append(hideColumns, 2)
+		hideColumns = append(hideColumns, 1, 2)
 	}
+
 	return hideColumns
 }
 
 func (s *image) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
-	out := []Cell{
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-		NewCellText(""),
-	}
+	out := make([]Cell, len(s.Headers()))
+
 	return out, nil
 }
 
@@ -139,6 +136,32 @@ func (s *image) imageBuildRow(info BuilderInformation, imageName string, pullPol
 	var imageID string
 	var containerID string
 	var cellList []Cell
+
+	name := imageName
+	tag := ""
+
+	if strings.Contains(imageName, "/") {
+		arrPath := strings.Split(imageName, "/")
+		if c := len(arrPath); c > 0 {
+			tmp := strings.Split(arrPath[c-1], ":")
+			if len(tmp) > 0 {
+				tag = strings.Join(tmp[1:], ":")
+				//calculate the uri length
+				namelen := len(imageName) - len(tag)
+				if len(tag) > 0 {
+					// check a tag was supplied so we dont cut off the last char of the image name
+					namelen--
+				}
+				name = imageName[0:namelen]
+			}
+		}
+	} else {
+		arrImage := strings.Split(imageName, ":")
+		if c := len(arrImage); c > 0 {
+			tag = arrImage[c-1]
+			name = strings.Join(arrImage[:c-1], ":")
+		}
+	}
 
 	for _, status := range info.Data.pod.Status.InitContainerStatuses {
 		if status.Image == imageName {
@@ -167,7 +190,8 @@ func (s *image) imageBuildRow(info BuilderInformation, imageName string, pullPol
 		NewCellText(pullPolicy),
 		NewCellText(imageID),
 		NewCellText(containerID),
-		NewCellText(imageName),
+		NewCellText(name),
+		NewCellText(tag),
 	)
 
 	return cellList
