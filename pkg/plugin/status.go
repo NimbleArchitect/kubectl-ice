@@ -97,7 +97,9 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	log.Debug("commonFlagList.showTreeView =", commonFlagList.showTreeView)
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.Build(&loopinfo)
+	if err := builder.Build(&loopinfo); err != nil {
+		return err
+	}
 
 	if !builder.ShowTreeView {
 		if !loopinfo.ShowPrevious { // restart count dosent show up when using previous flag

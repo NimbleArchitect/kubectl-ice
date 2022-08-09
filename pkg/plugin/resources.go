@@ -107,7 +107,9 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	loopinfo.MetricsResource = loopinfo.podMetrics2Hashtable(podStateList)
-	builder.Build(&loopinfo)
+	if err := builder.Build(&loopinfo); err != nil {
+		return err
+	}
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err

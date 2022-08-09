@@ -75,7 +75,9 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.Build(&loopinfo)
+	if err := builder.Build(&loopinfo); err != nil {
+		return err
+	}
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err

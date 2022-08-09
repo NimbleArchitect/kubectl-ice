@@ -69,7 +69,9 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	builder.Build(&loopinfo)
+	if err := builder.Build(&loopinfo); err != nil {
+		return err
+	}
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err

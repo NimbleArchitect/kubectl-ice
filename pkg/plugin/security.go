@@ -75,7 +75,9 @@ func Security(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 		loopinfo.ShowSELinuxOptions = true
 	}
 
-	builder.Build(&loopinfo)
+	if err := builder.Build(&loopinfo); err != nil {
+		return err
+	}
 
 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
 		return err
