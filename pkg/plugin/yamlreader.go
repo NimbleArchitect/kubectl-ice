@@ -1,159 +1,158 @@
 package plugin
 
 import (
-	"io/ioutil"
+	"bufio"
+	"log"
+	"os"
 
 	a1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
 )
 
-var yamlfile = `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: myappdeploy
-  name: myapp
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: myappdeploy
-  template:
-    metadata:
-      labels:
-            app: myappdeploy
-    spec:
-      containers:
-      - name: frontend
-        image: python:latest
-        command: ['python', '/myapp/randomcpuapp.py']
-        ports:
-          - containerPort: 8080
-        resources:
-          requests:
-            cpu: "125m"
-            memory: "1M"
-          limits:
-            cpu: "1"
-            memory: 256M
-        volumeMounts:
-          - name: app
-            mountPath: /myapp/
-        livenessProbe:
-          exec:
-            command:
-            - /bin/true
-          initialDelaySeconds: 10
-          periodSeconds: 5
-        
-      - name: nginx
-        image: nginx:1.7.9
-        ports:
-        - containerPort: 80
-        resources:
-          requests:
-            cpu: "1m"
-            memory: "1M"
-          limits:
-            cpu: "1"
-            memory: 256M
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 60
-          failureThreshold: 8
-          periodSeconds: 60
+func (b *RowBuilder) loadYaml(filename string) ([]v1.Pod, error) {
+	var pods []v1.Pod
+	var content string
+	var scanner *bufio.Scanner
 
-      volumes:
-      - name: app
-        configMap:
-          name: app.py
-          defaultMode: 0777
-          items:
-          # - key: mainapp
-          - key: randomcpu
-            path: randomcpuapp.py
-`
+	if b.StdinChanged {
+		// read yaml from stdin
+		file := bufio.NewReader(os.Stdin)
+		scanner = bufio.NewScanner(file)
+	} else {
+		// load yaml file
+		file, err := os.Open(filename)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+		scanner = bufio.NewScanner(file)
+	}
 
-func loadYaml(filename string) ([]v1.Pod, error) {
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "---" {
+			pod, err := b.convertFromYaml([]byte(content))
+			if err != nil {
+				return []v1.Pod{}, err
+			}
+			pods = append(pods, pod)
+			content = ""
+		} else {
+			content += line + "\n"
+		}
+	}
 
-	// load yaml file
-	//TODO: doesn't read multi part yaml files :(
-	content, err := ioutil.ReadFile(filename)
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
 
+	pod, err := b.convertFromYaml([]byte(content))
 	if err != nil {
 		return []v1.Pod{}, err
 	}
+	pods = append(pods, pod)
 
-	return convertFromYaml([]byte(content))
+	return pods, nil
 }
 
-func convertFromYaml(input []byte) ([]v1.Pod, error) {
-	var allPods []v1.Pod
+func (b *RowBuilder) convertFromYaml(input []byte) (v1.Pod, error) {
+	// var allPods []v1.Pod
 	var err error
-
 	var pod v1.Pod
+	var newPod v1.Pod
+
+	// Happy accident, it looks like pod unmarshalling sets the kind field so we dont have to guess,
+	//  not sure if this is intended so it might break in the future
 	err = yaml.Unmarshal(input, &pod)
 	if err == nil {
-		allPods = append(allPods, pod)
-	} else {
-		return []v1.Pod{}, err
-	}
-
-	var deploySpec a1.Deployment
-	err = yaml.Unmarshal(input, &deploySpec)
-	if err == nil {
-		podTemplate := deploySpec.Spec.Template
-		pod := v1.Pod{
-			Spec: podTemplate.Spec,
+		if pod.Kind == "Pod" {
+			newPod = pod
 		}
-		pod.SetName(deploySpec.Name)
-		allPods = append(allPods, pod)
 	} else {
-		return []v1.Pod{}, err
+		return v1.Pod{}, err
 	}
 
-	var replicaSpec a1.ReplicaSet
-	err = yaml.Unmarshal(input, &replicaSpec)
-	if err == nil {
-		podTemplate := replicaSpec.Spec.Template
-		pod := v1.Pod{
-			Spec: podTemplate.Spec,
+	switch pod.Kind {
+	case "Deployment":
+		var deploySpec a1.Deployment
+		err = yaml.Unmarshal(input, &deploySpec)
+		if err == nil {
+			podTemplate := deploySpec.Spec.Template
+			newPod = v1.Pod{
+				Spec: podTemplate.Spec,
+			}
+			newPod.SetName(deploySpec.Name)
+		} else {
+			return v1.Pod{}, err
 		}
-		pod.SetName(replicaSpec.Name)
-		allPods = append(allPods, pod)
-	} else {
-		return []v1.Pod{}, err
-	}
 
-	var statefulSpec a1.StatefulSet
-	err = yaml.Unmarshal(input, &statefulSpec)
-	if err == nil {
-		podTemplate := statefulSpec.Spec.Template
-		pod := v1.Pod{
-			Spec: podTemplate.Spec,
+	case "ReplicaSet":
+		var replicaSpec a1.ReplicaSet
+		err = yaml.Unmarshal(input, &replicaSpec)
+		if err == nil {
+			podTemplate := replicaSpec.Spec.Template
+			newPod = v1.Pod{
+				Spec: podTemplate.Spec,
+			}
+			newPod.SetName(replicaSpec.Name)
+		} else {
+			return v1.Pod{}, err
 		}
-		pod.SetName(statefulSpec.Name)
-		allPods = append(allPods, pod)
-	} else {
-		return []v1.Pod{}, err
-	}
 
-	var daemonSpec a1.DaemonSet
-	err = yaml.Unmarshal(input, &daemonSpec)
-	if err == nil {
-		podTemplate := daemonSpec.Spec.Template
-		pod := v1.Pod{
-			Spec: podTemplate.Spec,
+	case "StatefulSet":
+		var statefulSpec a1.StatefulSet
+		err = yaml.Unmarshal(input, &statefulSpec)
+		if err == nil {
+			podTemplate := statefulSpec.Spec.Template
+			newPod = v1.Pod{
+				Spec: podTemplate.Spec,
+			}
+			newPod.SetName(statefulSpec.Name)
+		} else {
+			return v1.Pod{}, err
 		}
-		pod.SetName(daemonSpec.Name)
-		allPods = append(allPods, pod)
-	} else {
-		return []v1.Pod{}, err
+
+	case "DaemonSet":
+		var daemonSpec a1.DaemonSet
+		err = yaml.Unmarshal(input, &daemonSpec)
+		if err == nil {
+			podTemplate := daemonSpec.Spec.Template
+			newPod = v1.Pod{
+				Spec: podTemplate.Spec,
+			}
+			newPod.SetName(daemonSpec.Name)
+		} else {
+			return v1.Pod{}, err
+		}
+
+	case "Job":
+		var jobSpec batchv1.Job
+		err = yaml.Unmarshal(input, &jobSpec)
+		if err == nil {
+			podTemplate := jobSpec.Spec.Template
+			newPod = v1.Pod{
+				Spec: podTemplate.Spec,
+			}
+			newPod.SetName(jobSpec.Name)
+		} else {
+			return v1.Pod{}, err
+		}
+
+	case "CronJob":
+		var cronJobSpec batchv1.CronJob
+		err = yaml.Unmarshal(input, &cronJobSpec)
+		if err == nil {
+			podTemplate := cronJobSpec.Spec.JobTemplate
+			newPod = v1.Pod{
+				Spec: podTemplate.Spec.Template.Spec,
+			}
+			newPod.SetName(cronJobSpec.Name)
+		} else {
+			return v1.Pod{}, err
+		}
 	}
 
-	return allPods, nil
+	return newPod, nil
 }

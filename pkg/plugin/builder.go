@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"errors"
+	"os"
 	"strconv"
 
 	v1 "k8s.io/api/core/v1"
@@ -37,7 +38,8 @@ type RowBuilder struct {
 	FilterList         map[string]matchValue // used to filter out rows from the table during Print function
 	CalcFiltered       bool                  // the filterd out rows are included in the branch calculations
 	DefaultHeaderLen   int
-	InputFilename      string //filename to be used as the source instead of reading pod information from k8s api
+	InputFilename      string // filename to be used as the source instead of reading pod information from k8s api
+	StdinChanged       bool   // have we been run as part of a shell redirect
 
 	annotationLabel map[string]map[string]map[string]map[string]string
 	head            []string
@@ -110,16 +112,24 @@ func (b *RowBuilder) Build(loop Looper) error {
 
 	info := BuilderInformation{TreeView: b.ShowTreeView}
 
-	err := b.LoadHeaders(loop, &info)
+	// check if our input has been redirected
+	fileinfo, err := os.Stdin.Stat()
+	if err != nil {
+		return err
+	}
+	if (fileinfo.Mode() & os.ModeCharDevice) == 0 {
+		b.StdinChanged = true
+	}
+
+	err = b.LoadHeaders(loop, &info)
 	if err != nil {
 		return err
 	}
 
-	// TODO: make if statment so we can load from -f flag
-	if len(b.InputFilename) == 0 {
+	if len(b.InputFilename) == 0 && !b.StdinChanged {
 		podList, err = b.Connection.GetPods(b.PodName)
 	} else {
-		podList, err = loadYaml(b.InputFilename)
+		podList, err = b.loadYaml(b.InputFilename)
 	}
 
 	if err != nil {
