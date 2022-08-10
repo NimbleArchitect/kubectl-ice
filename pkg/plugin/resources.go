@@ -83,12 +83,23 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	loopinfo.ResourceType = resourceType
 
-	if err := connect.LoadMetricConfig(kubeFlags); err != nil {
-		return err
-	}
-	podStateList, err := connect.GetMetricPods(args)
+	stdinChanged, err := builder.HasStdinChanged()
 	if err != nil {
 		return err
+	}
+
+	//only need to pull metrics info we are reading live data,
+	// if we read from a file metric data wont exist
+	if len(commonFlagList.inputFilename) == 0 && !stdinChanged {
+		if err := connect.LoadMetricConfig(kubeFlags); err != nil {
+			return err
+		}
+		podStateList, err := connect.GetMetricPods(args)
+		if err != nil {
+			log.Tell(err)
+		} else {
+			loopinfo.MetricsResource = loopinfo.podMetrics2Hashtable(podStateList)
+		}
 	}
 
 	if cmd.Flag("size") != nil {
@@ -106,7 +117,6 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
-	loopinfo.MetricsResource = loopinfo.podMetrics2Hashtable(podStateList)
 	if err := builder.Build(&loopinfo); err != nil {
 		return err
 	}
@@ -228,6 +238,7 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 	var displayValue, request, limit, percentLimit, percentRequest string
 	var rawRequest, rawLimit, rawValue int64
 	var rawPercentRequest, rawPercentLimit float64
+	var requestCell, limitCell Cell
 
 	log := logger{location: "resources:statsProcessTableRow"}
 	log.Debug("Start")
@@ -235,23 +246,38 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 	floatfmt := "%.6f"
 
 	if resource == "cpu" {
+		if res.Size() >= 3 {
+			if res.Limits.Cpu() != nil {
+				if s.ShowRaw {
+					rawLimit = res.Limits.Cpu().ScaledValue(apires.Nano)
+					limit = fmt.Sprintf("%dn", rawLimit)
+				} else {
+					rawLimit = res.Limits.Cpu().MilliValue()
+					limit = fmt.Sprintf("%dm", rawLimit)
+				}
+				limitCell = NewCellInt(limit, rawLimit)
+			}
+
+			if res.Requests.Cpu() != nil {
+				if s.ShowRaw {
+					rawRequest = res.Requests.Cpu().ScaledValue(apires.Nano)
+					request = fmt.Sprintf("%dn", rawRequest)
+				} else {
+					rawRequest = res.Requests.Cpu().MilliValue()
+					request = fmt.Sprintf("%dm", rawRequest)
+				}
+				requestCell = NewCellInt(request, rawRequest)
+			}
+		}
 		if metrics.Cpu() != nil {
 			if s.ShowRaw {
 				// this returns nanocores as the display value when using --raw
 				displayValue = metrics.Cpu().String()
 				rawValue = metrics.Cpu().ScaledValue(apires.Nano)
-				rawLimit = res.Limits.Cpu().ScaledValue(apires.Nano)
-				rawRequest = res.Requests.Cpu().ScaledValue(apires.Nano)
-				limit = fmt.Sprintf("%dn", rawLimit)
-				request = fmt.Sprintf("%dn", rawRequest)
 			} else {
+				floatfmt = "%.2f"
 				displayValue = fmt.Sprintf("%dm", metrics.Cpu().MilliValue())
 				rawValue = metrics.Cpu().MilliValue()
-				rawLimit = res.Limits.Cpu().MilliValue()
-				rawRequest = res.Requests.Cpu().MilliValue()
-				limit = fmt.Sprintf("%dm", rawLimit)
-				request = fmt.Sprintf("%dm", rawRequest)
-				floatfmt = "%.2f"
 			}
 
 			if cpuVal := metrics.Cpu().AsApproximateFloat64(); cpuVal > 0 {
@@ -275,9 +301,23 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 				}
 			}
 		}
+
 	}
 
 	if resource == "memory" {
+		if res.Size() >= 3 {
+			if res.Limits.Memory() != nil {
+				limit = res.Limits.Memory().String()
+				rawLimit = res.Limits.Memory().Value()
+				limitCell = NewCellInt(limit, rawLimit)
+			}
+
+			if res.Requests.Memory() != nil {
+				request = res.Requests.Memory().String()
+				rawRequest = res.Requests.Memory().Value()
+				requestCell = NewCellInt(request, rawRequest)
+			}
+		}
 		if metrics.Memory() != nil {
 			rawValue = metrics.Memory().Value() / 1000
 			if s.ShowRaw {
@@ -286,11 +326,6 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 				displayValue = memoryHumanReadable(metrics.Memory().Value(), s.BytesAs)
 				floatfmt = "%.2f"
 			}
-
-			limit = res.Limits.Memory().String()
-			rawLimit = res.Limits.Memory().Value()
-			request = res.Requests.Memory().String()
-			rawRequest = res.Requests.Memory().Value()
 
 			if memVal := metrics.Memory().AsApproximateFloat64(); memVal > 0 {
 				// check memory limits has a value
@@ -317,8 +352,8 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 
 	cellList = append(cellList,
 		NewCellInt(displayValue, rawValue),
-		NewCellInt(request, rawRequest),
-		NewCellInt(limit, rawLimit),
+		requestCell,
+		limitCell,
 		NewCellFloat(percentRequest, rawPercentRequest),
 		NewCellFloat(percentLimit, rawPercentLimit),
 	)
