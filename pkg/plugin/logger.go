@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"fmt"
+	"os"
 )
 
 var LogDebug bool
@@ -57,16 +58,29 @@ func logGetType(logType int) (string, string) {
 	return "UNKNOWN", NoColour
 }
 
-func (l *logger) Error(message ...interface{}) {
+func (l *logger) Yell(message ...interface{}) {
 	id := 1
 	logPrefix, logColour := logGetType(id)
 
 	msg := fmt.Sprintln(message...)
 	// dump the message out to the screen
 	if dontUseColour {
-		l.showLog("", logPrefix+": ", msg)
+		l.showLog(true, "", logPrefix+": ", msg)
 	} else {
-		l.showLog(logColour, logPrefix+": ", msg)
+		l.showLog(true, logColour, logPrefix+": ", msg)
+	}
+}
+
+func (l *logger) Tell(message ...interface{}) {
+	id := 2
+	logPrefix, logColour := logGetType(id)
+
+	msg := fmt.Sprintln(message...)
+	// dump the message out to the screen
+	if dontUseColour {
+		l.showLog(true, "", logPrefix+": ", msg)
+	} else {
+		l.showLog(true, logColour, logPrefix+": ", msg)
 	}
 }
 
@@ -81,20 +95,24 @@ func (l *logger) Debug(message ...interface{}) {
 
 		// dump the message out to the screen
 		if dontUseColour {
-			l.showLog("", prefix, msg)
+			l.showLog(false, "", prefix, msg)
 		} else {
-			l.showLog(logColour, prefix, msg)
+			l.showLog(false, logColour, prefix, msg)
 		}
 	}
 }
 
 // print the log to stdout
-func (l *logger) showLog(format string, prefix string, message string) {
+func (l *logger) showLog(useStdErr bool, format string, prefix string, message string) {
 	if len(format) == 0 {
 		format = "%s%s"
 	}
 
 	colourMsg := fmt.Sprintf(format, prefix, message)
-	fmt.Print(colourMsg)
+	if useStdErr {
+		fmt.Fprint(os.Stderr, colourMsg)
+	} else {
+		fmt.Print(colourMsg)
+	}
 
 }

@@ -494,6 +494,12 @@ func strMatch(str string, pattern string) bool {
 	return lookup[n][m]
 }
 
+func NewCellEmpty() Cell {
+	return Cell{
+		typ: -1,
+	}
+}
+
 // NewCellText quick wrapper to return a cell object containing the given string
 func NewCellText(text string) Cell {
 
