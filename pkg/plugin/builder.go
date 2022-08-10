@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"strconv"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 )
@@ -44,6 +45,7 @@ type RowBuilder struct {
 	annotationLabel map[string]map[string]map[string]map[string]string
 	head            []string
 	filter          []matchFilter
+	columnByNames   []string // show only these named columns
 }
 
 type BuilderInformation struct {
@@ -99,6 +101,12 @@ func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
 
 	if !b.ShowContainerType {
 		b.ShowContainerType = b.CommonFlags.showContainerType
+	}
+
+	if len(commonFlagList.showColumnByName) > 0 {
+		columns := strings.TrimSpace(commonFlagList.showColumnByName)
+		columnNames := strings.ToUpper(columns)
+		b.columnByNames = strings.Split(columnNames, ",")
 	}
 
 }
@@ -185,8 +193,19 @@ func (b *RowBuilder) Build(loop Looper) error {
 		}
 
 	} else {
-		return b.BuildContainerTable(loop, &info, podList)
+		err := b.BuildContainerTable(loop, &info, podList)
+		if err != nil {
+			return err
+		}
 	}
+
+	if len(b.columnByNames) > 0 {
+		err := b.Table.HideOnlyNamedColumns(b.columnByNames)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

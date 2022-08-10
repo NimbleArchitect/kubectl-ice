@@ -137,6 +137,39 @@ func (t *Table) HideColumn(columnNumber int) {
 	}
 }
 
+// HideTheseColumns hides the column number to hide, columns numbers are the unsorted column number
+func (t *Table) HideOnlyNamedColumns(columnName []string) error {
+	var found bool
+	var validNames []string
+
+	log := logger{location: "Table:HideOnlyNamedColumns"}
+	log.Debug("Start")
+
+	log.Debug("len(columnName) =", len(columnName))
+	// // unhide every column
+	for i := range t.head {
+		t.head[i].hidden = true
+		validNames = append(validNames, t.head[i].title)
+	}
+
+	// hide only the listed columns
+	for _, c := range columnName {
+		found = false
+		for i, h := range t.head {
+			if c == h.title {
+				log.Debug("hide =", h.title)
+				t.head[i].hidden = false
+				found = true
+			}
+		}
+		if !found {
+			// 	t.head[i].hidden = true
+			return fmt.Errorf("error: invalid column \"%s\" current valid column names are as following %s", c, validNames)
+		}
+	}
+	return nil
+}
+
 // Print outputs the table on the terminal, taking the column order and visibiliy into account
 func (t *Table) Print() {
 	headLine := ""

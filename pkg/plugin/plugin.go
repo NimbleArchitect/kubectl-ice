@@ -31,6 +31,7 @@ type commonFlags struct {
 	labelNodeName      string
 	labelPodName       string
 	annotationPodName  string
+	showColumnByName   string // list of column names to show, overrides other hidden columns
 }
 
 var helpTemplate = `
@@ -384,6 +385,8 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("pod-label", "", "", `Show the selected pod label as a column`)
 	cmdObj.Flags().StringP("annotation", "", "", `Show the selected annotation as a column`)
 	cmdObj.Flags().StringP("filename", "f", "", `read pod information from this yaml file instead`)
+	cmdObj.Flags().StringP("columns", "", "", `list of column names to show in the table output, all other columns are hidden`)
+
 }
 
 func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
@@ -534,6 +537,10 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 	if cmd.Flag("filename").Value.String() != "" {
 		inputFilename := cmd.Flag("filename").Value.String()
 		f.inputFilename = inputFilename
+	}
+
+	if cmd.Flag("columns").Value.String() != "" {
+		f.showColumnByName = cmd.Flag("columns").Value.String()
 	}
 
 	return f, nil
