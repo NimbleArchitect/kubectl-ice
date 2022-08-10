@@ -103,9 +103,22 @@ func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
 
 }
 
+func (b RowBuilder) HasStdinChanged() (bool, error) {
+	// check if our input has been redirected
+	fileinfo, err := os.Stdin.Stat()
+	if err != nil {
+		return false, err
+	}
+	if (fileinfo.Mode() & os.ModeCharDevice) == 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
 // Build
 func (b *RowBuilder) Build(loop Looper) error {
 	var podList []v1.Pod
+	var err error
 
 	log := logger{location: "RowBuilder:Build"}
 	log.Debug("Start")
@@ -113,12 +126,9 @@ func (b *RowBuilder) Build(loop Looper) error {
 	info := BuilderInformation{TreeView: b.ShowTreeView}
 
 	// check if our input has been redirected
-	fileinfo, err := os.Stdin.Stat()
+	b.StdinChanged, err = b.HasStdinChanged()
 	if err != nil {
 		return err
-	}
-	if (fileinfo.Mode() & os.ModeCharDevice) == 0 {
-		b.StdinChanged = true
 	}
 
 	err = b.LoadHeaders(loop, &info)
