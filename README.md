@@ -34,6 +34,15 @@ ice lists detailed information about the containers present inside a
 
 [![asciicast](https://asciinema.org/a/512927.svg)](https://asciinema.org/a/512927)
 
+
+## Contributing
+
+If you like my work or find this program useful and want to say thanks you can reach me on twitter [@NimbleArchitect](https://twitter.com/nimblearchitect) or you can [Sponsor me](https://github.com/sponsors/NimbleArchitect) with github sponsors or [Buy Me A Coffee](https://www.buymeacoffee.com/NimbleArchitect)
+
+
+All feedback and contributions are welcome, if you want to raise an issue or help with fixes or features please [raise an issue to discuss](https://github.com/NimbleArchitect/kubectl-ice/issues)
+
+
 # Installation
 
 ## Install using krew
@@ -280,14 +289,6 @@ demo-odd-cpu-5f947f9db4-cwvdq  web-frontend  135m  1m       1000m  13408.25  13.
 
 ```
 
-
-## Contributing
-
-
-If you like my work or find this program useful and want to say thanks you can reach me on twitter [@NimbleArchitect](https://twitter.com/nimblearchitect) or you can [Buy Me A Coffee](https://www.buymeacoffee.com/NimbleArchitect)
-
-
-All feedback and contributions are welcome, if you want to raise an issue or help with fixes or features please [raise an issue to discuss](https://github.com/NimbleArchitect/kubectl-ice/issues)
 
 ## License
 Licensed under Apache 2.0 see [LICENSE](https://github.com/NimbleArchitect/kubectl-pod/blob/main/LICENSE)
