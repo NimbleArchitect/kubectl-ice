@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Documentation | kubectl-ice</title>
+<meta name="generator" content="Jekyll v3.9.2" />
+<meta property="og:title" content="Documentation" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="kubectl-ice cleanly lists all containers in kubernetes pods including init containers you can view running kubernetes information about the multi-container pods to assist in troubleshooting and information gathering" />
+<meta property="og:description" content="kubectl-ice cleanly lists all containers in kubernetes pods including init containers you can view running kubernetes information about the multi-container pods to assist in troubleshooting and information gathering" />
+<link rel="canonical" href="https://nimblearchitect.github.io/kubectl-ice/documentation/" />
+<meta property="og:url" content="https://nimblearchitect.github.io/kubectl-ice/documentation/" />
+<meta property="og:site_name" content="kubectl-ice" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Documentation" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","description":"kubectl-ice cleanly lists all containers in kubernetes pods including init containers you can view running kubernetes information about the multi-container pods to assist in troubleshooting and information gathering","headline":"Documentation","url":"https://nimblearchitect.github.io/kubectl-ice/documentation/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/kubectl-ice/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://nimblearchitect.github.io/kubectl-ice/feed.xml" title="kubectl-ice" /><script>
+if(!(window.doNotTrack === "1" || navigator.doNotTrack === "1" || navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1")) {
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'G-Q2EDCE0VN4', 'auto');
+  ga('send', 'pageview');
+}
+</script>
+  
+<link rel="stylesheet" href="/kubectl-ice/mystyle.css"></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/kubectl-ice/">kubectl-ice</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/kubectl-ice/about/">About</a><a class="page-link" href="/kubectl-ice/demos/">Demos</a><a class="page-link" href="/kubectl-ice/downloads/">Downloads</a><a class="page-link" href="/kubectl-ice/how_to/">How do I...</a><a class="page-link" href="/kubectl-ice/documentation/">Documentation</a><a class="page-link" href="/kubectl-ice/faq/">FAQ</a><a class="page-link" href="/kubectl-ice/blog/">Ice Blog</a><a class="page-link" href="/kubectl-ice/donations/">Donations</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <!-- <h1>Documentation</h1> -->
+
+
+<div class="row">
+  <div class="toc_box">
+      
+      
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 0em;">        
+        
+
+        <li><a href="#1_Home">1 Home</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#1.1_Intro">1.1 Intro</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#1.2_Features">1.2 Features</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#1.3_License">1.3 License</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#2_Installation">2 Installation</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#2.1_Using krew">2.1 Using krew</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#2.2_From binary">2.2 From binary</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#2.3_From Source">2.3 From Source</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#3_Commands">3 Commands</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.1_Capabilities">3.1 Capabilities</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.1.1_Flags">3.1.1 Flags</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.1.2_Examples">3.1.2 Examples</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#3.1_Restarts">3.1 Restarts</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.10.1_Flags">3.10.1 Flags</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.10.2_Examples">3.10.2 Examples</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#3.11_Security">3.11 Security</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.11.1_Flags">3.11.1 Flags</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.11.2_Examples">3.11.2 Examples</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#3.12_Status">3.12 Status</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.12.1_Flags">3.12.1 Flags</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.12.2_Examples">3.12.2 Examples</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#3.13_Volumes">3.13 Volumes</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.13.1_Flags">3.13.1 Flags</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.13.2_Examples">3.13.2 Examples</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#3.2_Command">3.2 Command</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.2.1_Flags">3.2.1 Flags</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.2_Examples">3.2.2 Examples</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#3.3_CPU">3.3 CPU</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.3.1_Flags">3.3.1 Flags</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.3.2_Examples">3.3.2 Examples</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#3.4_Environment">3.4 Environment</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.4.1_Flags">3.4.1 Flags</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.4.2_Examples">3.4.2 Examples</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#3.5_Image">3.5 Image</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.5.1_Flags">3.5.1 Flags</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.5.2_Examples">3.5.2 Examples</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#3.6_IP">3.6 IP</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.6.1_Flags">3.6.1 Flags</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.6.2_Examples">3.6.2 Examples</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#3.7_Memory">3.7 Memory</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.7.1_Flags">3.7.1 Flags</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.7.2_Examples">3.7.2 Examples</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#3.8_Ports">3.8 Ports</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.8.1_Flags">3.8.1 Flags</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.8.2_Examples">3.8.2 Examples</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
+
+        <li><a href="#3.9_Probes">3.9 Probes</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.9.1_Flags">3.9.1 Flags</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.9.2_Examples">3.9.2 Examples</a></li>
+
+        
+      
+  </div>
+  <div class="content_body">
+    
+    
+      
+
+      
+    
+      <h2 id="1_Home">Home</h2>
+      <p>
+        <p>Kubectl-ice is a cli based application that lets you cleanly list all containers in kubernetes pods including init containers and view running kubernetes information about those multi-container pods to assist in troubleshooting and information gathering</p>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="1.1_Intro">Intro</h3>
+      <p>
+        <p>Kubectl-ice is a kubectl plugin that allows you to easily view advanced configuration of all containers that are running inside pods, I created it so I could peer inside the pods and see the details of the containers that are inside running pods and then extended it so all containers could be viewed at once.</p>
+
+<p>ice lists detailed information about the containers present inside a pod, useful for trouble-shooting multi container issues. You can view volume, image, port and executable configurations, along with current cpu and memory metrics all at the container level (requires metrics server)</p>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="1.2_Features">Features</h3>
+      <p>
+        <ul>
+  <li>Runs on Windows, Linux and MacOS</li>
+  <li>Only uses read permissions, no writes are called</li>
+  <li>Tree view adds each container in a pod, then each pod in a replica or stateful set etc, all the way up to the node level</li>
+  <li>Selectors work just like they do with the standard kubectl command</li>
+  <li>Sortable output columns</li>
+  <li>List all the containers in a kubernetes pod including Init and Ephemeral containers</li>
+  <li>Include or exclude rows from output using the match flag, useful to exclude containers with low memory or cpu usage</li>
+  <li>List only cpu and memory results that dont fall within range using the oddities flag</li>
+  <li>Also displays information on init and ephemerial containers</li>
+  <li>Pods can be filtered using their priority and priorityClassName</li>
+  <li>Most sub commands utilize aliases meaning less typing (eg command and cmd are the same)</li>
+  <li>Easily view securityContext details and POSIX capabilities</li>
+  <li>Use the show-namespace flag to output the pods namespace</li>
+</ul>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="1.3_License">License</h3>
+      <p>
+        <p>Licensed under Apache 2.0 see <a href="https://github.com/NimbleArchitect/kubectl-pod/blob/main/LICENSE">LICENSE</a></p>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h2 id="2_Installation">Installation</h2>
+      <p>
+        
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="2.1_Using krew">Using krew</h3>
+      <p>
+        <div class="language-plaintext highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>$ kubectl krew install ice
+</code></pre>
+  </div>
+</div>
+<p>update with</p>
+<div class="language-plaintext highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>$ kubectl krew update
+$ kubectl krew upgrade ice
+</code></pre>
+  </div>
+</div>
+<p>dont have krew? check it out here <a href="https://github.com/GoogleContainerTools/krew">https://github.com/GoogleContainerTools/krew</a></p>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="2.2_From binary">From binary</h3>
+      <p>
+        <ul>
+  <li>download the required binary from the release page</li>
+  <li>unzip and copy the kubectl-ice file to your path</li>
+  <li>run <code class="language-plaintext highlighter-rouge">kubectl-ice help</code> to check its working</li>
+</ul>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="2.3_From Source">From Source</h3>
+      <p>
+        <p>clone and build the source using the following commands</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>git clone https://github.com/NimbleArchitect/kubectl-ice.git
+<span class="nb">cd </span>kubectl-ice
+make bin
+</code></pre>
+  </div>
+</div>
+<p>then copy ./bin/kubectl-ice to somewhere in your path and run <code class="language-plaintext highlighter-rouge">kubectl-ice help</code> to check its working</p>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h2 id="3_Commands">Commands</h2>
+      <p>
+        <p>if kubectl-ice is in your path you can replace the command <code class="language-plaintext highlighter-rouge">kubectl-ice</code> with <code class="language-plaintext highlighter-rouge">kubectl ice</code> (remove the dash) to
+ make it feel more like a native kubectl command, this also works if you have kubectl set as an alias, for example
+ if k is aliased to kubectl you can type <code class="language-plaintext highlighter-rouge">k ice subcommand</code> instead of <code class="language-plaintext highlighter-rouge">kubectl-ice subcommand</code></p>
+
+<p>The following commands are available for <code class="language-plaintext highlighter-rouge">kubectl-ice</code></p>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.1_Capabilities">Capabilities</h3>
+      <p>
+        <p>Lists the runtime priviliges and linux capabilities that have been set for each container in a kubernetes pod</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><strong>Aliases:</strong></td>
+      <td>capabilities, cap</td>
+    </tr>
+    <tr>
+      <td><strong>Usage:</strong></td>
+      <td>kubectl-ice capabilities [flags]<br />kubectl-ice capabilities [flags] podname</td>
+    </tr>
+  </tbody>
+</table>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.1.1_Flags">Flags</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
+  <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
+  <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
+  <span class="nt">-M</span>, <span class="nt">--match-only</span> string              Filters out results but only calculates up visible rows
+      <span class="nt">--node-label</span> string              Show the selected node label as a column
+      <span class="nt">--node-tree</span>                      Displayes the tree with the nodes as the root
+  <span class="nt">-o</span>, <span class="nt">--output</span> string                  Output format, currently csv, list, json and yaml are supported
+      <span class="nt">--pod-label</span> string               Show the selected pod label as a column
+      <span class="nt">--select</span> string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of <span class="o">==</span>, <span class="o">=</span> and <span class="o">!=</span> 
+      <span class="nt">--show-namespace</span>                 Show the namespace column
+      <span class="nt">--show-node</span>                      Show the node name column
+  <span class="nt">-T</span>, <span class="nt">--show-type</span>                      Show the container <span class="nb">type </span>column, where:
+                                           <span class="nv">I</span><span class="o">=</span>init container, <span class="nv">C</span><span class="o">=</span>container, <span class="nv">E</span><span class="o">=</span>ephemerial container, <span class="nv">P</span><span class="o">=</span>Pod, <span class="nv">D</span><span class="o">=</span>Deployment, <span class="nv">R</span><span class="o">=</span>ReplicaSet, <span class="nv">A</span><span class="o">=</span>DaemonSet, <span class="nv">S</span><span class="o">=</span>StatefulSet, <span class="nv">N</span><span class="o">=</span>Node
+  <span class="nt">-t</span>, <span class="nt">--tree</span>                           Display tree like view instead of the standard list
+
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.1.2_Examples">Examples</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="c"># List container capabilities from pods</span>
+kubectl-ice capabilities
+
+<span class="c"># List container capabilities info from pods output in JSON format</span>
+kubectl-ice capabilities <span class="nt">-o</span> json
+
+<span class="c"># List container capabilities info from a single pod</span>
+kubectl-ice capabilities my-pod-4jh36
+
+<span class="c"># List capabilities info for all containers named web-container searching all</span>
+<span class="c"># pods in the current namespace</span>
+kubectl-ice capabilities <span class="nt">-c</span> web-container
+
+<span class="c"># List capabilities info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by container name in descending order (notice the ! charator)</span>
+kubectl-ice capabilities <span class="nt">-c</span> web-container <span class="nt">--sort</span> <span class="s1">'!CONTAINER'</span>
+
+<span class="c"># List capabilities info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by pod name in ascending order</span>
+kubectl-ice capabilities <span class="nt">-c</span> web-container <span class="nt">--sort</span> PODNAME
+
+<span class="c"># List container capabilities info from all pods where label app matches web</span>
+kubectl-ice capabilities <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>web
+
+<span class="c"># List container capabilities info from all pods where the pod label app is either web or mail</span>
+kubectl-ice capabilities <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</span>
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.1_Restarts">Restarts</h3>
+      <p>
+        <table>
+  <tbody>
+    <tr>
+      <td><strong>Aliases:</strong></td>
+      <td>restarts, restart</td>
+    </tr>
+    <tr>
+      <td><strong>Usage:</strong></td>
+      <td>kubectl-ice restarts [flags]<br />kubectl-ice restarts [flags] podname</td>
+    </tr>
+  </tbody>
+</table>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.10.1_Flags">Flags</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
+  <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
+  <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
+  <span class="nt">-M</span>, <span class="nt">--match-only</span> string              Filters out results but only calculates up visible rows
+      <span class="nt">--node-label</span> string              Show the selected node label as a column
+      <span class="nt">--node-tree</span>                      Displayes the tree with the nodes as the root
+      <span class="nt">--oddities</span>                       show only the outlier rows that dont fall within the computed range
+  <span class="nt">-o</span>, <span class="nt">--output</span> string                  Output format, currently csv, list, json and yaml are supported
+      <span class="nt">--pod-label</span> string               Show the selected pod label as a column
+      <span class="nt">--select</span> string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of <span class="o">==</span>, <span class="o">=</span> and <span class="o">!=</span> 
+      <span class="nt">--show-namespace</span>                 Show the namespace column
+      <span class="nt">--show-node</span>                      Show the node name column
+  <span class="nt">-T</span>, <span class="nt">--show-type</span>                      Show the container <span class="nb">type </span>column, where:
+                                           <span class="nv">I</span><span class="o">=</span>init container, <span class="nv">C</span><span class="o">=</span>container, <span class="nv">E</span><span class="o">=</span>ephemerial container, <span class="nv">P</span><span class="o">=</span>Pod, <span class="nv">D</span><span class="o">=</span>Deployment, <span class="nv">R</span><span class="o">=</span>ReplicaSet, <span class="nv">A</span><span class="o">=</span>DaemonSet, <span class="nv">S</span><span class="o">=</span>StatefulSet, <span class="nv">N</span><span class="o">=</span>Node
+  <span class="nt">-t</span>, <span class="nt">--tree</span>                           Display tree like view instead of the standard list
+
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.10.2_Examples">Examples</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="c"># List individual container restart count from pods</span>
+kubectl-ice restarts
+
+<span class="c"># List conttainers restart count from pods output in JSON format</span>
+kubectl-ice restarts <span class="nt">-o</span> json
+
+<span class="c"># List restart count from all containers in a single pod</span>
+kubectl-ice restarts my-pod-4jh36
+
+<span class="c"># List restart count of all containers named web-container searching all</span>
+<span class="c"># pods in the current namespace</span>
+kubectl-ice restarts <span class="nt">-c</span> web-container
+
+<span class="c"># List restart count of containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by container name in descending order (notice the ! charator)</span>
+kubectl-ice restarts <span class="nt">-c</span> web-container <span class="nt">--sort</span> <span class="s1">'!CONTAINER'</span>
+
+<span class="c"># List restart count of containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by pod name in ascending order</span>
+kubectl-ice restarts <span class="nt">-c</span> web-container <span class="nt">--sort</span> PODNAME
+
+<span class="c"># List container restart count from all pods where label app equals web</span>
+kubectl-ice restarts <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>web
+
+<span class="c"># List restart count from all containers where the pod label app is either web or mail</span>
+kubectl-ice restarts <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</span>
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.11_Security">Security</h3>
+      <p>
+        <table>
+  <tbody>
+    <tr>
+      <td><strong>Aliases:</strong></td>
+      <td>security, sec</td>
+    </tr>
+    <tr>
+      <td><strong>Usage:</strong></td>
+      <td>kubectl-ice security [flags]<br />kubectl-ice security [flags] podname</td>
+    </tr>
+  </tbody>
+</table>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.11.1_Flags">Flags</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
+  <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
+  <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
+  <span class="nt">-M</span>, <span class="nt">--match-only</span> string              Filters out results but only calculates up visible rows
+      <span class="nt">--node-label</span> string              Show the selected node label as a column
+      <span class="nt">--node-tree</span>                      Displayes the tree with the nodes as the root
+  <span class="nt">-o</span>, <span class="nt">--output</span> string                  Output format, currently csv, list, json and yaml are supported
+      <span class="nt">--pod-label</span> string               Show the selected pod label as a column
+      <span class="nt">--select</span> string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of <span class="o">==</span>, <span class="o">=</span> and <span class="o">!=</span> 
+      <span class="nt">--selinux</span>                        show the SELinux context thats applied to the containers
+      <span class="nt">--show-namespace</span>                 Show the namespace column
+      <span class="nt">--show-node</span>                      Show the node name column
+  <span class="nt">-T</span>, <span class="nt">--show-type</span>                      Show the container <span class="nb">type </span>column, where:
+                                           <span class="nv">I</span><span class="o">=</span>init container, <span class="nv">C</span><span class="o">=</span>container, <span class="nv">E</span><span class="o">=</span>ephemerial container, <span class="nv">P</span><span class="o">=</span>Pod, <span class="nv">D</span><span class="o">=</span>Deployment, <span class="nv">R</span><span class="o">=</span>ReplicaSet, <span class="nv">A</span><span class="o">=</span>DaemonSet, <span class="nv">S</span><span class="o">=</span>StatefulSet, <span class="nv">N</span><span class="o">=</span>Node
+  <span class="nt">-t</span>, <span class="nt">--tree</span>                           Display tree like view instead of the standard list
+
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.11.2_Examples">Examples</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="c"># List container security info from pods</span>
+kubectl-ice security
+
+<span class="c"># List container security info from pods output in JSON format</span>
+kubectl-ice security <span class="nt">-o</span> json
+
+<span class="c"># List container security info from a single pod</span>
+kubectl-ice security my-pod-4jh36
+
+<span class="c"># List security info for all containers named web-container searching all</span>
+<span class="c"># pods in the current namespace</span>
+kubectl-ice security <span class="nt">-c</span> web-container
+
+<span class="c"># List security info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by container name in descending order (notice the ! charator)</span>
+kubectl-ice security <span class="nt">-c</span> web-container <span class="nt">--sort</span> <span class="s1">'!CONTAINER'</span>
+
+<span class="c"># List security info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by pod name in ascending order</span>
+kubectl-ice security <span class="nt">-c</span> web-container <span class="nt">--sort</span> PODNAME
+
+<span class="c"># List container security info from all pods where label app matches web</span>
+kubectl-ice security <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>web
+
+<span class="c"># List container security info from all pods where the pod label app is either web or mail</span>
+kubectl-ice security <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</span>
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.12_Status">Status</h3>
+      <p>
+        <table>
+  <tbody>
+    <tr>
+      <td><strong>Aliases:</strong></td>
+      <td>status, st</td>
+    </tr>
+    <tr>
+      <td><strong>Usage:</strong></td>
+      <td>kubectl-ice status [flags]<br />kubectl-ice status [flags] podname</td>
+    </tr>
+  </tbody>
+</table>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.12.1_Flags">Flags</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
+  <span class="nt">-d</span>, <span class="nt">--details</span>                        Display the timestamp instead of age along with the message column
+  <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
+      <span class="nt">--id</span>                             Show running containers <span class="nb">id</span>
+  <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
+  <span class="nt">-M</span>, <span class="nt">--match-only</span> string              Filters out results but only calculates up visible rows
+      <span class="nt">--node-label</span> string              Show the selected node label as a column
+      <span class="nt">--node-tree</span>                      Displayes the tree with the nodes as the root
+      <span class="nt">--oddities</span>                       show only the outlier rows that dont fall within the computed range
+  <span class="nt">-o</span>, <span class="nt">--output</span> string                  Output format, currently csv, list, json and yaml are supported
+      <span class="nt">--pod-label</span> string               Show the selected pod label as a column
+  <span class="nt">-p</span>, <span class="nt">--previous</span>                       Show previous state
+      <span class="nt">--select</span> string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of <span class="o">==</span>, <span class="o">=</span> and <span class="o">!=</span> 
+      <span class="nt">--show-namespace</span>                 Show the namespace column
+      <span class="nt">--show-node</span>                      Show the node name column
+  <span class="nt">-T</span>, <span class="nt">--show-type</span>                      Show the container <span class="nb">type </span>column, where:
+                                           <span class="nv">I</span><span class="o">=</span>init container, <span class="nv">C</span><span class="o">=</span>container, <span class="nv">E</span><span class="o">=</span>ephemerial container, <span class="nv">P</span><span class="o">=</span>Pod, <span class="nv">D</span><span class="o">=</span>Deployment, <span class="nv">R</span><span class="o">=</span>ReplicaSet, <span class="nv">A</span><span class="o">=</span>DaemonSet, <span class="nv">S</span><span class="o">=</span>StatefulSet, <span class="nv">N</span><span class="o">=</span>Node
+  <span class="nt">-t</span>, <span class="nt">--tree</span>                           Display tree like view instead of the standard list
+
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.12.2_Examples">Examples</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="c"># List individual container status from pods</span>
+kubectl-ice status
+
+<span class="c"># List conttainers status from pods output in JSON format</span>
+kubectl-ice status <span class="nt">-o</span> json
+
+<span class="c"># List status from all container in a single pod</span>
+kubectl-ice status my-pod-4jh36
+
+<span class="c"># List previous container status from a single pod</span>
+kubectl-ice status <span class="nt">-p</span> my-pod-4jh36
+
+<span class="c"># List status of all containers named web-container searching all</span>
+<span class="c"># pods in the current namespace</span>
+kubectl-ice status <span class="nt">-c</span> web-container
+
+<span class="c"># List status of containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by container name in descending order (notice the ! charator)</span>
+kubectl-ice status <span class="nt">-c</span> web-container <span class="nt">--sort</span> <span class="s1">'!CONTAINER'</span>
+
+<span class="c"># List status of containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by pod name in ascending order</span>
+kubectl-ice status <span class="nt">-c</span> web-container <span class="nt">--sort</span> PODNAME
+
+<span class="c"># List container status from all pods where label app equals web</span>
+kubectl-ice status <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>web
+
+<span class="c"># List status from all containers where the pods label app is either web or mail</span>
+kubectl-ice status <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</span>
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.13_Volumes">Volumes</h3>
+      <p>
+        <table>
+  <tbody>
+    <tr>
+      <td><strong>Aliases:</strong></td>
+      <td>volumes, volume, vol</td>
+    </tr>
+    <tr>
+      <td><strong>Usage:</strong></td>
+      <td>kubectl-ice volumes [flags]<br />kubectl-ice volumes [flags] podname</td>
+    </tr>
+  </tbody>
+</table>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.13.1_Flags">Flags</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
+  <span class="nt">-d</span>, <span class="nt">--device</span>                         show raw block device mappings within a container
+  <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
+  <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
+  <span class="nt">-M</span>, <span class="nt">--match-only</span> string              Filters out results but only calculates up visible rows
+      <span class="nt">--node-label</span> string              Show the selected node label as a column
+      <span class="nt">--node-tree</span>                      Displayes the tree with the nodes as the root
+  <span class="nt">-o</span>, <span class="nt">--output</span> string                  Output format, currently csv, list, json and yaml are supported
+      <span class="nt">--pod-label</span> string               Show the selected pod label as a column
+      <span class="nt">--select</span> string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of <span class="o">==</span>, <span class="o">=</span> and <span class="o">!=</span> 
+      <span class="nt">--show-namespace</span>                 Show the namespace column
+      <span class="nt">--show-node</span>                      Show the node name column
+  <span class="nt">-T</span>, <span class="nt">--show-type</span>                      Show the container <span class="nb">type </span>column, where:
+                                           <span class="nv">I</span><span class="o">=</span>init container, <span class="nv">C</span><span class="o">=</span>container, <span class="nv">E</span><span class="o">=</span>ephemerial container, <span class="nv">P</span><span class="o">=</span>Pod, <span class="nv">D</span><span class="o">=</span>Deployment, <span class="nv">R</span><span class="o">=</span>ReplicaSet, <span class="nv">A</span><span class="o">=</span>DaemonSet, <span class="nv">S</span><span class="o">=</span>StatefulSet, <span class="nv">N</span><span class="o">=</span>Node
+  <span class="nt">-t</span>, <span class="nt">--tree</span>                           Display tree like view instead of the standard list
+
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.13.2_Examples">Examples</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="c"># List volumes from containers inside pods from current namespace</span>
+kubectl-ice volumes
+
+<span class="c"># List volumes from conttainers output in JSON format</span>
+kubectl-ice volumes <span class="nt">-o</span> json
+
+<span class="c"># List all container volumes from a single pod</span>
+kubectl-ice volumes my-pod-4jh36
+
+<span class="c"># List volumes from all containers named web-container searching all</span>
+<span class="c"># pods in the current namespace</span>
+kubectl-ice volumes <span class="nt">-c</span> web-container
+
+<span class="c"># List volumes from container web-container searching all pods in current</span>
+<span class="c"># namespace sorted by volume name in descending order (notice the ! charator)</span>
+kubectl-ice volumes <span class="nt">-c</span> web-container <span class="nt">--sort</span> <span class="s1">'!VOLUME'</span>
+
+<span class="c"># List volumes from container web-container searching all pods in current</span>
+<span class="c"># namespace sorted by volume name in ascending order</span>
+kubectl-ice volumes <span class="nt">-c</span> web-container <span class="nt">--sort</span> MOUNT-POINT
+
+<span class="c"># List container volume info from all pods where label app equals web</span>
+kubectl-ice volumes <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>web
+
+<span class="c"># List volumes from all containers where the pod label app is web or mail</span>
+kubectl-ice volumes <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</span>
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.2_Command">Command</h3>
+      <p>
+        <table>
+  <tbody>
+    <tr>
+      <td><strong>Aliases:</strong></td>
+      <td>command, cmd, exec, args</td>
+    </tr>
+    <tr>
+      <td><strong>Usage:</strong></td>
+      <td>kubectl-ice command [flags]<br />kubectl-ice command [flags] podname</td>
+    </tr>
+  </tbody>
+</table>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.1_Flags">Flags</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
+  <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
+  <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
+  <span class="nt">-M</span>, <span class="nt">--match-only</span> string              Filters out results but only calculates up visible rows
+      <span class="nt">--node-label</span> string              Show the selected node label as a column
+      <span class="nt">--node-tree</span>                      Displayes the tree with the nodes as the root
+  <span class="nt">-o</span>, <span class="nt">--output</span> string                  Output format, currently csv, list, json and yaml are supported
+      <span class="nt">--pod-label</span> string               Show the selected pod label as a column
+      <span class="nt">--select</span> string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of <span class="o">==</span>, <span class="o">=</span> and <span class="o">!=</span> 
+      <span class="nt">--show-namespace</span>                 Show the namespace column
+      <span class="nt">--show-node</span>                      Show the node name column
+  <span class="nt">-T</span>, <span class="nt">--show-type</span>                      Show the container <span class="nb">type </span>column, where:
+                                           <span class="nv">I</span><span class="o">=</span>init container, <span class="nv">C</span><span class="o">=</span>container, <span class="nv">E</span><span class="o">=</span>ephemerial container, <span class="nv">P</span><span class="o">=</span>Pod, <span class="nv">D</span><span class="o">=</span>Deployment, <span class="nv">R</span><span class="o">=</span>ReplicaSet, <span class="nv">A</span><span class="o">=</span>DaemonSet, <span class="nv">S</span><span class="o">=</span>StatefulSet, <span class="nv">N</span><span class="o">=</span>Node
+  <span class="nt">-t</span>, <span class="nt">--tree</span>                           Display tree like view instead of the standard list
+
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.2_Examples">Examples</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="c"># List containers command info from pods</span>
+kubectl-ice <span class="nb">command</span>
+
+<span class="c"># List container command info from pods output in JSON format</span>
+kubectl-ice <span class="nb">command</span> <span class="nt">-o</span> json
+
+<span class="c"># List container command info from a single pod</span>
+kubectl-ice <span class="nb">command </span>my-pod-4jh36
+
+<span class="c"># List command info for all containers named web-container searching all</span>
+<span class="c"># pods in the current namespace</span>
+kubectl-ice <span class="nb">command</span> <span class="nt">-c</span> web-container
+
+<span class="c"># List command info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by container name in descending order (notice the ! charator)</span>
+kubectl-ice <span class="nb">command</span> <span class="nt">-c</span> web-container <span class="nt">--sort</span> <span class="s1">'!CONTAINER'</span>
+
+<span class="c"># List command info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by pod name in ascending order</span>
+kubectl-ice <span class="nb">command</span> <span class="nt">-c</span> web-container <span class="nt">--sort</span> PODNAME
+
+<span class="c"># List container command info from all pods where label app matches web</span>
+kubectl-ice <span class="nb">command</span> <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>web
+
+<span class="c"># List container command info from all pods where the pod label app is either web or mail</span>
+kubectl-ice <span class="nb">command</span> <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</span>
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.3_CPU">CPU</h3>
+      <p>
+        <table>
+  <tbody>
+    <tr>
+      <td><strong>Aliases:</strong></td>
+      <td>cpu</td>
+    </tr>
+    <tr>
+      <td><strong>Usage:</strong></td>
+      <td>kubectl-ice cpu [flags]<br />kubectl-ice cpu [flags] podname</td>
+    </tr>
+  </tbody>
+</table>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.3.1_Flags">Flags</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
+  <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
+  <span class="nt">-i</span>, <span class="nt">--include-init</span>                   include init container<span class="o">(</span>s<span class="o">)</span> <span class="k">in </span>the output, by default init containers are hidden
+  <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
+  <span class="nt">-M</span>, <span class="nt">--match-only</span> string              Filters out results but only calculates up visible rows
+      <span class="nt">--node-label</span> string              Show the selected node label as a column
+      <span class="nt">--node-tree</span>                      Displayes the tree with the nodes as the root
+      <span class="nt">--oddities</span>                       show only the outlier rows that dont fall within the computed range
+  <span class="nt">-o</span>, <span class="nt">--output</span> string                  Output format, currently csv, list, json and yaml are supported
+      <span class="nt">--pod-label</span> string               Show the selected pod label as a column
+  <span class="nt">-r</span>, <span class="nt">--raw</span>                            show raw values
+      <span class="nt">--select</span> string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of <span class="o">==</span>, <span class="o">=</span> and <span class="o">!=</span> 
+      <span class="nt">--show-namespace</span>                 Show the namespace column
+      <span class="nt">--show-node</span>                      Show the node name column
+  <span class="nt">-T</span>, <span class="nt">--show-type</span>                      Show the container <span class="nb">type </span>column, where:
+                                           <span class="nv">I</span><span class="o">=</span>init container, <span class="nv">C</span><span class="o">=</span>container, <span class="nv">E</span><span class="o">=</span>ephemerial container, <span class="nv">P</span><span class="o">=</span>Pod, <span class="nv">D</span><span class="o">=</span>Deployment, <span class="nv">R</span><span class="o">=</span>ReplicaSet, <span class="nv">A</span><span class="o">=</span>DaemonSet, <span class="nv">S</span><span class="o">=</span>StatefulSet, <span class="nv">N</span><span class="o">=</span>Node
+  <span class="nt">-t</span>, <span class="nt">--tree</span>                           Display tree like view instead of the standard list
+
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.3.2_Examples">Examples</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="c"># List containers cpu info from pods</span>
+kubectl-ice cpu
+
+<span class="c"># List container cpu info from pods output in JSON format</span>
+kubectl-ice cpu <span class="nt">-o</span> json
+
+<span class="c"># List container cpu info from a single pod</span>
+kubectl-ice cpu my-pod-4jh36
+
+<span class="c"># List cpu info for all containers named web-container searching all</span>
+<span class="c"># pods in the current namespace</span>
+kubectl-ice cpu <span class="nt">-c</span> web-container
+
+<span class="c"># List cpu info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by container name in descending order (notice the ! charator)</span>
+kubectl-ice cpu <span class="nt">-c</span> web-container <span class="nt">--sort</span> <span class="s1">'!CONTAINER'</span>
+
+<span class="c"># List cpu info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by pod name in ascending order</span>
+kubectl-ice cpu <span class="nt">-c</span> web-container <span class="nt">--sort</span> PODNAME
+
+<span class="c"># List container cpu info from all pods where label app matches web</span>
+kubectl-ice cpu <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>web
+
+<span class="c"># List container cpu info from all pods where the pod label app is either web or mail</span>
+kubectl-ice cpu <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</span>
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.4_Environment">Environment</h3>
+      <p>
+        <table>
+  <tbody>
+    <tr>
+      <td><strong>Aliases:</strong></td>
+      <td>environment, env, vars</td>
+    </tr>
+    <tr>
+      <td><strong>Usage:</strong></td>
+      <td>kubectl-ice environment [flags]<br />kubectl-ice environment [flags] podname</td>
+    </tr>
+  </tbody>
+</table>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.4.1_Flags">Flags</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
+  <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
+  <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
+  <span class="nt">-M</span>, <span class="nt">--match-only</span> string              Filters out results but only calculates up visible rows
+      <span class="nt">--node-label</span> string              Show the selected node label as a column
+      <span class="nt">--node-tree</span>                      Displayes the tree with the nodes as the root
+  <span class="nt">-o</span>, <span class="nt">--output</span> string                  Output format, currently csv, list, json and yaml are supported
+      <span class="nt">--pod-label</span> string               Show the selected pod label as a column
+      <span class="nt">--select</span> string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of <span class="o">==</span>, <span class="o">=</span> and <span class="o">!=</span> 
+      <span class="nt">--show-namespace</span>                 Show the namespace column
+      <span class="nt">--show-node</span>                      Show the node name column
+  <span class="nt">-T</span>, <span class="nt">--show-type</span>                      Show the container <span class="nb">type </span>column, where:
+                                           <span class="nv">I</span><span class="o">=</span>init container, <span class="nv">C</span><span class="o">=</span>container, <span class="nv">E</span><span class="o">=</span>ephemerial container, <span class="nv">P</span><span class="o">=</span>Pod, <span class="nv">D</span><span class="o">=</span>Deployment, <span class="nv">R</span><span class="o">=</span>ReplicaSet, <span class="nv">A</span><span class="o">=</span>DaemonSet, <span class="nv">S</span><span class="o">=</span>StatefulSet, <span class="nv">N</span><span class="o">=</span>Node
+      <span class="nt">--translate</span>                      <span class="nb">read </span>the configmap show its values
+  <span class="nt">-t</span>, <span class="nt">--tree</span>                           Display tree like view instead of the standard list
+
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.4.2_Examples">Examples</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="c"># List containers env info from pods</span>
+kubectl-ice <span class="nb">env</span>
+
+<span class="c"># List container env info from pods output in JSON format</span>
+kubectl-ice <span class="nb">env</span> <span class="nt">-o</span> json
+
+<span class="c"># List container env info from a single pod</span>
+kubectl-ice <span class="nb">env </span>my-pod-4jh36
+
+<span class="c"># List env info for all containers named web-container searching all</span>
+<span class="c"># pods in the current namespace</span>
+kubectl-ice <span class="nb">env</span> <span class="nt">-c</span> web-container
+
+<span class="c"># List env info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by container name in descending order (notice the ! charator)</span>
+kubectl-ice <span class="nb">env</span> <span class="nt">-c</span> web-container <span class="nt">--sort</span> <span class="s1">'!CONTAINER'</span>
+
+<span class="c"># List env info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by pod name in ascending order</span>
+kubectl-ice <span class="nb">env</span> <span class="nt">-c</span> web-container <span class="nt">--sort</span> PODNAME
+
+<span class="c"># List container env info from all pods where label app matches web</span>
+kubectl-ice <span class="nb">env</span> <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>web
+
+<span class="c"># List container env info from all pods where the pod label app is either web or mail</span>
+kubectl-ice <span class="nb">env</span> <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</span>
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.5_Image">Image</h3>
+      <p>
+        <table>
+  <tbody>
+    <tr>
+      <td><strong>Aliases:</strong></td>
+      <td>image, im</td>
+    </tr>
+    <tr>
+      <td><strong>Usage:</strong></td>
+      <td>kubectl-ice image [flags]<br />kubectl-ice image [flags] podname</td>
+    </tr>
+  </tbody>
+</table>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.5.1_Flags">Flags</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
+  <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
+      <span class="nt">--id</span>                             Show running containers <span class="nb">id</span>
+  <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
+  <span class="nt">-M</span>, <span class="nt">--match-only</span> string              Filters out results but only calculates up visible rows
+      <span class="nt">--node-label</span> string              Show the selected node label as a column
+      <span class="nt">--node-tree</span>                      Displayes the tree with the nodes as the root
+  <span class="nt">-o</span>, <span class="nt">--output</span> string                  Output format, currently csv, list, json and yaml are supported
+      <span class="nt">--pod-label</span> string               Show the selected pod label as a column
+      <span class="nt">--select</span> string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of <span class="o">==</span>, <span class="o">=</span> and <span class="o">!=</span> 
+      <span class="nt">--show-namespace</span>                 Show the namespace column
+      <span class="nt">--show-node</span>                      Show the node name column
+  <span class="nt">-T</span>, <span class="nt">--show-type</span>                      Show the container <span class="nb">type </span>column, where:
+                                           <span class="nv">I</span><span class="o">=</span>init container, <span class="nv">C</span><span class="o">=</span>container, <span class="nv">E</span><span class="o">=</span>ephemerial container, <span class="nv">P</span><span class="o">=</span>Pod, <span class="nv">D</span><span class="o">=</span>Deployment, <span class="nv">R</span><span class="o">=</span>ReplicaSet, <span class="nv">A</span><span class="o">=</span>DaemonSet, <span class="nv">S</span><span class="o">=</span>StatefulSet, <span class="nv">N</span><span class="o">=</span>Node
+  <span class="nt">-t</span>, <span class="nt">--tree</span>                           Display tree like view instead of the standard list
+
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.5.2_Examples">Examples</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="c"># List containers image info from pods</span>
+kubectl-ice image
+
+<span class="c"># List container image info from pods output in JSON format</span>
+kubectl-ice image <span class="nt">-o</span> json
+
+<span class="c"># List container image info from a single pod</span>
+kubectl-ice image my-pod-4jh36
+
+<span class="c"># List image info for all containers named web-container searching all</span>
+<span class="c"># pods in the current namespace</span>
+kubectl-ice image <span class="nt">-c</span> web-container
+
+<span class="c"># List image info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by container name in descending order (notice the ! charator)</span>
+kubectl-ice image <span class="nt">-c</span> web-container <span class="nt">--sort</span> <span class="s1">'!CONTAINER'</span>
+
+<span class="c"># List image info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by pod name in ascending order</span>
+kubectl-ice image <span class="nt">-c</span> web-container <span class="nt">--sort</span> PODNAME
+
+<span class="c"># List container image info from all pods where label app matches web</span>
+kubectl-ice image <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>web
+
+<span class="c"># List container image info from all pods where the pod label app is either web or mail</span>
+kubectl-ice image <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</span>
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.6_IP">IP</h3>
+      <p>
+        <table>
+  <tbody>
+    <tr>
+      <td><strong>Aliases:</strong></td>
+      <td>ip</td>
+    </tr>
+    <tr>
+      <td><strong>Usage:</strong></td>
+      <td>kubectl-ice ip [flags]<br />kubectl-ice ip [flags] podname</td>
+    </tr>
+  </tbody>
+</table>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.6.1_Flags">Flags</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
+  <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
+  <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
+  <span class="nt">-M</span>, <span class="nt">--match-only</span> string              Filters out results but only calculates up visible rows
+      <span class="nt">--node-label</span> string              Show the selected node label as a column
+      <span class="nt">--node-tree</span>                      Displayes the tree with the nodes as the root
+  <span class="nt">-o</span>, <span class="nt">--output</span> string                  Output format, currently csv, list, json and yaml are supported
+      <span class="nt">--pod-label</span> string               Show the selected pod label as a column
+      <span class="nt">--select</span> string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of <span class="o">==</span>, <span class="o">=</span> and <span class="o">!=</span> 
+      <span class="nt">--show-namespace</span>                 Show the namespace column
+      <span class="nt">--show-node</span>                      Show the node name column
+  <span class="nt">-T</span>, <span class="nt">--show-type</span>                      Show the container <span class="nb">type </span>column, where:
+                                           <span class="nv">I</span><span class="o">=</span>init container, <span class="nv">C</span><span class="o">=</span>container, <span class="nv">E</span><span class="o">=</span>ephemerial container, <span class="nv">P</span><span class="o">=</span>Pod, <span class="nv">D</span><span class="o">=</span>Deployment, <span class="nv">R</span><span class="o">=</span>ReplicaSet, <span class="nv">A</span><span class="o">=</span>DaemonSet, <span class="nv">S</span><span class="o">=</span>StatefulSet, <span class="nv">N</span><span class="o">=</span>Node
+  <span class="nt">-t</span>, <span class="nt">--tree</span>                           Display tree like view instead of the standard list
+
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.6.2_Examples">Examples</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="c"># List IP address of pods</span>
+kubectl-ice ip
+
+<span class="c"># List IP address of pods output in JSON format</span>
+kubectl-ice ip <span class="nt">-o</span> json
+
+<span class="c"># List IP address a single pod</span>
+kubectl-ice ip my-pod-4jh36
+
+<span class="c"># List IP address of all pods where label app matches web</span>
+kubectl-ice ip <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>web
+
+<span class="c"># List IP address of all pods where the pod label app is either web or mail</span>
+kubectl-ice ip <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</span>
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.7_Memory">Memory</h3>
+      <p>
+        <table>
+  <tbody>
+    <tr>
+      <td><strong>Aliases:</strong></td>
+      <td>memory, mem</td>
+    </tr>
+    <tr>
+      <td><strong>Usage:</strong></td>
+      <td>kubectl-ice memory [flags]<br />kubectl-ice memory [flags] podname</td>
+    </tr>
+  </tbody>
+</table>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.7.1_Flags">Flags</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
+  <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
+  <span class="nt">-i</span>, <span class="nt">--include-init</span>                   include init container<span class="o">(</span>s<span class="o">)</span> <span class="k">in </span>the output, by default init containers are hidden
+  <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
+  <span class="nt">-M</span>, <span class="nt">--match-only</span> string              Filters out results but only calculates up visible rows
+      <span class="nt">--node-label</span> string              Show the selected node label as a column
+      <span class="nt">--node-tree</span>                      Displayes the tree with the nodes as the root
+      <span class="nt">--oddities</span>                       show only the outlier rows that dont fall within the computed range
+  <span class="nt">-o</span>, <span class="nt">--output</span> string                  Output format, currently csv, list, json and yaml are supported
+      <span class="nt">--pod-label</span> string               Show the selected pod label as a column
+  <span class="nt">-r</span>, <span class="nt">--raw</span>                            show raw values
+      <span class="nt">--select</span> string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of <span class="o">==</span>, <span class="o">=</span> and <span class="o">!=</span> 
+      <span class="nt">--show-namespace</span>                 Show the namespace column
+      <span class="nt">--show-node</span>                      Show the node name column
+  <span class="nt">-T</span>, <span class="nt">--show-type</span>                      Show the container <span class="nb">type </span>column, where:
+                                           <span class="nv">I</span><span class="o">=</span>init container, <span class="nv">C</span><span class="o">=</span>container, <span class="nv">E</span><span class="o">=</span>ephemerial container, <span class="nv">P</span><span class="o">=</span>Pod, <span class="nv">D</span><span class="o">=</span>Deployment, <span class="nv">R</span><span class="o">=</span>ReplicaSet, <span class="nv">A</span><span class="o">=</span>DaemonSet, <span class="nv">S</span><span class="o">=</span>StatefulSet, <span class="nv">N</span><span class="o">=</span>Node
+      <span class="nt">--size</span> string                    allows conversion to the selected size rather <span class="k">then </span>the default megabyte output <span class="o">(</span>default <span class="s2">"Mi"</span><span class="o">)</span>
+  <span class="nt">-t</span>, <span class="nt">--tree</span>                           Display tree like view instead of the standard list
+
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.7.2_Examples">Examples</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="c"># List containers memory info from pods</span>
+kubectl-ice memory
+
+<span class="c"># List container memory info from pods output in JSON format</span>
+kubectl-ice memory <span class="nt">-o</span> json
+
+<span class="c"># List container memory info from a single pod</span>
+kubectl-ice memory my-pod-4jh36
+
+<span class="c"># List memory info for all containers named web-container searching all</span>
+<span class="c"># pods in the current namespace</span>
+kubectl-ice memory <span class="nt">-c</span> web-container
+
+<span class="c"># List memory info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by container name in descending order (notice the ! charator)</span>
+kubectl-ice memory <span class="nt">-c</span> web-container <span class="nt">--sort</span> <span class="s1">'!CONTAINER'</span>
+
+<span class="c"># List memory info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by pod name in ascending order</span>
+kubectl-ice memory <span class="nt">-c</span> web-container <span class="nt">--sort</span> PODNAME
+
+<span class="c"># List container memory info from all pods where label app matches web</span>
+kubectl-ice memory <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>web
+
+<span class="c"># List container memory info from all pods where the pod label app is either web or mail</span>
+kubectl-ice memory <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</span>
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.8_Ports">Ports</h3>
+      <p>
+        <table>
+  <tbody>
+    <tr>
+      <td><strong>Aliases:</strong></td>
+      <td>ports, port, po</td>
+    </tr>
+    <tr>
+      <td><strong>Usage:</strong></td>
+      <td>kubectl-ice ports [flags]<br />kubectl-ice ports [flags] podname</td>
+    </tr>
+  </tbody>
+</table>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.8.1_Flags">Flags</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
+  <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
+  <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
+  <span class="nt">-M</span>, <span class="nt">--match-only</span> string              Filters out results but only calculates up visible rows
+      <span class="nt">--node-label</span> string              Show the selected node label as a column
+      <span class="nt">--node-tree</span>                      Displayes the tree with the nodes as the root
+  <span class="nt">-o</span>, <span class="nt">--output</span> string                  Output format, currently csv, list, json and yaml are supported
+      <span class="nt">--pod-label</span> string               Show the selected pod label as a column
+      <span class="nt">--select</span> string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of <span class="o">==</span>, <span class="o">=</span> and <span class="o">!=</span> 
+      <span class="nt">--show-namespace</span>                 Show the namespace column
+      <span class="nt">--show-node</span>                      Show the node name column
+  <span class="nt">-T</span>, <span class="nt">--show-type</span>                      Show the container <span class="nb">type </span>column, where:
+                                           <span class="nv">I</span><span class="o">=</span>init container, <span class="nv">C</span><span class="o">=</span>container, <span class="nv">E</span><span class="o">=</span>ephemerial container, <span class="nv">P</span><span class="o">=</span>Pod, <span class="nv">D</span><span class="o">=</span>Deployment, <span class="nv">R</span><span class="o">=</span>ReplicaSet, <span class="nv">A</span><span class="o">=</span>DaemonSet, <span class="nv">S</span><span class="o">=</span>StatefulSet, <span class="nv">N</span><span class="o">=</span>Node
+  <span class="nt">-t</span>, <span class="nt">--tree</span>                           Display tree like view instead of the standard list
+
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.8.2_Examples">Examples</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="c"># List containers port info from pods</span>
+kubectl-ice ports
+
+<span class="c"># List container port info from pods output in JSON format</span>
+kubectl-ice ports <span class="nt">-o</span> json
+
+<span class="c"># List container port info from a single pod</span>
+kubectl-ice ports my-pod-4jh36
+
+<span class="c"># List port info for all containers named web-container searching all</span>
+<span class="c"># pods in the current namespace</span>
+kubectl-ice ports <span class="nt">-c</span> web-container
+
+<span class="c"># List port info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by container name in descending order (notice the ! charator)</span>
+kubectl-ice ports <span class="nt">-c</span> web-container <span class="nt">--sort</span> <span class="s1">'!CONTAINER'</span>
+
+<span class="c"># List port info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by pod name in ascending order</span>
+kubectl-ice ports <span class="nt">-c</span> web-container <span class="nt">--sort</span> PODNAME
+
+<span class="c"># List container port info from all pods where label app matches web</span>
+kubectl-ice ports <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>web
+
+<span class="c"># List container port info from all pods where the pod label app is either web or mail</span>
+kubectl-ice ports <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</span>
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.9_Probes">Probes</h3>
+      <p>
+        <table>
+  <tbody>
+    <tr>
+      <td><strong>Aliases:</strong></td>
+      <td>probes, probe</td>
+    </tr>
+    <tr>
+      <td><strong>Usage:</strong></td>
+      <td>kubectl-ice probes [flags]<br />kubectl-ice probes [flags] podname</td>
+    </tr>
+  </tbody>
+</table>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.9.1_Flags">Flags</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
+  <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
+  <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
+  <span class="nt">-M</span>, <span class="nt">--match-only</span> string              Filters out results but only calculates up visible rows
+      <span class="nt">--node-label</span> string              Show the selected node label as a column
+      <span class="nt">--node-tree</span>                      Displayes the tree with the nodes as the root
+  <span class="nt">-o</span>, <span class="nt">--output</span> string                  Output format, currently csv, list, json and yaml are supported
+      <span class="nt">--pod-label</span> string               Show the selected pod label as a column
+      <span class="nt">--select</span> string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of <span class="o">==</span>, <span class="o">=</span> and <span class="o">!=</span> 
+      <span class="nt">--show-namespace</span>                 Show the namespace column
+      <span class="nt">--show-node</span>                      Show the node name column
+  <span class="nt">-T</span>, <span class="nt">--show-type</span>                      Show the container <span class="nb">type </span>column, where:
+                                           <span class="nv">I</span><span class="o">=</span>init container, <span class="nv">C</span><span class="o">=</span>container, <span class="nv">E</span><span class="o">=</span>ephemerial container, <span class="nv">P</span><span class="o">=</span>Pod, <span class="nv">D</span><span class="o">=</span>Deployment, <span class="nv">R</span><span class="o">=</span>ReplicaSet, <span class="nv">A</span><span class="o">=</span>DaemonSet, <span class="nv">S</span><span class="o">=</span>StatefulSet, <span class="nv">N</span><span class="o">=</span>Node
+  <span class="nt">-t</span>, <span class="nt">--tree</span>                           Display tree like view instead of the standard list
+
+More information at: https://www.github.com/NimbleArchitect/kubectl-ice
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.9.2_Examples">Examples</h4>
+      <p>
+        <div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="c"># List containers probe info from pods</span>
+kubectl-ice probes
+
+<span class="c"># List container probe info from pods output in JSON format</span>
+kubectl-ice probes <span class="nt">-o</span> json
+
+<span class="c"># List container probe info from a single pod</span>
+kubectl-ice probes my-pod-4jh36
+
+<span class="c"># List probe info for all containers named web-container searching all</span>
+<span class="c"># pods in the current namespace</span>
+kubectl-ice probes <span class="nt">-c</span> web-container
+
+<span class="c"># List probe info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by container name in descending order (notice the ! charator)</span>
+kubectl-ice probes <span class="nt">-c</span> web-container <span class="nt">--sort</span> <span class="s1">'!CONTAINER'</span>
+
+<span class="c"># List probe info for all containers called web-container searching all pods in current</span>
+<span class="c"># namespace sorted by pod name in ascending order</span>
+kubectl-ice probes <span class="nt">-c</span> web-container <span class="nt">--sort</span> PODNAME
+
+<span class="c"># List container probe info from all pods where label app matches web</span>
+kubectl-ice probes <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>web
+
+<span class="c"># List container probe info from all pods where the pod label app is either web or mail</span>
+kubectl-ice probes <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</span>
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+  </div>
+</div> 
+
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/kubectl-ice/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">kubectl-ice</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">kubectl-ice</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/nimblearchitect"><svg class="svg-icon"><use xlink:href="/kubectl-ice/assets/minima-social-icons.svg#github"></use></svg> <span class="username">nimblearchitect</span></a></li><li><a href="https://www.twitter.com/nimblearchitect"><svg class="svg-icon"><use xlink:href="/kubectl-ice/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">nimblearchitect</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>kubectl-ice cleanly lists all containers in kubernetes pods including init containers you can view running kubernetes  information about the multi-container pods to assist in troubleshooting and information gathering</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
