@@ -28,6 +28,21 @@ clear: both;
 }
 }
 
+.idxpanel {
+  width: 20%;
+  display: flex;
+  justify-content: left;
+  /* margin-left: 0px; */
+}
+/* make the columns stack on top of each other when small screen */
+@media screen and (max-width: 800px) {
+  .idxpanel {
+      width: 100%;
+      display:contents;
+      /* margin-left: 0px; */
+  }
+}
+
 .toc_item {
   list-style: outside none none !important;
   margin-left: 0px;
@@ -50,6 +65,7 @@ a.btn {
   align-items: center;
   padding: 0.4em 1em;
   margin: 0.5em 1em;
+  max-width: 8em;
   background: #4479BA;
   color: #FFF;
   -webkit-border-radius: 4px;
