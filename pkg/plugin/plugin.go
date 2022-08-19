@@ -34,12 +34,6 @@ type commonFlags struct {
 	showColumnByName   string // list of column names to show, overrides other hidden columns
 }
 
-var helpTemplate = `
-{{if or .Runnable .HasSubCommands}}{{.UsageString}}{{end}}
-More information at: https://www.github.com/NimbleArchitect/kubectl-ice
-
-`
-
 func InitSubCommands(rootCmd *cobra.Command) {
 	var includeInitShort string = "include init container(s) in the output, by default init containers are hidden"
 	var odditiesShort string = "show only the outlier rows that dont fall within the computed range"
