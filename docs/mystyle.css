@@ -1,14 +1,14 @@
 /* Create two equal columns that floats next to each other */
 .toc_box {
     float: left;
-    width: 18%;
+    width: 23%;
     padding: 10px;
     padding-left: 0px;
   }
   
 .content_body {
     float: left;
-    width: 72%;
+    width: 74%;
     padding: 10px;
     
 }

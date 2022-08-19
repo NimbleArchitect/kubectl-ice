@@ -148,6 +148,201 @@
         
 
         
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.1_Syntax">3.1 Syntax</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2_Example commands">3.2 Example commands</a></li>
+
+        
+      
+
+        
+
+        
+            <ul class="toc_item" style="margin-left: 1em;">        
+        
+
+        <li><a href="#3.2.1_Single pod info">3.2.1 Single pod info</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.10_Container images">3.2.10 Container images</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.11_Advanced labels">3.2.11 Advanced labels</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.12_Odditites and sorting">3.2.12 Odditites and sorting</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.13_Pod volumes">3.2.13 Pod volumes</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.14_Pod exec command">3.2.14 Pod exec command</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.15_Excluding rows">3.2.15 Excluding rows</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.16_Extra selections">3.2.16 Extra selections</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.17_Security information">3.2.17 Security information</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.18_POSIX capabilities">3.2.18 POSIX capabilities</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.19_Column labels">3.2.19 Column labels</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.2_Using labels">3.2.2 Using labels</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.3_Named containers">3.2.3 Named containers</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.4_Alternate status view">3.2.4 Alternate status view</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.5_Pick and un-mix">3.2.5 Pick and un-mix</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.6_Filtered trees">3.2.6 Filtered trees</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.7_Labels and containers">3.2.7 Labels and containers</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.8_Status details">3.2.8 Status details</a></li>
+
+        
+      
+
+        
+
+        
+
+        <li><a href="#3.2.9_Container status">3.2.9 Container status</a></li>
+
+        
+      
+
+        
+
+        
+          </ul>
+        
 
         <li><a href="#4_Commands">4 Commands</a></li>
 
@@ -626,7 +821,7 @@
     
       <h2 id="2_Installation">Installation</h2>
       <p>
-        
+        <p>ice can be installed a few different ways but the easist at the minute is by using krew if you have it, as it’s a simple one line command and everything is done for you.</p>
 
       </p>
       
@@ -651,7 +846,7 @@ $ kubectl krew upgrade ice
 </code></pre>
   </div>
 </div>
-<p>dont have krew? check it out here <a href="https://github.com/GoogleContainerTools/krew">https://github.com/GoogleContainerTools/krew</a></p>
+<p>dont have krew? check it out at: <a href="https://github.com/GoogleContainerTools/krew">https://github.com/GoogleContainerTools/krew</a></p>
 
       </p>
       
@@ -662,10 +857,12 @@ $ kubectl krew upgrade ice
     
       <h3 id="2.2_From binary">From binary</h3>
       <p>
-        <ul>
-  <li>download the required binary from the release page</li>
-  <li>unzip and copy the kubectl-ice file to your path</li>
-  <li>run <code class="language-plaintext highlighter-rouge">kubectl-ice help</code> to check its working</li>
+        <p>Manual download steps are slightly more technical but easy enough if you know your way around a computer.</p>
+
+<ul>
+  <li>download the required binary from the <a href="/kubectl-ice/downloads/">downloads</a> page</li>
+  <li>unzip and copy the kubectl-ice file to a location in your path</li>
+  <li>run <code class="language-plaintext highlighter-rouge">kubectl-ice help</code> from a terminal to check its working</li>
 </ul>
 
       </p>
@@ -697,12 +894,614 @@ make bin
     
       <h2 id="3_Usage">Usage</h2>
       <p>
-        <p>So you have ice installed and you’re eager to get started</p>
+        <p>So you have ice installed and you’re eager to get started, first make sure kubectl-ice is in your path with by typing the following in your terminal or command prompt:</p>
+<div class="language-plaintext highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>kubectl ice version
+</code></pre>
+  </div>
+</div>
+<p>you should get an about screen back with information on how to find help and further documentation, if on the other hand you are looking at an error you will need to check the installation instructions above.</p>
 
-<h2 id="examples">Examples</h2>
+<p>kubectl-ice uses syntex just like kubectl except it doesn’t have commands for listing Pods, DaemonSets, Jobs etc due to only working at the container level, you know that bit the Pod uses to do its actual work, thats the bit ice works with and displays information on.</p>
 
-<h2 id="advanced-examples">Advanced examples</h2>
+      </p>
+      
+    
+      
 
+      
+    
+      <h3 id="3.1_Syntax">Syntax</h3>
+      <p>
+        <p>In it’s simplest form ice can be run in one of the following ways:</p>
+
+<div class="language-plaintext highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>kubectl ice subcommand
+kubectl-ice subcommand
+</code></pre>
+  </div>
+</div>
+
+<p>where <code class="language-plaintext highlighter-rouge">subcommand</code> should be replaced with any of the known commands like <code class="language-plaintext highlighter-rouge">cpu</code>, <code class="language-plaintext highlighter-rouge">memory</code>, <code class="language-plaintext highlighter-rouge">status</code>, <code class="language-plaintext highlighter-rouge">volumes</code> along with many more available from the <a href="#4_Commands">commands</a> section</p>
+
+<p>when you run the command as above kubectl-ice will scan all pods in your current namespace and context, showing the selected information on all containers within each of the scanned pods, if you only want a list of matching container names you need to use the -c flag so you end up with something like the following (remember to replace mycontainer below with the name of the container you are interested in.)</p>
+
+<div class="language-plaintext highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>kubectl ice status -c mycontainer
+</code></pre>
+  </div>
+</div>
+<p>you can also ask kubectl-ice to search and list a specific pod by adding the pod name to the end of the command, ending up with a command that looks like</p>
+
+<div class="language-plaintext highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>kubectl ice status mypod
+</code></pre>
+  </div>
+</div>
+<p>again replace <code class="language-plaintext highlighter-rouge">mypod</code> above with the name of the pod you want to see details of.  Whilst this all sounds Ok in the documentation, what does it allow us to achieve, for that we need to set the scene…</p>
+
+<p>Imagine we have a web pod running that contains an Nginx pod and a python application that serves as a frontend website, on top of this the pod also contains a backend password container that manages passwords and security certificates, so 3 containers running in this web pod, now if we had hundreds of these pods running and lets say a few of these pods start crashing due to memory over use. With the kubernetes default tools you have to get pods to find out which pod is causing a problem, then you have to describe pods to list the containers that have a problem then maybe you need to check the nodes the pod is running on (in case its a node problem) then possible check the labels… I’m sure you get the idea that whilst its powerful it can also be a bit long winded at times.  Enter kubectl-ice to the stage and we have a single command along the lines of</p>
+<div class="language-plaintext highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>kubectl ice status --match 'restarts&gt;0' --node-tree
+</code></pre>
+  </div>
+</div>
+<p>the above command will show the status of all containers that have a restart count of more than but not equal to 0, in a nice tree view that is grouped and rooted by the node name, you can also show specific labels and annotations as columns within the output using the flags <code class="language-plaintext highlighter-rouge">--pod-label</code>, <code class="language-plaintext highlighter-rouge">--node-label</code> and <code class="language-plaintext highlighter-rouge">--annotation</code></p>
+
+<p>In a nutshell multiple commands can be reduced down to a single command… that’s is a big win for me.</p>
+
+<p>On top of everything else we can also read yaml directly via stdin or via the -f flag rather than reading from the k8s api, using this approach we can read the output of <code class="language-plaintext highlighter-rouge">helm template</code> and kubectl-ice will allow us to check things like the memory requirements or security capabilities requested by a chart before actually being installed, we can also use helm get manifest to read details from already installed charts.</p>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h3 id="3.2_Example commands">Example commands</h3>
+      <p>
+        
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.1_Single pod info">Single pod info</h4>
+      <p>
+        <p>Shows the currently used memory along with the configured memory requests and limits of all containers (side cars) in the pod named web-pod</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice memory web-pod
+CONTAINER       USED    REQUEST  LIMIT  %REQ    %LIMIT
+app-init        0       0        0      -       -
+app-watcher     4.99Mi  1M       512M   523.06  1.02
+app-broken      0       1M       512M   -       -
+myapp           4.98Mi  1M       256M   521.83  2.04
+debugger-k5znj  0       0        0      -       -
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.10_Container images">Container images</h4>
+      <p>
+        <p>need to chack on the currently configured image versions use the image command</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice image <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>userandomcpu
+PODNAME                           CONTAINER       PULL          IMAGE
+demo-random-cpu-55954b64b4-9t7m2  init-myservice  IfNotPresent  busybox:1.28
+demo-random-cpu-55954b64b4-9t7m2  web-frontend    Always        python:latest
+demo-random-cpu-55954b64b4-9t7m2  nginx           IfNotPresent  nginx:1.7.9
+demo-random-cpu-55954b64b4-km6bg  init-myservice  IfNotPresent  busybox:1.28
+demo-random-cpu-55954b64b4-km6bg  web-frontend    Always        python:latest
+demo-random-cpu-55954b64b4-km6bg  nginx           IfNotPresent  nginx:1.7.9
+demo-random-cpu-55954b64b4-knc6n  init-myservice  IfNotPresent  busybox:1.28
+demo-random-cpu-55954b64b4-knc6n  web-frontend    Always        python:latest
+demo-random-cpu-55954b64b4-knc6n  nginx           IfNotPresent  nginx:1.7.9
+demo-random-cpu-55954b64b4-vr4hg  init-myservice  IfNotPresent  busybox:1.28
+demo-random-cpu-55954b64b4-vr4hg  web-frontend    Always        python:latest
+demo-random-cpu-55954b64b4-vr4hg  nginx           IfNotPresent  nginx:1.7.9
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.11_Advanced labels">Advanced labels</h4>
+      <p>
+        <p>return cpu requests size and limits of each container where the pods have an app label that matches useoddcpu and the container name is equal to web-frontend</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice cpu <span class="nt">-l</span> <span class="s2">"app in (useoddcpu)"</span> <span class="nt">-c</span> web-frontend
+PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
+demo-odd-cpu-5f947f9db4-2g7p2  web-frontend  3m    1m       1000m  239.26    0.24
+demo-odd-cpu-5f947f9db4-59jm6  web-frontend  3m    1m       1000m  228.24    0.23
+demo-odd-cpu-5f947f9db4-6gzw7  web-frontend  137m  1m       1000m  13605.66  13.61
+demo-odd-cpu-5f947f9db4-6s97l  web-frontend  3m    1m       1000m  242.12    0.24
+demo-odd-cpu-5f947f9db4-86mb8  web-frontend  3m    1m       1000m  236.35    0.24
+demo-odd-cpu-5f947f9db4-cwvdq  web-frontend  135m  1m       1000m  13408.25  13.41
+demo-odd-cpu-5f947f9db4-dcg8p  web-frontend  2m    1m       1000m  189.21    0.19
+demo-odd-cpu-5f947f9db4-fhs8q  web-frontend  3m    1m       1000m  231.62    0.23
+demo-odd-cpu-5f947f9db4-gzcrm  web-frontend  3m    1m       1000m  239.25    0.24
+demo-odd-cpu-5f947f9db4-hf872  web-frontend  2m    1m       1000m  196.35    0.20
+demo-odd-cpu-5f947f9db4-hft68  web-frontend  3m    1m       1000m  219.94    0.22
+demo-odd-cpu-5f947f9db4-jp8fw  web-frontend  3m    1m       1000m  235.47    0.24
+demo-odd-cpu-5f947f9db4-k2gtp  web-frontend  135m  1m       1000m  13417.88  13.42
+demo-odd-cpu-5f947f9db4-kj8s7  web-frontend  3m    1m       1000m  229.13    0.23
+demo-odd-cpu-5f947f9db4-qtxp2  web-frontend  3m    1m       1000m  262.48    0.26
+demo-odd-cpu-5f947f9db4-vg2d5  web-frontend  3m    1m       1000m  252.21    0.25
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.12_Odditites and sorting">Odditites and sorting</h4>
+      <p>
+        <p>given the listed output above the optional –oddities flag picks out the containers that have a high cpu usage when compared to the other containers listed we also sort the list in descending order by the %REQ column</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice cpu <span class="nt">-l</span> <span class="s2">"app in (useoddcpu)"</span> <span class="nt">-c</span> web-frontend <span class="nt">--oddities</span> <span class="nt">--sort</span> <span class="s1">'!%REQ'</span>
+PODNAME                        CONTAINER     USED  REQUEST  LIMIT  %REQ      %LIMIT
+demo-odd-cpu-5f947f9db4-6gzw7  web-frontend  137m  1m       1000m  13605.66  13.61
+demo-odd-cpu-5f947f9db4-k2gtp  web-frontend  135m  1m       1000m  13417.88  13.42
+demo-odd-cpu-5f947f9db4-cwvdq  web-frontend  135m  1m       1000m  13408.25  13.41
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.13_Pod volumes">Pod volumes</h4>
+      <p>
+        <p>list all container volumes with mount points</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice volumes web-pod
+CONTAINER    VOLUME                 TYPE       BACKING           SIZE  RO    MOUNT-POINT
+app-init     kube-api-access-c47d7  Projected  kube-root-ca.crt  -     <span class="nb">true</span>  /var/run/secrets/kubernetes.io/serviceaccount
+app-watcher  app                    ConfigMap  app.py            -     <span class="nb">false</span> /myapp/
+app-watcher  kube-api-access-c47d7  Projected  kube-root-ca.crt  -     <span class="nb">true</span>  /var/run/secrets/kubernetes.io/serviceaccount
+app-broken   kube-api-access-c47d7  Projected  kube-root-ca.crt  -     <span class="nb">true</span>  /var/run/secrets/kubernetes.io/serviceaccount
+myapp        app                    ConfigMap  app.py            -     <span class="nb">false</span> /myapp/
+myapp        kube-api-access-c47d7  Projected  kube-root-ca.crt  -     <span class="nb">true</span>  /var/run/secrets/kubernetes.io/serviceaccount
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.14_Pod exec command">Pod exec command</h4>
+      <p>
+        <p>retrieves the command line and any arguments specified at the container level</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice <span class="nb">command </span>web-pod
+CONTAINER       COMMAND                   ARGUMENTS
+app-init        sh <span class="nt">-c</span> <span class="nb">sleep </span>2<span class="p">;</span> <span class="nb">exit </span>0     -
+app-watcher     python /myapp/mainapp.py  -
+app-broken      sh <span class="nt">-c</span> <span class="nb">sleep </span>2<span class="p">;</span> <span class="nb">exit </span>1     -
+myapp           python /myapp/mainapp.py  -
+debugger-k5znj  -                         -
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.15_Excluding rows">Excluding rows</h4>
+      <p>
+        <p>use the –match flag to show only the output rows where the used memory column is greater than or equal to 3MB, this has the effect of exclusing any row where the used memory column is currently under 4096kB, the value 4096 can be replaced with any whole number in kilobytes</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice mem <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>userandomcpu <span class="nt">--match</span> <span class="s1">'used&gt;=4096'</span>
+PODNAME                           CONTAINER     USED    REQUEST  LIMIT  %REQ    %LIMIT
+demo-random-cpu-55954b64b4-9t7m2  web-frontend  6.71Mi  1M       256M   704.10  2.75
+demo-random-cpu-55954b64b4-km6bg  web-frontend  8.29Mi  1M       256M   869.17  3.40
+demo-random-cpu-55954b64b4-knc6n  web-frontend  5.41Mi  1M       256M   566.89  2.21
+demo-random-cpu-55954b64b4-vr4hg  web-frontend  8.63Mi  1M       256M   904.81  3.53
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.16_Extra selections">Extra selections</h4>
+      <p>
+        <p>using the –select flag allows you to filter the pod selection to only pods that have a priorityClassName thats equal to system-cluster-critical, you can also match against priority</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice status <span class="nt">--select</span> <span class="s1">'priorityClassName=system-cluster-critical'</span> <span class="nt">-A</span>
+NAMESPACE    PODNAME                          CONTAINER       READY  STARTED  RESTARTS  STATE    REASON  EXIT-CODE  SIGNAL  AGE
+kube-system  coredns-78fcd69978-qnjtj         coredns         <span class="nb">true   true     </span>1         Running  -       -          -       46h
+kube-system  metrics-server-77c99ccb96-kjq9s  metrics-server  <span class="nb">true   true     </span>1         Running  -       -          -       46h
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.17_Security information">Security information</h4>
+      <p>
+        <p>listing runAsUser and runAsGroup settings along with other related container security information</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice security <span class="nt">-n</span> kube-system
+PODNAME                           CONTAINER                ALLOW_PRIVILEGE_ESCALATION  PRIVILEGED  RO_ROOT_FS  RUN_AS_NON_ROOT  RUN_AS_USER  RUN_AS_GROUP
+coredns-78fcd69978-qnjtj          coredns                  <span class="nb">false</span>                       -           <span class="nb">true</span>        -                -            -
+etcd-minikube                     etcd                     -                           -           -           -                -            -
+kindnet-2mhhp                     kindnet-cni              -                           <span class="nb">false</span>       -           -                -            -
+kindnet-qpdhv                     kindnet-cni              -                           <span class="nb">false</span>       -           -                -            -
+kube-apiserver-minikube           kube-apiserver           -                           -           -           -                -            -
+kube-controller-manager-minikube  kube-controller-manager  -                           -           -           -                -            -
+kube-proxy-f98q8                  kube-proxy               -                           <span class="nb">true</span>        -           -                -            -
+kube-proxy-hdx8w                  kube-proxy               -                           <span class="nb">true</span>        -           -                -            -
+kube-scheduler-minikube           kube-scheduler           -                           -           -           -                -            -
+metrics-server-77c99ccb96-kjq9s   metrics-server           -                           -           <span class="nb">true        true             </span>1000         -
+storage-provisioner               storage-provisioner      -                           -           -           -                -            -
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.18_POSIX capabilities">POSIX capabilities</h4>
+      <p>
+        <p>display configured capabilities related to each container</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice capabilities <span class="nt">-n</span> kube-system
+PODNAME                           CONTAINER                ADD               DROP
+coredns-78fcd69978-qnjtj          coredns                  NET_BIND_SERVICE  all
+etcd-minikube                     etcd                     -                 -
+kindnet-2mhhp                     kindnet-cni              NET_RAW,NET_ADMIN -
+kindnet-qpdhv                     kindnet-cni              NET_RAW,NET_ADMIN -
+kube-apiserver-minikube           kube-apiserver           -                 -
+kube-controller-manager-minikube  kube-controller-manager  -                 -
+kube-proxy-f98q8                  kube-proxy               -                 -
+kube-proxy-hdx8w                  kube-proxy               -                 -
+kube-scheduler-minikube           kube-scheduler           -                 -
+metrics-server-77c99ccb96-kjq9s   metrics-server           -                 -
+storage-provisioner               storage-provisioner      -                 -
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.19_Column labels">Column labels</h4>
+      <p>
+        <p>with the –node-label and –pod-label flags its possible to show the values of the labels as columns in the output table</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice status <span class="nt">--node-label</span> <span class="s2">"beta.kubernetes.io/os"</span> <span class="nt">--pod-label</span> <span class="s2">"component"</span> <span class="nt">-n</span> kube-system
+PODNAME                           CONTAINER                beta.kubernetes.io/os  component                READY  STARTED  RESTARTS  STATE    REASON  EXIT-CODE  SIGNAL  AGE
+coredns-78fcd69978-qnjtj          coredns                  linux                  -                        <span class="nb">true   true     </span>1         Running  -       -          -       46h
+etcd-minikube                     etcd                     linux                  etcd                     <span class="nb">true   true     </span>1         Running  -       -          -       46h
+kindnet-2mhhp                     kindnet-cni              linux                  -                        <span class="nb">true   true     </span>1         Running  -       -          -       46h
+kindnet-qpdhv                     kindnet-cni              linux                  -                        <span class="nb">true   true     </span>1         Running  -       -          -       46h
+kube-apiserver-minikube           kube-apiserver           linux                  kube-apiserver           <span class="nb">true   true     </span>1         Running  -       -          -       46h
+kube-controller-manager-minikube  kube-controller-manager  linux                  kube-controller-manager  <span class="nb">true   true     </span>1         Running  -       -          -       46h
+kube-proxy-f98q8                  kube-proxy               linux                  -                        <span class="nb">true   true     </span>1         Running  -       -          -       46h
+kube-proxy-hdx8w                  kube-proxy               linux                  -                        <span class="nb">true   true     </span>1         Running  -       -          -       46h
+kube-scheduler-minikube           kube-scheduler           linux                  kube-scheduler           <span class="nb">true   true     </span>1         Running  -       -          -       46h
+metrics-server-77c99ccb96-kjq9s   metrics-server           linux                  -                        <span class="nb">true   true     </span>1         Running  -       -          -       46h
+storage-provisioner               storage-provisioner      linux                  -                        <span class="nb">true   true     </span>2         Running  -       -          -       46h
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.2_Using labels">Using labels</h4>
+      <p>
+        <p>using labels you can search all pods that are part of a deployment where the label app matches demoprobe and list selected information about the containers in each pod, this example shows the currently configured probe information and gives details of configured startup, readiness and liveness probes of each container</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice probes <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>demoprobe
+PODNAME                      CONTAINER     PROBE     DELAY  PERIOD  TIMEOUT  SUCCESS  FAILURE  CHECK    ACTION
+demo-probe-765fd4d8f7-n6kc7  web-frontend  liveness  10     5       1        1        3        Exec     /bin/true
+demo-probe-765fd4d8f7-n6kc7  web-frontend  readiness 5      5       1        1        3        Exec     <span class="nb">cat</span> /tmp/health
+demo-probe-765fd4d8f7-n6kc7  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
+demo-probe-765fd4d8f7-x2zr6  web-frontend  liveness  10     5       1        1        3        Exec     /bin/true
+demo-probe-765fd4d8f7-x2zr6  web-frontend  readiness 5      5       1        1        3        Exec     <span class="nb">cat</span> /tmp/health
+demo-probe-765fd4d8f7-x2zr6  nginx         liveness  60     60      1        1        8        HTTPGet  http://:80/
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.3_Named containers">Named containers</h4>
+      <p>
+        <p>the optional container flag (-c) searchs all selected pods and lists only containers that match the name web-frontend</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice <span class="nb">command</span> <span class="nt">-c</span> web-frontend
+PODNAME                           CONTAINER     COMMAND                                      ARGUMENTS
+demo-memory-7ddb58cd5b-5kf9g      web-frontend  python /myapp/halfmemapp.py                  -
+demo-memory-7ddb58cd5b-csbds      web-frontend  python /myapp/halfmemapp.py                  -
+demo-memory-7ddb58cd5b-d4zwp      web-frontend  python /myapp/halfmemapp.py                  -
+demo-memory-7ddb58cd5b-pdm9c      web-frontend  python /myapp/halfmemapp.py                  -
+demo-odd-cpu-5f947f9db4-2g7p2     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-59jm6     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-6gzw7     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-6s97l     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-86mb8     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-cwvdq     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-dcg8p     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-fhs8q     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-gzcrm     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-hf872     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-hft68     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-jp8fw     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-k2gtp     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-kj8s7     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-qtxp2     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-odd-cpu-5f947f9db4-vg2d5     web-frontend  python /myapp/oddcpuapp.py                   -
+demo-probe-765fd4d8f7-n6kc7       web-frontend  sh <span class="nt">-c</span> <span class="nb">touch</span> /tmp/health<span class="p">;</span> <span class="nb">sleep </span>2000<span class="p">;</span> <span class="nb">exit </span>0  -
+demo-probe-765fd4d8f7-x2zr6       web-frontend  sh <span class="nt">-c</span> <span class="nb">touch</span> /tmp/health<span class="p">;</span> <span class="nb">sleep </span>2000<span class="p">;</span> <span class="nb">exit </span>0  -
+demo-random-cpu-55954b64b4-9t7m2  web-frontend  python /myapp/randomcpuapp.py                -
+demo-random-cpu-55954b64b4-km6bg  web-frontend  python /myapp/randomcpuapp.py                -
+demo-random-cpu-55954b64b4-knc6n  web-frontend  python /myapp/randomcpuapp.py                -
+demo-random-cpu-55954b64b4-vr4hg  web-frontend  python /myapp/randomcpuapp.py                -
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.4_Alternate status view">Alternate status view</h4>
+      <p>
+        <p>the tree flag shows the containers and pods in a tree view, with values calculated all the way up to the parent</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice status <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>demoprobe <span class="nt">--tree</span>
+NAMESPACE  NAME                                 READY  STARTED  RESTARTS  STATE    REASON  EXIT-CODE  SIGNAL  AGE
+ice        Deployment/demo-probe                <span class="nb">true   true     </span>20        -        -       -          -       -
+ice        └─ReplicaSet/demo-probe-765fd4d8f7   <span class="nb">true   true     </span>20        -        -       -          -       -
+ice          └─Pod/demo-probe-765fd4d8f7-n6kc7  <span class="nb">true   true     </span>10        Running  -       -          -       19h
+ice           └─Container/nginx                 <span class="nb">true   true     </span>0         Running  -       -          -       19h
+ice           └─Container/web-frontend          <span class="nb">true   true     </span>10        Running  -       -          -       25m
+ice          └─Pod/demo-probe-765fd4d8f7-x2zr6  <span class="nb">true   true     </span>10        Running  -       -          -       19h
+ice           └─Container/nginx                 <span class="nb">true   true     </span>0         Running  -       -          -       19h
+ice           └─Container/web-frontend          <span class="nb">true   true     </span>10        Running  -       -          -       25m
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.5_Pick and un-mix">Pick and un-mix</h4>
+      <p>
+        <p>Using the -A flag to search all namespaces we can exclude all standard containers with the –match T!=C flag. The -T flag is optional and is provided to show that only Init and Ephemeral containers are displayed</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice cpu <span class="nt">-A</span> <span class="nt">-T</span> <span class="nt">--match</span> T!<span class="o">=</span>C
+T  NAMESPACE  PODNAME                           CONTAINER       USED  REQUEST  LIMIT  %REQ  %LIMIT
+I  default    web-pod                           app-init        0m    0m       0m     -     -
+I  ice        demo-memory-7ddb58cd5b-5kf9g      init-myservice  0m    1m       100m   -     -
+I  ice        demo-memory-7ddb58cd5b-csbds      init-myservice  0m    1m       100m   -     -
+I  ice        demo-memory-7ddb58cd5b-d4zwp      init-myservice  0m    1m       100m   -     -
+I  ice        demo-memory-7ddb58cd5b-pdm9c      init-myservice  0m    1m       100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-2g7p2     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-59jm6     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-6gzw7     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-6s97l     init-myservice  0m    100m     100m   -     -
+E  ice        demo-odd-cpu-5f947f9db4-6s97l     debugger-vvz4z  0m    0m       0m     -     -
+I  ice        demo-odd-cpu-5f947f9db4-86mb8     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-cwvdq     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-dcg8p     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-fhs8q     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-gzcrm     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-hf872     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-hft68     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-jp8fw     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-k2gtp     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-kj8s7     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-qtxp2     init-myservice  0m    100m     100m   -     -
+I  ice        demo-odd-cpu-5f947f9db4-vg2d5     init-myservice  0m    100m     100m   -     -
+I  ice        demo-random-cpu-55954b64b4-9t7m2  init-myservice  0m    120m     120m   -     -
+I  ice        demo-random-cpu-55954b64b4-km6bg  init-myservice  0m    120m     120m   -     -
+I  ice        demo-random-cpu-55954b64b4-knc6n  init-myservice  0m    120m     120m   -     -
+I  ice        demo-random-cpu-55954b64b4-vr4hg  init-myservice  0m    120m     120m   -     -
+I  ice        web-pod                           app-init        0m    0m       0m     -     -
+E  ice        web-pod                           debugger-k5znj  0m    0m       0m     -     -
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.6_Filtered trees">Filtered trees</h4>
+      <p>
+        <p>The tree view also allows us to use the –match flag to filter based on resource type (T column) so we include deployments only providing us with a nice total of memory used for each deployment</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice mem <span class="nt">-T</span> <span class="nt">--tree</span> <span class="nt">--match</span> <span class="nv">T</span><span class="o">==</span>D
+T  NAMESPACE  NAME                        USED      REQUEST    LIMIT      %REQ  %LIMIT
+D  ice        Deployment/demo-memory      328.13Mi  11.44Mi    2334.59Mi  0.01  2.87
+D  ice        Deployment/demo-odd-cpu     103.47Mi  1459.12Mi  8754.73Mi  0.00  0.01
+D  ice        Deployment/demo-random-cpu  15.69Mi   194.55Mi   1167.30Mi  0.00  0.01
+D  ice        Deployment/demo-odd-cpu     7.14Mi    97.27Mi    583.65Mi   0.00  0.01
+D  ice        Deployment/demo-probe       6.42Mi    3.81Mi     976.56Mi   0.00  0.17
+D  ice        Deployment/demo-random-cpu  21.33Mi   194.55Mi   1167.30Mi  0.00  0.01
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.7_Labels and containers">Labels and containers</h4>
+      <p>
+        <p>you can also search specific pods and list all containers with a specific name, in this example all pods with the label app=userandomcpu are searched and only the containers that match the name web-fronteend are shown</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice cpu <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>userandomcpu <span class="nt">-c</span> web-frontend
+PODNAME                           CONTAINER     USED  REQUEST  LIMIT  %REQ    %LIMIT
+demo-random-cpu-55954b64b4-9t7m2  web-frontend  569m  125m     1000m  454.43  56.80
+demo-random-cpu-55954b64b4-km6bg  web-frontend  449m  125m     1000m  358.72  44.84
+demo-random-cpu-55954b64b4-knc6n  web-frontend  206m  125m     1000m  164.19  20.52
+demo-random-cpu-55954b64b4-vr4hg  web-frontend  456m  125m     1000m  364.08  45.51
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.8_Status details">Status details</h4>
+      <p>
+        <p>using the details flag displays the timestamp and message columns</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice status <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>myapp <span class="nt">--details</span>
+T  PODNAME  CONTAINER       READY  STARTED  RESTARTS  STATE       REASON            EXIT-CODE  SIGNAL  TIMESTAMP            MESSAGE
+I  web-pod  app-init        <span class="nb">true</span>   -        0         Terminated  Completed         0          0       2022-08-04 19:00:53  -
+C  web-pod  app-broken      <span class="nb">false  false    </span>68        Waiting     CrashLoopBackOff  -          -       -                    back-off 5m0s restarting failed
+C  web-pod  app-watcher     <span class="nb">true   true     </span>0         Running     -                 -          -       2022-08-04 19:00:59  -
+C  web-pod  myapp           <span class="nb">true   true     </span>0         Running     -                 -          -       2022-08-04 19:01:12  -
+E  web-pod  debugger-k5znj  <span class="nb">false</span>  -        0         Terminated  Completed         0          0       2022-08-04 19:02:59  -
+
+</code></pre>
+  </div>
+</div>
+
+      </p>
+      
+    
+      
+
+      
+    
+      <h4 id="3.2.9_Container status">Container status</h4>
+      <p>
+        <p>most commands work the same way including the status command which also lets you see which container(s) are causing the restarts and by using the optional –previous flag you can view the containers previous exit code</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nv">$ </span>kubectl-ice status <span class="nt">-l</span> <span class="nv">app</span><span class="o">=</span>myapp <span class="nt">--previous</span>
+PODNAME  CONTAINER       STATE       REASON  EXIT-CODE  SIGNAL  TIMESTAMP            MESSAGE
+web-pod  app-init        -           -       -          -       -                    -
+web-pod  app-broken      Terminated  Error   1          0       2022-08-05 13:59:58  -
+web-pod  app-watcher     -           -       -          -       -                    -
+web-pod  myapp           -           -       -          -       -                    -
+web-pod  debugger-k5znj  -           -       -          -       -                    -
+
+</code></pre>
+  </div>
+</div>
 
       </p>
       
