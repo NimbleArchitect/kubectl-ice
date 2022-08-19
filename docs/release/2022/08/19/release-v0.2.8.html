@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>New Release V0.2.8 | kubectl-ice</title>
+<meta name="generator" content="Jekyll v3.9.2" />
+<meta property="og:title" content="New Release V0.2.8" />
+<meta name="author" content="NimbleArchitect" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Kubectl v0.2.8 has just been released, this release adds support for reading from yaml files along with reading from stdin, it also adds the –column flag which allows you to specify which columns should be shown in the output." />
+<meta property="og:description" content="Kubectl v0.2.8 has just been released, this release adds support for reading from yaml files along with reading from stdin, it also adds the –column flag which allows you to specify which columns should be shown in the output." />
+<link rel="canonical" href="https://nimblearchitect.github.io/kubectl-ice/release/2022/08/19/release-v0.2.8.html" />
+<meta property="og:url" content="https://nimblearchitect.github.io/kubectl-ice/release/2022/08/19/release-v0.2.8.html" />
+<meta property="og:site_name" content="kubectl-ice" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-08-19T17:47:54+01:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="New Release V0.2.8" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"NimbleArchitect"},"dateModified":"2022-08-19T17:47:54+01:00","datePublished":"2022-08-19T17:47:54+01:00","description":"Kubectl v0.2.8 has just been released, this release adds support for reading from yaml files along with reading from stdin, it also adds the –column flag which allows you to specify which columns should be shown in the output.","headline":"New Release V0.2.8","mainEntityOfPage":{"@type":"WebPage","@id":"https://nimblearchitect.github.io/kubectl-ice/release/2022/08/19/release-v0.2.8.html"},"url":"https://nimblearchitect.github.io/kubectl-ice/release/2022/08/19/release-v0.2.8.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/kubectl-ice/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://nimblearchitect.github.io/kubectl-ice/feed.xml" title="kubectl-ice" /><script async src="https://www.googletagmanager.com/gtag/js?id=G-Q2EDCE0VN4"></script>
+<script>
+  window['ga-disable-G-Q2EDCE0VN4'] = window.doNotTrack === "1" || navigator.doNotTrack === "1" || navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1";
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){window.dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q2EDCE0VN4');
+</script><link rel="stylesheet" href="/kubectl-ice/mystyle.css"></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/kubectl-ice/">kubectl-ice</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/kubectl-ice/about/">About</a><a class="page-link" href="/kubectl-ice/demos/">Demos</a><a class="page-link" href="/kubectl-ice/downloads/">Downloads</a><a class="page-link" href="/kubectl-ice/how_to/">How do I...</a><a class="page-link" href="/kubectl-ice/documentation/">Documentation</a><a class="page-link" href="/kubectl-ice/faq/">FAQ</a><a class="page-link" href="/kubectl-ice/blog/">Ice Blog</a><a class="page-link" href="/kubectl-ice/donations/">Donations</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">New Release V0.2.8</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2022-08-19T17:47:54+01:00" itemprop="datePublished">Aug 19, 2022
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Kubectl v0.2.8 has just been released, this release adds support for reading from yaml files along with reading from stdin, it also adds the –column flag which allows you to specify which columns should be shown in the output.</p>
+
+<p>First lets talk about the -f flag, I added it initially as it helped when testing new ideas but quickly realised it could be beneficial to others when I started exploring the image and capabilities commands. I actually found it really cool to be able to read a list of image names from yaml files without having to resort to opening the file or using grep to get the image list. With that in place it was a no-brainer to to add the ability to read piped data so it could be used with helm</p>
+
+<p>which then allows things like this:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>helm template mychart | kubectl-ice image
+helm get manifest mychart | kubectl-ice image
+</code></pre></div></div>
+
+<p>Currently I envision this as more of a safety check in a pipeline or maybe even used in a reporting process to list the ports or images used, when combined with the column flag below it has the potential to be very powerful and useful but only time will tell…</p>
+
+<p>Next up is the <code class="language-plaintext highlighter-rouge">--columns</code> flag, which when specified this flag accept a comma separated list of column names to show, the advantage here is only those specified columns are shown in the table output and you can specify any valid column even those that are hidden by default, given the image command you could create something like</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl-ice image --columns podname,image,imageid
+</code></pre></div></div>
+<p>would show a list of pod names with the image name and along with the sha of the image
+the only down side of this is that the column order is set but the program and now the user so you have no control over the column order.</p>
+
+<p>That’s me for now and I hope this has been useful.</p>
+
+<p>NimbleArchitect</p>
+
+  </div><a class="u-url" href="/kubectl-ice/release/2022/08/19/release-v0.2.8.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/kubectl-ice/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">kubectl-ice</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">NimbleArchitect</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/nimblearchitect"><svg class="svg-icon"><use xlink:href="/kubectl-ice/assets/minima-social-icons.svg#github"></use></svg> <span class="username">nimblearchitect</span></a></li><li><a href="https://www.twitter.com/nimblearchitect"><svg class="svg-icon"><use xlink:href="/kubectl-ice/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">nimblearchitect</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>kubectl-ice cleanly lists all containers in kubernetes pods including init containers you can view running kubernetes  information about the multi-container pods to assist in troubleshooting and information gathering</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
