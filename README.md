@@ -150,6 +150,41 @@ all flags are optional, see usage instructions and examples for more info
 Some example commands are listed below but full [usage instructions](https://nimblearchitect.github.io/kubectl-ice/documentation/#3_Usage) and [examples](https://nimblearchitect.github.io/kubectl-ice/documentation/#3.2_Example%20commands) can be found over at my website https://nimblearchitect.github.io/kubectl-ice/
 
 
+### Single pod info
+Shows the currently used memory along with the configured memory requests and limits of all containers (side cars) in the pod named web-pod
+```
+kubectl ice memory web-pod
+```
+### Named containers
+the optional container flag (-c) searchs all selected pods and lists only containers that match the name web-frontend
+```
+kubectl ice command -c web-frontend
+```
+
+### Alternate status view
+the tree flag shows the containers and pods in a tree view, with values calculated all the way up to the parent
+```
+kubectl ice status -l app=demoprobe --tree
+```
+
+### Excluding rows
+use the --match flag to show only the output rows where the used memory column is greater than or equal to 3MB, this has the effect of exclusing any row where the used memory column is currently under 4096kB, the value 4096 can be replaced with any whole number in kilobytes
+```
+kubectl ice mem -l app=userandomcpu --match 'used>=4096'
+```
+
+### Extra selections
+using the --select flag allows you to filter the pod selection to only pods that have a priorityClassName thats equal to system-cluster-critical, you can also match against priority
+```
+kubectl ice status --select 'priorityClassName=system-cluster-critical' -A
+```
+
+### Column labels
+with the --node-label and --pod-label flags its possible to show the values of the labels as columns in the output table
+```
+kubectl ice status --node-label "beta.kubernetes.io/os" --pod-label "component" -n kube-system
+```
+
 
 ## License
 Licensed under Apache 2.0 see [LICENSE](https://github.com/NimbleArchitect/kubectl-pod/blob/main/LICENSE)
