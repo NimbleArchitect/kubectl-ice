@@ -30,6 +30,8 @@ ice lists detailed information about the containers present inside a
 * Most sub commands utilize aliases meaning less typing (eg command and cmd are the same)
 * Easily view securityContext details and POSIX capabilities
 * Use the show-namespace flag to output the pods namespace
+* Ability to read yaml from file or stdin for processing
+* Can specify columns to output for a more custom view
 
 
 [![asciicast](https://asciinema.org/a/512927.svg)](https://asciinema.org/a/512927)
@@ -44,7 +46,9 @@ All feedback and contributions are welcome, if you want to raise an issue or hel
 
 
 # Documentation
-Full documentation can be found over at: https://nimblearchitect.github.io/kubectl-ice
+Full documentation can be found over at:
+
+https://nimblearchitect.github.io/kubectl-ice
 
 # Installation
 ## Install using krew
