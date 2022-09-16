@@ -210,7 +210,8 @@ func (b *RowBuilder) Build(loop Looper) error {
 }
 
 // walkTreeCreateRow - recursive function to loop over each child item along with all sub children, buildPodTree
-//  is called on each child with the results passed to Sum so we can calculate parent values from the children
+//
+//	is called on each child with the results passed to Sum so we can calculate parent values from the children
 func (b *RowBuilder) walkTreeCreateRow(loop Looper, info *BuilderInformation, parent LeafNode) ([][]Cell, error) {
 	var totals [][]Cell
 	log := logger{location: "RowBuilder:walkTreeCreateRow"}
@@ -565,7 +566,8 @@ func (b *RowBuilder) setVisibleColumns(info *BuilderInformation) {
 }
 
 // PodLoop given a pod we loop over all containers adding to the table as we go
-//  returns a copy of rows added and nil on success
+//
+//	returns a copy of rows added and nil on success
 func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, indentLevel int) ([][]Cell, error) {
 	var podRowsOut [][]Cell
 
@@ -731,7 +733,8 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 }
 
 // makeFullRow adds the listed columns to the default columns, outputs
-//  the complete row as a list of columns
+//
+//	the complete row as a list of columns
 func (b *RowBuilder) makeFullRow(info *BuilderInformation, indentLevel int, columns ...[]Cell) []Cell {
 	log := logger{location: "RowBuilder:makeFullRow"}
 	log.Debug("Start")

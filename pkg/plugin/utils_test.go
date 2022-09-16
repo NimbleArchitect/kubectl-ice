@@ -7,9 +7,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-//*****************
-//skipContainerName
-//*****************
+// *****************
+// skipContainerName
+// *****************
 type skipContainerNameTest struct {
 	arg1     commonFlags
 	arg2     string
@@ -33,9 +33,9 @@ func TestSkipContainerName(t *testing.T) {
 
 }
 
-//********************
-//skipmemoryGetUnitLst
-//********************
+// ********************
+// skipmemoryGetUnitLst
+// ********************
 type skipMemoryGetUnitLstTest struct {
 	arg1      string
 	expected1 int64
@@ -95,9 +95,9 @@ func TestMemoryGetUnitLst(t *testing.T) {
 
 }
 
-//*******************
-//memoryHumanReadable
-//*******************
+// *******************
+// memoryHumanReadable
+// *******************
 type memoryHumanReadableTest struct {
 	arg1     int64
 	arg2     string
@@ -128,9 +128,9 @@ func TestMemoryHumanReadable(t *testing.T) {
 	}
 }
 
-//*******************
-//validateFloat64
-//*******************
+// *******************
+// validateFloat64
+// *******************
 func TestValidateFloat64(t *testing.T) {
 	input := 1234.1234
 	output := validateFloat64(input)
@@ -145,9 +145,9 @@ func TestValidateFloat64(t *testing.T) {
 	}
 }
 
-//*******************
-//portAsString
-//*******************
+// *******************
+// portAsString
+// *******************
 type portAsStringTest struct {
 	arg1     intstr.IntOrString
 	expected string

@@ -7,9 +7,9 @@ import (
 
 var table Table
 
-//*****************
-//SetHeader
-//*****************
+// *****************
+// SetHeader
+// *****************
 type tableSetHeaderTest struct {
 	arg1        []string
 	count       int
@@ -39,9 +39,9 @@ func TestTableSetHeader(t *testing.T) {
 
 }
 
-//*****************
-//AddRow
-//*****************
+// *****************
+// AddRow
+// *****************
 type addRowTest struct {
 	arg1      []Cell
 	rowCount  int
@@ -75,9 +75,9 @@ func TestAddRow(t *testing.T) {
 
 }
 
-//*****************
-//Order
-//*****************
+// *****************
+// Order
+// *****************
 type orderTest struct {
 	arg1     []int
 	expected []int
@@ -103,9 +103,9 @@ func TestOrder(t *testing.T) {
 
 }
 
-//*****************
-//HideColumn
-//*****************
+// *****************
+// HideColumn
+// *****************
 type hideColumnTest struct {
 	arg1     int
 	expected []headerRow

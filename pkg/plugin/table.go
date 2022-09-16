@@ -357,7 +357,8 @@ func (t *Table) PrintCsv() {
 }
 
 // sort Sorts via the column number, uses the full column count including hidden columns
-//  function can be run multiple times and is cumalitive
+//
+//	function can be run multiple times and is cumalitive
 func (t *Table) sort(list []int, columnNumber int, ascending bool) {
 	// rather then reordering all rows we have an order array that we can loop through
 	// sort contains the actual row number to use next
@@ -547,7 +548,8 @@ func NewCellText(text string) Cell {
 }
 
 // NewCellTextIndent creates a text cell with an indentation indicator, this dosen't actually indent the cell it just
-//   tells table.go Print to indent it for us
+//
+//	tells table.go Print to indent it for us
 func NewCellTextIndent(text string, indentLevel int) Cell {
 
 	temp := strings.Replace(text, "\r", "\\r", -1)

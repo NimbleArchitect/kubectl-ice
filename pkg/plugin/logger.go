@@ -13,7 +13,8 @@ type logger struct {
 }
 
 // given log number (int) return the prefix string (ERROR,INFO,DEBUG,etc) and a colour map
-//  that can be used with fmt.Printf and friends
+//
+//	that can be used with fmt.Printf and friends
 func logGetType(logType int) (string, string) {
 
 	// Black: [30m

@@ -154,7 +154,7 @@ func (s *lifecycle) buildLifecycleList(lifecycle *v1.Lifecycle) map[string]lifec
 	}
 
 	if lifecycle.PreStop != nil {
-		lifeCycleList["preStop"] = s.buildLifecycleAction(lifecycle.PostStart)
+		lifeCycleList["preStop"] = s.buildLifecycleAction(lifecycle.PreStop)
 	}
 
 	return lifeCycleList

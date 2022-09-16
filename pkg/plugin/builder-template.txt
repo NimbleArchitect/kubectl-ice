@@ -1,0 +1,77 @@
+// package plugin
+
+// import (
+// 	v1 "k8s.io/api/core/v1"
+// )
+
+// func Template (cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+
+// 	log := logger{location: "Template"}
+// 	log.Debug("Start")
+
+// 	loopinfo := commands{}
+// 	builder := RowBuilder{}
+// 	builder.LoopSpec = true
+// 	builder.ShowInitContainers = true
+// 	builder.PodName = args
+
+// 	connect := Connector{}
+// 	if err := connect.LoadConfig(kubeFlags); err != nil {
+// 		return err
+// 	}
+
+// 	commonFlagList, err := processCommonFlags(cmd)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	connect.Flags = commonFlagList
+// 	builder.Connection = &connect
+// 	builder.SetFlagsFrom(commonFlagList)
+
+// 	table := Table{}
+// 	builder.Table = &table
+// 	builder.ShowTreeView = commonFlagList.showTreeView
+
+// 	builder.Build(loopinfo)
+
+// 	if err := table.SortByNames(commonFlagList.sortList...); err != nil {
+// 		return err
+// 	}
+
+// 	outputTableAs(table, commonFlagList.outputAs)
+// 	return nil
+
+// }
+
+// type template struct {
+// }
+
+// func (s template) Headers() []string {
+// 	return []string{
+// 		// "USED", "REQUEST", "LIMIT", "%REQ", "%LIMIT",
+// 	}
+// }
+
+// func (s template) BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+// 	return [][]Cell{}, nil
+// }
+
+// func (s template) BuildEphemeralContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error) {
+// 	return [][]Cell{}, nil
+// }
+
+// func (s template) HideColumns(info BuilderInformation) []int {
+// 	return []int{}
+// }
+
+// func (s template) BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error) {
+// 	out := [][]Cell{}
+// 	// out[0] = commandsBuildRow(cmdLine, info)
+// 	return out, nil
+// }
+
+// func (s template) BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error) {
+// 	out := [][]Cell{}
+// 	// out[0] = commandsBuildRow(cmdLine, info)
+// 	return out, nil
+// }
