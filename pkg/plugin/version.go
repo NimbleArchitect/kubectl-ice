@@ -12,7 +12,7 @@ var versionsShort = "Display container versions and mount points"
 var helpTemplate = `
 {{if or .Runnable .HasSubCommands}}{{.UsageString}}{{end}}
 More information, documentation and examples at: https://nimblearchitect.github.io/kubectl-ice/
- find this program useful? Please consider a donation: https://nimblearchitect.github.io/kubectl-ice/donations/
+ find this program useful? Please consider donating: https://nimblearchitect.github.io/kubectl-ice/donations/
 
 `
 
