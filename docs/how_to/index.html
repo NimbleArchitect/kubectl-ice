@@ -58,9 +58,9 @@
     <li>
       <h3>How do you cleanly list all the containers in a kubernetes pod</h3>
       <p>
-        <p><code class="language-plaintext highlighter-rouge">kubectl-ice image --columns container mypod</code></p>
+        <p>listing containers is a core part of kubectl-ice, here we use the –columns flag to specify the container names, we also specify the pod name to keep things clean by displaying only the details of the pod “mypod”</p>
 
-<p>mypod is the name of the pod im interested in</p>
+<p><code class="language-plaintext highlighter-rouge">kubectl-ice image --columns container mypod</code></p>
 
       </p>
     </li>
@@ -68,9 +68,9 @@
     <li>
       <h3>How do I list all pods with a container named nginx</h3>
       <p>
-        <p><code class="language-plaintext highlighter-rouge">kubectl-ice status -Ac nginx</code></p>
+        <p>listing container names normally involves the use of grep but as you can see with kubectl-ice we dont need it any more, this command will search all pods looking foar a container with the matching name (in our case nginx) and display only those matches, the -A tells ice to scan all pods in all avaliable namespaces</p>
 
-<p>the -A scans all avaliable namespaces</p>
+<p><code class="language-plaintext highlighter-rouge">kubectl-ice status -Ac nginx</code></p>
 
       </p>
     </li>
@@ -78,7 +78,9 @@
     <li>
       <h3>How do I show the images used in a helm chart</h3>
       <p>
-        <p><code class="language-plaintext highlighter-rouge">helm get manifest mychart | kubectl-ice image</code></p>
+        <p>lets say you want to list all the images used in a deployed helm chart, now you could use some fancy command line tools to search the installed manifest, which would work but why go through all that effort when you can use ice to read from stdin and process it directly. This command reads the pre deployed helm manifest the output of this is piped to ice which reads the yaml and pull out the image list, just as it would if it was reading from the kubernetes api. You can also substitute “image” with other subcommands</p>
+
+<p><code class="language-plaintext highlighter-rouge">helm get manifest mychart | kubectl-ice image</code></p>
 
 <p>Dont forget to replace mychart above with the name of the installed chart</p>
 
@@ -88,7 +90,9 @@
     <li>
       <h3>How do I find out which container is crashing in a pod</h3>
       <p>
-        <p><code class="language-plaintext highlighter-rouge">kubectl-ice status mypod</code></p>
+        <p>so you have a list of pods that are randomly restarting, not a big deal except these pods have multipule containers and you want to find out which container is causing the issue. This is where kubectl-ice status comes in to play it shows the pod restart counts along with the current status of the pods you can also narrow the list to a single container in each pod using the -c flag</p>
+
+<p><code class="language-plaintext highlighter-rouge">kubectl-ice status mypod</code></p>
 
 <p>Replace mypod above with the name of the pod you want to check</p>
 
@@ -98,7 +102,9 @@
     <li>
       <h3>How do you find the list of pods which are not in running state or are having issues</h3>
       <p>
-        <p><code class="language-plaintext highlighter-rouge">kubectl-ice status -A --match state!=Running</code></p>
+        <p>Imagine your boss wants a list of all pods that are not in the Running state, now its easy with the –match flag, you could even go one step further and reduce the list to a specific container</p>
+
+<p><code class="language-plaintext highlighter-rouge">kubectl-ice status -A --match state!=Running</code></p>
 
       </p>
     </li>
@@ -106,7 +112,9 @@
     <li>
       <h3>How do I list all containers in all pods with status</h3>
       <p>
-        <p><code class="language-plaintext highlighter-rouge">kubectl-ice status -A</code></p>
+        <p>listing the container status is a single command when using kubectl-ice, the -A flag allow to search every known namespace</p>
+
+<p><code class="language-plaintext highlighter-rouge">kubectl-ice status -A</code></p>
 
       </p>
     </li>
@@ -114,7 +122,9 @@
     <li>
       <h3>How do I list all images on the latest tag</h3>
       <p>
-        <p><code class="language-plaintext highlighter-rouge">kubectl-ice image -A --match tag==latest</code></p>
+        <p>if you want to list images with the latest tag, you can use the –match flag like below, you can also change this to specific versions or invert the match using != instead of ==</p>
+
+<p><code class="language-plaintext highlighter-rouge">kubectl-ice image -A --match tag==latest</code></p>
 
       </p>
     </li>
@@ -122,7 +132,9 @@
     <li>
       <h3>How do I list all pods that don't have a CPU limit set</h3>
       <p>
-        <p><code class="language-plaintext highlighter-rouge">kubectl-ice cpu --match 'limit==0'</code></p>
+        <p>the match flag also allows you to list pods and containers that dont have a cpu limit set using the –match flag</p>
+
+<p><code class="language-plaintext highlighter-rouge">kubectl-ice cpu --match 'limit==0'</code></p>
 
       </p>
     </li>
