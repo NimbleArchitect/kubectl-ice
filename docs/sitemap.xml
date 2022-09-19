@@ -2,39 +2,43 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://nimblearchitect.github.io/kubectl-ice/about/</loc>
-    <lastmod>2022-09-16</lastmod>
+    <lastmod>2022-09-19</lastmod>
   </url>
   <url>
     <loc>https://nimblearchitect.github.io/kubectl-ice/demos/</loc>
-    <lastmod>2022-09-16</lastmod>
+    <lastmod>2022-09-19</lastmod>
   </url>
   <url>
     <loc>https://nimblearchitect.github.io/kubectl-ice/downloads/</loc>
-    <lastmod>2022-09-16</lastmod>
+    <lastmod>2022-09-19</lastmod>
   </url>
   <url>
     <loc>https://nimblearchitect.github.io/kubectl-ice/how_to/</loc>
-    <lastmod>2022-09-16</lastmod>
+    <lastmod>2022-09-19</lastmod>
   </url>
   <url>
     <loc>https://nimblearchitect.github.io/kubectl-ice/documentation/</loc>
-    <lastmod>2022-09-16</lastmod>
+    <lastmod>2022-09-19</lastmod>
   </url>
   <url>
     <loc>https://nimblearchitect.github.io/kubectl-ice/faq/</loc>
-    <lastmod>2022-09-16</lastmod>
+    <lastmod>2022-09-19</lastmod>
   </url>
   <url>
     <loc>https://nimblearchitect.github.io/kubectl-ice/blog/</loc>
-    <lastmod>2022-09-16</lastmod>
+    <lastmod>2022-09-19</lastmod>
   </url>
   <url>
     <loc>https://nimblearchitect.github.io/kubectl-ice/donations/</loc>
-    <lastmod>2022-09-16</lastmod>
+    <lastmod>2022-09-19</lastmod>
   </url>
   <url>
     <loc>https://nimblearchitect.github.io/kubectl-ice/</loc>
-    <lastmod>2022-09-16</lastmod>
+    <lastmod>2022-09-19</lastmod>
+  </url>
+<url>
+ <loc>https://nimblearchitect.github.io/kubectl-ice/release/2022/09/19/release-v0.2.10.html</loc>
+    <lastmod>2022-09-19</lastmod>
   </url>
 <url>
  <loc>https://nimblearchitect.github.io/kubectl-ice/release/2022/09/16/release-v0.2.9.html</loc>
