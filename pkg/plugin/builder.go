@@ -109,6 +109,10 @@ func (b *RowBuilder) SetFlagsFrom(commonFlagList commonFlags) {
 		b.columnByNames = strings.Split(columnNames, ",")
 	}
 
+	if commonFlagList.showInitContainers {
+		b.ShowInitContainers = true
+	}
+
 }
 
 func (b RowBuilder) HasStdinChanged() (bool, error) {

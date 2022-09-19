@@ -63,7 +63,6 @@ func Resources(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 
 	builder := RowBuilder{}
 	builder.LoopSpec = true
-	builder.ShowInitContainers = true
 	builder.PodName = args
 
 	connect := Connector{}
