@@ -144,29 +144,31 @@ func (s *environment) envBuildRow(info BuilderInformation, env v1.EnvVar, connec
 
 	envKey = env.Name
 	if len(env.Value) == 0 {
-		if env.ValueFrom.ConfigMapKeyRef != nil {
-			configName = env.ValueFrom.ConfigMapKeyRef.LocalObjectReference.Name
-			key = env.ValueFrom.ConfigMapKeyRef.Key
-			envValue = "CONFIGMAP:" + configName + " KEY:" + key
-		}
+		if env.ValueFrom != nil {
+			if env.ValueFrom.ConfigMapKeyRef != nil {
+				configName = env.ValueFrom.ConfigMapKeyRef.LocalObjectReference.Name
+				key = env.ValueFrom.ConfigMapKeyRef.Key
+				envValue = "CONFIGMAP:" + configName + " KEY:" + key
+			}
 
-		if env.ValueFrom.SecretKeyRef != nil {
-			configName = env.ValueFrom.SecretKeyRef.LocalObjectReference.Name
-			key = env.ValueFrom.SecretKeyRef.Key
-			envValue = "SECRETMAP:" + configName + " KEY:" + key
-			translate = false // never translate secrets
-		}
+			if env.ValueFrom.SecretKeyRef != nil {
+				configName = env.ValueFrom.SecretKeyRef.LocalObjectReference.Name
+				key = env.ValueFrom.SecretKeyRef.Key
+				envValue = "SECRETMAP:" + configName + " KEY:" + key
+				translate = false // never translate secrets
+			}
 
-		if env.ValueFrom.FieldRef != nil {
-			configName = env.ValueFrom.FieldRef.FieldPath
-			envValue = "FIELDREF:" + configName
-			translate = false // we cant translate FieldRef at the minute
-		}
+			if env.ValueFrom.FieldRef != nil {
+				configName = env.ValueFrom.FieldRef.FieldPath
+				envValue = "FIELDREF:" + configName
+				translate = false // we cant translate FieldRef at the minute
+			}
 
-		if env.ValueFrom.ResourceFieldRef != nil {
-			configName = env.ValueFrom.ResourceFieldRef.Resource
-			envValue = "RESOURCE:" + configName
-			translate = false // we cant translate resourceFieldRef at the moment
+			if env.ValueFrom.ResourceFieldRef != nil {
+				configName = env.ValueFrom.ResourceFieldRef.Resource
+				envValue = "RESOURCE:" + configName
+				translate = false // we cant translate resourceFieldRef at the moment
+			}
 		}
 
 		if translate {
