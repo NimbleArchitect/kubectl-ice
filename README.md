@@ -12,8 +12,7 @@ ice lists detailed information about the containers present inside a
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/nimblearchitect/kubectl-ice)
 ![GitHub](https://img.shields.io/github/license/NimbleArchitect/kubectl-ice)
 ![Github All Releases](https://img.shields.io/github/downloads/NimbleArchitect/kubectl-ice/total.svg?color=blue)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/NimbleArchitect/kubectl-ice/release)
-![LGTM Alerts](https://img.shields.io/lgtm/alerts/github/NimbleArchitect/kubectl-ice)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/NimbleArchitect/kubectl-ice/release.yml)
 [![CodeQL](https://github.com/NimbleArchitect/kubectl-ice/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/NimbleArchitect/kubectl-ice/actions/workflows/codeql-analysis.yml)
 
 ## Features:
