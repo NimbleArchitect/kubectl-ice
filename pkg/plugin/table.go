@@ -24,6 +24,7 @@ type Cell struct {
 	typ    int // 0=string, 1=int64, 2=float64, 3=placeholder
 	phRef  int // placeholder reference id, used to track the row thats used as a placeholder
 	indent int // the number of indents required in the output
+	colour int
 }
 
 type Table struct {
@@ -171,7 +172,7 @@ func (t *Table) HideOnlyNamedColumns(columnName []string) error {
 }
 
 // Print outputs the table on the terminal, taking the column order and visibiliy into account
-func (t *Table) Print() {
+func (t *Table) Print(withColour bool) {
 	headLine := ""
 	// loop through all headers and make a single line properly spaced
 	for col := 0; col < t.headCount; col++ {
@@ -210,6 +211,7 @@ func (t *Table) Print() {
 		}
 		// now loop through each column in the currentl selected row
 		for col := 0; col < t.headCount; col++ {
+			emptyCell := false
 			idx := t.columnOrder[col]
 			cell := row[idx]
 
@@ -220,6 +222,7 @@ func (t *Table) Print() {
 
 			if len(cell.text) == 0 {
 				cell.text = "-"
+				emptyCell = true
 			}
 
 			celltxt := t.indentText(cell.indent, cell.text)
@@ -228,6 +231,11 @@ func (t *Table) Print() {
 				spaceCount = maxLineLength
 			}
 			pad := strings.Repeat(" ", spaceCount)
+
+			if withColour && !emptyCell && cell.colour > -1 {
+				celltxt = fmt.Sprintf("\033[%dm%s%s", cell.colour, cell.text, colourEnd)
+			}
+
 			line += fmt.Sprint(celltxt, pad)
 		}
 		if !excludeRow {
@@ -530,7 +538,8 @@ func strMatch(str string, pattern string) bool {
 
 func NewCellEmpty() Cell {
 	return Cell{
-		typ: -1,
+		typ:    -1,
+		colour: -1,
 	}
 }
 
@@ -543,7 +552,8 @@ func NewCellText(text string) Cell {
 	temp = strings.Replace(temp, "\t", "\\t", -1)
 
 	return Cell{
-		text: temp,
+		text:   temp,
+		colour: -1,
 	}
 }
 
@@ -560,6 +570,7 @@ func NewCellTextIndent(text string, indentLevel int) Cell {
 	return Cell{
 		text:   temp,
 		indent: indentLevel,
+		colour: -1,
 	}
 }
 
@@ -569,15 +580,51 @@ func NewCellInt(text string, value int64) Cell {
 		text:   text,
 		number: value,
 		typ:    1,
+		colour: -1,
 	}
 }
 
 // NewCellFloat quick wrapper to return a cell object containing the given string float
 func NewCellFloat(text string, value float64) Cell {
 	return Cell{
-		text:  text,
-		float: value,
-		typ:   2,
+		text:   text,
+		float:  value,
+		typ:    2,
+		colour: -1,
+	}
+}
+
+// NewCellColourText quick wrapper to return a cell object containing the given string and the colour to be used
+func NewCellColourText(colour int, text string) Cell {
+
+	temp := strings.Replace(text, "\r", "\\r", -1)
+	temp = strings.Replace(temp, "\f", "\\f", -1)
+	temp = strings.Replace(temp, "\n", "\\n", -1)
+	temp = strings.Replace(temp, "\t", "\\t", -1)
+
+	return Cell{
+		text:   temp,
+		colour: colour,
+	}
+}
+
+// NewCellColorInt quick wrapper to return a cell object containing the given colour, string and int
+func NewCellColourInt(colour int, text string, value int64) Cell {
+	return Cell{
+		text:   text,
+		number: value,
+		typ:    1,
+		colour: colour,
+	}
+}
+
+// NewCellFloat quick wrapper to return a cell object containing the given colour, string and float
+func NewCellColourFloat(colour int, text string, value float64) Cell {
+	return Cell{
+		text:   text,
+		float:  value,
+		typ:    2,
+		colour: colour,
 	}
 }
 

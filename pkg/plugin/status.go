@@ -201,16 +201,20 @@ func (s *status) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, er
 	// rowOut[10] // message
 
 	rowOut[0].text = "true"
+	rowOut[0].colour = colourOk
 	rowOut[1].text = "true"
+	rowOut[1].colour = colourOk
 
 	// loop through each row in podTotals and add the columns in each row
 	for _, r := range rows {
 		if r[0].text == "false" {
 			// ready = false
 			rowOut[0].text = "false" // ready
+			rowOut[0].colour = colourBad
 		}
 		if r[1].text == "false" {
 			rowOut[1].text = "false" // started
+			rowOut[1].colour = colourBad
 		}
 		rowOut[2].number += r[2].number // restarts
 
@@ -226,6 +230,7 @@ func (s *status) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, er
 			rowOut[3].text = string(info.Data.pod.Status.Phase) // state
 		} else {
 			rowOut[3].text = "Terminating" // state
+			rowOut[3].colour = colourWarn
 		}
 		rowOut[4].text = info.Data.pod.Status.Reason                             // reason
 		rowOut[8].text = info.Data.pod.CreationTimestamp.Format(timestampFormat) // timestamp
@@ -250,6 +255,7 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 	var age string
 	var state v1.ContainerState
 	var rawExitCode, rawSignal, rawRestarts int64
+	var colourcode, readyColour, startColour int
 	// var id string
 
 	log := logger{location: "Status:BuildContainerStatus"}
@@ -267,6 +273,7 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 		message = state.Waiting.Message
 		// waiting state dosent have a start time so we skip setting the age variable, used further down
 		skipAgeCalculation = true
+		colourcode = colourWarn
 	}
 
 	if state.Terminated != nil {
@@ -279,12 +286,19 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 		startedAt = state.Terminated.StartedAt.Format(timestampFormat)
 		reason = state.Terminated.Reason
 		message = state.Terminated.Message
+
+		if rawExitCode == 0 {
+			colourcode = colourOk
+		} else {
+			colourcode = colourBad
+		}
 	}
 
 	if state.Running != nil {
 		strState = "Running"
 		startedAt = state.Running.StartedAt.Format(timestampFormat)
 		startTime = state.Running.StartedAt.Time
+		colourcode = colourOk
 	}
 
 	if container.Started != nil {
@@ -292,12 +306,17 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 		if !*container.Started {
 			s.pStopped = true
 		}
+		// set started colour true = green and false = red
+		startColour = setColourBoolean(*container.Started)
 	}
 
 	ready := fmt.Sprintf("%t", container.Ready)
 	if !container.Ready {
 		s.pNotReady = true
 	}
+	// set ready colour
+	readyColour = setColourBoolean(container.Ready)
+
 	restarts := fmt.Sprintf("%d", container.RestartCount)
 	rawRestarts = int64(container.RestartCount)
 
@@ -319,12 +338,12 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 
 	// READY STARTED RESTARTS STATE REASON EXIT-CODE SIGNAL TIMESTAMP AGE MESSAGE
 	cellList = append(cellList,
-		NewCellText(ready),
-		NewCellText(started),
+		NewCellColourText(readyColour, ready),
+		NewCellColourText(startColour, started),
 		NewCellInt(restarts, rawRestarts),
-		NewCellText(strState),
+		NewCellColourText(colourcode, strState),
 		NewCellText(reason),
-		NewCellInt(exitCode, rawExitCode),
+		NewCellColourInt(colourcode, exitCode, rawExitCode),
 		NewCellInt(signal, rawSignal),
 		NewCellText(container.ContainerID),
 		NewCellText(startedAt),

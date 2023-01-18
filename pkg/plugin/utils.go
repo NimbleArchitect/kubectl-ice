@@ -8,6 +8,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const colourEnd = "\033[0m"
+const colourNone = -1
+const colourBad = 31
+const colourOk = 32
+const colourWarn = 33
+
 // always returns false if the flagList.container is empty as we expect to show all containers
 // returns true if we dont have a match
 func skipContainerName(flagList commonFlags, containerName string) bool {
@@ -91,7 +97,9 @@ func outputTableAs(t Table, outType string) {
 	switch outType {
 
 	case "":
-		t.Print()
+		t.Print(false)
+	case "colour":
+		t.Print(true)
 	case "csv":
 		t.PrintCsv()
 	case "list":
@@ -126,4 +134,29 @@ func portAsString(port intstr.IntOrString) string {
 	}
 
 	return ""
+}
+
+func setColourValue(value int, bad int, warn int) int {
+	var colour int
+
+	colour = colourOk
+	if value > bad {
+		colour = colourBad
+	} else if value > warn {
+		colour = colourWarn
+	}
+
+	return colour
+}
+
+func setColourBoolean(value bool) int {
+	var colour int
+
+	if value {
+		colour = colourOk
+	} else {
+		colour = colourBad
+	}
+
+	return colour
 }

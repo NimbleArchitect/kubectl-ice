@@ -205,6 +205,7 @@ func (s *resource) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, 
 			val := validateFloat64(float64(rowOut[0].number) / float64(rowOut[1].number) * 100)
 			rowOut[4].text = fmt.Sprintf(floatfmt, val)
 			rowOut[4].float = val
+			rowOut[4].colour = setColourValue(int(val), 90, 75)
 		}
 
 		if rowOut[2].number > 0.0 {
@@ -212,7 +213,17 @@ func (s *resource) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, 
 			val := validateFloat64(float64(rowOut[0].number) / float64(rowOut[2].number) * 100)
 			rowOut[3].text = fmt.Sprintf(floatfmt, val)
 			rowOut[3].float = val
+			rowOut[3].colour = setColourValue(int(val), 90, 75)
 		}
+
+		usedColour := 0
+		if rowOut[3].float > rowOut[4].float {
+			usedColour = setColourValue(int(rowOut[4].float), 90, 75)
+		} else {
+			usedColour = setColourValue(int(rowOut[3].float), 90, 75)
+		}
+
+		rowOut[0].colour = usedColour
 	}
 
 	return rowOut, nil
@@ -238,6 +249,7 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 	var rawRequest, rawLimit, rawValue int64
 	var rawPercentRequest, rawPercentLimit float64
 	var requestCell, limitCell Cell
+	var percentRequestColour, percentLimitColour int
 
 	log := logger{location: "resources:statsProcessTableRow"}
 	log.Debug("Start")
@@ -288,6 +300,8 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 					val := validateFloat64(cpuVal / res.Limits.Cpu().AsApproximateFloat64() * 100)
 					percentLimit = fmt.Sprintf(floatfmt, val)
 					rawPercentLimit = val
+
+					percentLimitColour = setColourValue(int(val), 90, 75)
 				}
 				// check cpu requests has a value
 				if res.Requests.Cpu().AsApproximateFloat64() == 0 {
@@ -297,6 +311,8 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 					val := validateFloat64(cpuVal / res.Requests.Cpu().AsApproximateFloat64() * 100)
 					percentRequest = fmt.Sprintf(floatfmt, val)
 					rawPercentRequest = val
+
+					percentRequestColour = setColourValue(int(val), 90, 75)
 				}
 			}
 		}
@@ -331,30 +347,43 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 				if res.Limits.Memory().AsApproximateFloat64() == 0 {
 					percentLimit = "-"
 					rawPercentLimit = 0.0
+					percentLimitColour = -1
 				} else {
 					val := validateFloat64(memVal / res.Limits.Memory().AsApproximateFloat64() * 100)
 					percentLimit = fmt.Sprintf(floatfmt, val)
 					rawPercentLimit = val
+
+					percentLimitColour = setColourValue(int(val), 90, 75)
 				}
 				// check memory requests has a value
 				if res.Requests.Memory().AsApproximateFloat64() == 0 {
 					percentRequest = "-"
 					rawPercentRequest = 0.0
+					percentRequestColour = -1
 				} else {
 					val := validateFloat64(memVal / res.Requests.Memory().AsApproximateFloat64() * 100)
 					percentRequest = fmt.Sprintf(floatfmt, val)
 					rawPercentRequest = val
+
+					percentRequestColour = setColourValue(int(val), 90, 75)
 				}
 			}
 		}
 	}
 
+	usedColour := 0
+	if percentLimitColour > percentRequestColour {
+		usedColour = percentLimitColour
+	} else {
+		usedColour = percentRequestColour
+	}
+
 	cellList = append(cellList,
-		NewCellInt(displayValue, rawValue),
+		NewCellColourInt(usedColour, displayValue, rawValue),
 		requestCell,
 		limitCell,
-		NewCellFloat(percentRequest, rawPercentRequest),
-		NewCellFloat(percentLimit, rawPercentLimit),
+		NewCellColourFloat(percentRequestColour, percentRequest, rawPercentRequest),
+		NewCellColourFloat(percentLimitColour, percentLimit, rawPercentLimit),
 	)
 
 	log.Debug("cellList", cellList)

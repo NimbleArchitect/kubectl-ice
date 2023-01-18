@@ -430,6 +430,11 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 				f.outputAs = "json"
 			case "yaml":
 				f.outputAs = "yaml"
+			case "colour":
+				fallthrough
+			case "color":
+				f.outputAs = "colour"
+
 			default:
 				return commonFlags{}, errors.New("unknown output format only csv, list, json and yaml are supported")
 			}
