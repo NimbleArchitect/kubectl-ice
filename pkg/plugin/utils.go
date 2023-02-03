@@ -136,13 +136,13 @@ func portAsString(port intstr.IntOrString) string {
 	return ""
 }
 
-func setColourValue(value int, bad int, warn int) int {
+func setColourValue(value int) int {
 	var colour int
 
 	colour = colourOk
-	if value > bad {
+	if value > 90 {
 		colour = colourBad
-	} else if value > warn {
+	} else if value > 75 {
 		colour = colourWarn
 	}
 

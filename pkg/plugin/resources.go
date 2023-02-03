@@ -205,7 +205,7 @@ func (s *resource) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, 
 			val := validateFloat64(float64(rowOut[0].number) / float64(rowOut[1].number) * 100)
 			rowOut[4].text = fmt.Sprintf(floatfmt, val)
 			rowOut[4].float = val
-			rowOut[4].colour = setColourValue(int(val), 90, 75)
+			rowOut[4].colour = setColourValue(int(val))
 		}
 
 		if rowOut[2].number > 0.0 {
@@ -213,14 +213,14 @@ func (s *resource) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, 
 			val := validateFloat64(float64(rowOut[0].number) / float64(rowOut[2].number) * 100)
 			rowOut[3].text = fmt.Sprintf(floatfmt, val)
 			rowOut[3].float = val
-			rowOut[3].colour = setColourValue(int(val), 90, 75)
+			rowOut[3].colour = setColourValue(int(val))
 		}
 
 		usedColour := 0
 		if rowOut[3].float > rowOut[4].float {
-			usedColour = setColourValue(int(rowOut[4].float), 90, 75)
+			usedColour = setColourValue(int(rowOut[4].float))
 		} else {
-			usedColour = setColourValue(int(rowOut[3].float), 90, 75)
+			usedColour = setColourValue(int(rowOut[3].float))
 		}
 
 		rowOut[0].colour = usedColour
@@ -301,7 +301,7 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 					percentLimit = fmt.Sprintf(floatfmt, val)
 					rawPercentLimit = val
 
-					percentLimitColour = setColourValue(int(val), 90, 75)
+					percentLimitColour = setColourValue(int(val))
 				}
 				// check cpu requests has a value
 				if res.Requests.Cpu().AsApproximateFloat64() == 0 {
@@ -312,7 +312,7 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 					percentRequest = fmt.Sprintf(floatfmt, val)
 					rawPercentRequest = val
 
-					percentRequestColour = setColourValue(int(val), 90, 75)
+					percentRequestColour = setColourValue(int(val))
 				}
 			}
 		}
@@ -353,7 +353,7 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 					percentLimit = fmt.Sprintf(floatfmt, val)
 					rawPercentLimit = val
 
-					percentLimitColour = setColourValue(int(val), 90, 75)
+					percentLimitColour = setColourValue(int(val))
 				}
 				// check memory requests has a value
 				if res.Requests.Memory().AsApproximateFloat64() == 0 {
@@ -365,7 +365,7 @@ func (s *resource) statsProcessTableRow(res v1.ResourceRequirements, metrics v1.
 					percentRequest = fmt.Sprintf(floatfmt, val)
 					rawPercentRequest = val
 
-					percentRequestColour = setColourValue(int(val), 90, 75)
+					percentRequestColour = setColourValue(int(val))
 				}
 			}
 		}
