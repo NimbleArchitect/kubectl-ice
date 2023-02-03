@@ -116,7 +116,7 @@ Flags:
   -n, --namespace string               If present, the namespace scope for this CLI request
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
-  -o, --output string                  Output format, currently color, colour, csv, list, json and yaml are supported
+  -o, --output string                  Output format, currently csv, list, json and yaml are supported
       --pod-label string               Show the selected pod label as a column
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
   -l, --selector string                Selector (label query) to filter on
