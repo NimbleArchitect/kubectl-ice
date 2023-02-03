@@ -3,6 +3,7 @@ package plugin
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -37,6 +38,7 @@ type Table struct {
 	hideRow       []bool
 	placeHolder   map[int][]Cell
 	placeHolderID int
+	ColourOutput  int
 }
 
 // SetHeader sets the header row to the specified array of strings
@@ -172,8 +174,21 @@ func (t *Table) HideOnlyNamedColumns(columnName []string) error {
 }
 
 // Print outputs the table on the terminal, taking the column order and visibiliy into account
-func (t *Table) Print(withColour bool) {
+func (t *Table) Print() {
+	var cellcolour int
+	var withColour bool
+	var visibleColumns int
 	headLine := ""
+	colourArray := make([]int, t.headCount)
+
+	if t.ColourOutput != COLOUR_NONE {
+		withColour = true
+
+		for i := 0; i < t.headCount; i++ {
+			colourArray[i] = int(math.Mod(float64(i), float64(7))) + 30
+		}
+	}
+
 	// loop through all headers and make a single line properly spaced
 	for col := 0; col < t.headCount; col++ {
 		// columnOrder contains the actual column number to use next
@@ -182,11 +197,21 @@ func (t *Table) Print(withColour bool) {
 			continue
 		}
 
+		cellcolour = colourArray[visibleColumns]
+		visibleColumns += 1
+
 		word := t.head[idx].title
+		runelen := len([]rune(word))
+
 		if len(word) == 0 {
 			word = "-"
 		}
-		pad := strings.Repeat(" ", t.head[idx].columnLength-len([]rune(word)))
+
+		if t.ColourOutput == COLOUR_MIX || t.ColourOutput == COLOUR_COLUMNS {
+			word = fmt.Sprintf("\033[%dm%s%s", cellcolour, word, colourEnd)
+		}
+		pad := strings.Repeat(" ", t.head[idx].columnLength-runelen)
+
 		headLine += fmt.Sprint(word, pad)
 	}
 	// print the header in one long line
@@ -196,6 +221,7 @@ func (t *Table) Print(withColour bool) {
 	for r := 0; r < len(t.data); r++ {
 		var row []Cell
 
+		visibleColumns = 0
 		line := ""
 		excludeRow := false
 		rowNum := t.rowOrder[r]
@@ -211,7 +237,6 @@ func (t *Table) Print(withColour bool) {
 		}
 		// now loop through each column in the currentl selected row
 		for col := 0; col < t.headCount; col++ {
-			emptyCell := false
 			idx := t.columnOrder[col]
 			cell := row[idx]
 
@@ -220,20 +245,36 @@ func (t *Table) Print(withColour bool) {
 				continue
 			}
 
+			cellcolour := colourArray[visibleColumns]
+			visibleColumns += 1
+
 			if len(cell.text) == 0 {
 				cell.text = "-"
-				emptyCell = true
 			}
 
-			celltxt := t.indentText(cell.indent, cell.text)
-			spaceCount := t.head[idx].columnLength - len([]rune(celltxt))
+			origtxt := t.indentText(cell.indent, cell.text)
+			celltxt := origtxt
+			spaceCount := t.head[idx].columnLength - len([]rune(origtxt))
 			if spaceCount <= 0 {
 				spaceCount = maxLineLength
 			}
 			pad := strings.Repeat(" ", spaceCount)
 
-			if withColour && !emptyCell && cell.colour > -1 {
-				celltxt = fmt.Sprintf("\033[%dm%s%s", cell.colour, cell.text, colourEnd)
+			// colour output has been set and the cell has data
+			if withColour {
+				if t.ColourOutput == COLOUR_MIX || t.ColourOutput == COLOUR_COLUMNS {
+					celltxt = fmt.Sprintf("\033[%dm%s%s", cellcolour, origtxt, colourEnd)
+				}
+
+				// we check for errors last so it can overwrite the column colours when we are using the mix colour set
+				if cell.colour > -1 && (t.ColourOutput == COLOUR_ERRORS || t.ColourOutput == COLOUR_MIX) {
+					// error colour set uses red/yellow/green for ok/warning/problem
+					if cell.colour == 0 && t.ColourOutput == COLOUR_MIX {
+						celltxt = fmt.Sprintf("\033[%dm%s%s", cellcolour, origtxt, colourEnd)
+					} else {
+						celltxt = fmt.Sprintf("\033[%dm%s%s", cell.colour, origtxt, colourEnd)
+					}
+				}
 			}
 
 			line += fmt.Sprint(celltxt, pad)

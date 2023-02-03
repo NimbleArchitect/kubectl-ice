@@ -97,9 +97,7 @@ func outputTableAs(t Table, outType string) {
 	switch outType {
 
 	case "":
-		t.Print(false)
-	case "colour":
-		t.Print(true)
+		t.Print()
 	case "csv":
 		t.PrintCsv()
 	case "list":

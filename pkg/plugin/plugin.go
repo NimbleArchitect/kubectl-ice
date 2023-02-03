@@ -3,6 +3,7 @@ package plugin
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -32,7 +33,16 @@ type commonFlags struct {
 	labelPodName       string
 	annotationPodName  string
 	showColumnByName   string // list of column names to show, overrides other hidden columns
+	outputAsColour     int    // which coloring type do we use when displaying columns
 }
+
+const (
+	COLOUR_NONE    = 0
+	COLOUR_ERRORS  = 1
+	COLOUR_COLUMNS = 2
+	COLOUR_MIX     = 3
+	COLOUR_CUSTOM  = 4
+)
 
 func InitSubCommands(rootCmd *cobra.Command) {
 	var includeInitShort string = "include init container(s) in the output, by default init containers are hidden"
@@ -380,6 +390,7 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("annotation", "", "", `Show the selected annotation as a column`)
 	cmdObj.Flags().StringP("filename", "f", "", `read pod information from this yaml file instead`)
 	cmdObj.Flags().StringP("columns", "", "", `list of column names to show in the table output, all other columns are hidden`)
+	cmdObj.Flags().StringP("color", "", "", `colour columns in the table output`)
 
 }
 
@@ -430,10 +441,6 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 				f.outputAs = "json"
 			case "yaml":
 				f.outputAs = "yaml"
-			case "colour":
-				fallthrough
-			case "color":
-				f.outputAs = "colour"
 
 			default:
 				return commonFlags{}, errors.New("unknown output format only csv, list, json and yaml are supported")
@@ -540,6 +547,35 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 
 	if cmd.Flag("columns").Value.String() != "" {
 		f.showColumnByName = cmd.Flag("columns").Value.String()
+	}
+
+	// check and set coluring type to use, we also check for both spellings of colour
+	colourOut := ""
+	// check environment vars first
+	colourOut = os.Getenv("ICE_COLOR")
+
+	//then allow overiding with flags
+	if cmd.Flag("color") != nil {
+		if len(cmd.Flag("color").Value.String()) > 0 {
+			colourOut = cmd.Flag("color").Value.String()
+		}
+	}
+
+	if len(colourOut) > 0 {
+		// we use a switch to match --colour flag so I can expand in future
+		switch strings.ToLower(colourOut) {
+		case "mix":
+			f.outputAsColour = COLOUR_MIX
+		case "columns":
+			f.outputAsColour = COLOUR_COLUMNS
+		case "errors":
+			f.outputAsColour = COLOUR_ERRORS
+		case "none":
+			f.outputAsColour = COLOUR_NONE
+
+		default:
+			return commonFlags{}, errors.New("unknown colour type only columns, errors, mix and none are supported")
+		}
 	}
 
 	return f, nil
