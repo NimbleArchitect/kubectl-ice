@@ -390,8 +390,7 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("annotation", "", "", `Show the selected annotation as a column`)
 	cmdObj.Flags().StringP("filename", "f", "", `read pod information from this yaml file instead`)
 	cmdObj.Flags().StringP("columns", "", "", `list of column names to show in the table output, all other columns are hidden`)
-	cmdObj.Flags().StringP("color", "", "", `colour columns in the table output`)
-
+	cmdObj.Flags().StringP("color", "", "", `Colour columns in the table output. string can be one of: columns, errors, mix, none`)
 }
 
 func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
