@@ -31,6 +31,7 @@ ice lists detailed information about the containers present inside a
 * Use the show-namespace flag to output the pods namespace
 * Ability to read yaml from file or stdin for processing
 * Can specify columns to output for a more custom view
+* Limited colour output of some sub commands: green = ok, yellow = warning, red = bad
 
 
 [![asciicast](https://asciinema.org/a/512927.svg)](https://asciinema.org/a/512927)
@@ -107,6 +108,7 @@ ice also supports all the standard kubectl flags in addition to:
 Flags:
   -A, --all-namespaces                 List containers from pods in all namespaces
       --annotation string              Show the selected annotation as a column
+      --color string                   Colour columns in the table output. string can be one of: columns, errors, mix, none
   -c, --container string               Container name. If set shows only the named containers
       --context string                 The name of the kubeconfig context to use
   -m, --match string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of ==,<,>,<=,>= and != 
@@ -114,7 +116,7 @@ Flags:
   -n, --namespace string               If present, the namespace scope for this CLI request
       --node-label string              Show the selected node label as a column
       --node-tree                      Displayes the tree with the nodes as the root
-  -o, --output string                  Output format, currently csv, list, json and yaml are supported
+  -o, --output string                  Output format, currently color, colour, csv, list, json and yaml are supported
       --pod-label string               Show the selected pod label as a column
       --select string                  Filters pods based on their spec field, comma seperated list of FIELD OP VALUE, where OP can be one of ==, = and != 
   -l, --selector string                Selector (label query) to filter on
