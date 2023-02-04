@@ -65,8 +65,9 @@ func Capabilities(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, 
 	builder.SetFlagsFrom(commonFlagList)
 
 	table := Table{}
-	builder.Table = &table
+	table.ColourOutput = commonFlagList.outputAsColour
 
+	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
 	if err := builder.Build(&loopinfo); err != nil {

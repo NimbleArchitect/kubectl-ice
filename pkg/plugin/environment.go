@@ -73,6 +73,8 @@ func Environment(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, a
 	}
 
 	table := Table{}
+	table.ColourOutput = commonFlagList.outputAsColour
+
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 	if err := builder.Build(&loopinfo); err != nil {

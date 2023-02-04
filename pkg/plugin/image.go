@@ -71,6 +71,8 @@ func Image(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 	}
 
 	table := Table{}
+	table.ColourOutput = commonFlagList.outputAsColour
+
 	builder.Table = &table
 	builder.CommonFlags = commonFlagList
 	builder.Connection = &connect

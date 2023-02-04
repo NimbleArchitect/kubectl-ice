@@ -77,6 +77,8 @@ func Probes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 	builder.SetFlagsFrom(commonFlagList)
 
 	table := Table{}
+	table.ColourOutput = commonFlagList.outputAsColour
+
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 

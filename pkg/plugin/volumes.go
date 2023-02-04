@@ -73,6 +73,8 @@ func Volumes(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args 
 	}
 
 	table := Table{}
+	table.ColourOutput = commonFlagList.outputAsColour
+
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 

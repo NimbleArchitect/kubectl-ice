@@ -72,6 +72,8 @@ func Lifecycle(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, arg
 	builder.SetFlagsFrom(commonFlagList)
 
 	table := Table{}
+	table.ColourOutput = commonFlagList.outputAsColour
+
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView
 
