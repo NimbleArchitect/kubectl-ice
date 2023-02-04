@@ -11,8 +11,11 @@ import (
 const colourEnd = "\033[0m"
 const colourNone = -1
 const colourBad = 31
+const colourModBad = 0
 const colourOk = 32
+const colourModOk = 0
 const colourWarn = 33
+const colourModWarn = 0
 
 // always returns false if the flagList.container is empty as we expect to show all containers
 // returns true if we dont have a match
@@ -134,26 +137,26 @@ func portAsString(port intstr.IntOrString) string {
 	return ""
 }
 
-func setColourValue(value int) int {
-	var colour int
+func setColourValue(value int) [2]int {
+	var colour [2]int
 
-	colour = colourOk
+	colour = [2]int{colourOk, colourModOk}
 	if value > 90 {
-		colour = colourBad
+		colour = [2]int{colourBad, colourModBad}
 	} else if value > 75 {
-		colour = colourWarn
+		colour = [2]int{colourWarn, colourModWarn}
 	}
 
 	return colour
 }
 
-func setColourBoolean(value bool) int {
-	var colour int
+func setColourBoolean(value bool) [2]int {
+	var colour [2]int
 
 	if value {
-		colour = colourOk
+		colour = [2]int{colourOk, colourModOk}
 	} else {
-		colour = colourBad
+		colour = [2]int{colourBad, colourModBad}
 	}
 
 	return colour

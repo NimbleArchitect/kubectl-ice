@@ -25,7 +25,7 @@ type Cell struct {
 	typ    int // 0=string, 1=int64, 2=float64, 3=placeholder
 	phRef  int // placeholder reference id, used to track the row thats used as a placeholder
 	indent int // the number of indents required in the output
-	colour int
+	colour [2]int
 }
 
 type Table struct {
@@ -175,17 +175,29 @@ func (t *Table) HideOnlyNamedColumns(columnName []string) error {
 
 // Print outputs the table on the terminal, taking the column order and visibiliy into account
 func (t *Table) Print() {
-	var cellcolour int
+	var cellcolour [2]int
 	var withColour bool
 	var visibleColumns int
 	headLine := ""
-	colourArray := make([]int, t.headCount)
+	colourArray := make([][2]int, t.headCount)
 
 	if t.ColourOutput != COLOUR_NONE {
 		withColour = true
 
+		maxColours := 7
+		modFlip := 0
+
 		for i := 0; i < t.headCount; i++ {
-			colourArray[i] = int(math.Mod(float64(i), float64(7))) + 30
+			colourCode := int(math.Mod(float64(i), float64(maxColours)))
+			colourArray[i][0] = colourCode + 30
+			colourArray[i][1] = modFlip
+
+			if colourCode >= maxColours-1 {
+				modFlip += 1
+				if modFlip > 1 {
+					modFlip = 0
+				}
+			}
 		}
 	}
 
@@ -208,7 +220,7 @@ func (t *Table) Print() {
 		}
 
 		if t.ColourOutput == COLOUR_MIX || t.ColourOutput == COLOUR_COLUMNS {
-			word = fmt.Sprintf("\033[%dm%s%s", cellcolour, word, colourEnd)
+			word = fmt.Sprintf("\033[%d;%dm%s%s", cellcolour[1], cellcolour[0], word, colourEnd)
 		}
 		pad := strings.Repeat(" ", t.head[idx].columnLength-runelen)
 
@@ -263,16 +275,16 @@ func (t *Table) Print() {
 			// colour output has been set and the cell has data
 			if withColour {
 				if t.ColourOutput == COLOUR_MIX || t.ColourOutput == COLOUR_COLUMNS {
-					celltxt = fmt.Sprintf("\033[%dm%s%s", cellcolour, origtxt, colourEnd)
+					celltxt = fmt.Sprintf("\033[%d;%dm%s%s", cellcolour[1], cellcolour[0], origtxt, colourEnd)
 				}
 
 				// we check for errors last so it can overwrite the column colours when we are using the mix colour set
-				if cell.colour > -1 && (t.ColourOutput == COLOUR_ERRORS || t.ColourOutput == COLOUR_MIX) {
+				if cell.colour[0] > -1 && (t.ColourOutput == COLOUR_ERRORS || t.ColourOutput == COLOUR_MIX) {
 					// error colour set uses red/yellow/green for ok/warning/problem
-					if cell.colour == 0 && t.ColourOutput == COLOUR_MIX {
-						celltxt = fmt.Sprintf("\033[%dm%s%s", cellcolour, origtxt, colourEnd)
+					if cell.colour[0] == 0 && t.ColourOutput == COLOUR_MIX {
+						celltxt = fmt.Sprintf("\033[%d;%dm%s%s", cellcolour[1], cellcolour[0], origtxt, colourEnd)
 					} else {
-						celltxt = fmt.Sprintf("\033[%dm%s%s", cell.colour, origtxt, colourEnd)
+						celltxt = fmt.Sprintf("\033[%d;%dm%s%s", cell.colour[1], cell.colour[0], origtxt, colourEnd)
 					}
 				}
 			}
@@ -580,7 +592,7 @@ func strMatch(str string, pattern string) bool {
 func NewCellEmpty() Cell {
 	return Cell{
 		typ:    -1,
-		colour: -1,
+		colour: [2]int{-1, 0},
 	}
 }
 
@@ -594,7 +606,7 @@ func NewCellText(text string) Cell {
 
 	return Cell{
 		text:   temp,
-		colour: -1,
+		colour: [2]int{-1, 0},
 	}
 }
 
@@ -611,7 +623,7 @@ func NewCellTextIndent(text string, indentLevel int) Cell {
 	return Cell{
 		text:   temp,
 		indent: indentLevel,
-		colour: -1,
+		colour: [2]int{-1, 0},
 	}
 }
 
@@ -621,7 +633,7 @@ func NewCellInt(text string, value int64) Cell {
 		text:   text,
 		number: value,
 		typ:    1,
-		colour: -1,
+		colour: [2]int{-1, 0},
 	}
 }
 
@@ -631,12 +643,12 @@ func NewCellFloat(text string, value float64) Cell {
 		text:   text,
 		float:  value,
 		typ:    2,
-		colour: -1,
+		colour: [2]int{-1, 0},
 	}
 }
 
 // NewCellColourText quick wrapper to return a cell object containing the given string and the colour to be used
-func NewCellColourText(colour int, text string) Cell {
+func NewCellColourText(colour [2]int, text string) Cell {
 
 	temp := strings.Replace(text, "\r", "\\r", -1)
 	temp = strings.Replace(temp, "\f", "\\f", -1)
@@ -650,7 +662,7 @@ func NewCellColourText(colour int, text string) Cell {
 }
 
 // NewCellColorInt quick wrapper to return a cell object containing the given colour, string and int
-func NewCellColourInt(colour int, text string, value int64) Cell {
+func NewCellColourInt(colour [2]int, text string, value int64) Cell {
 	return Cell{
 		text:   text,
 		number: value,
@@ -660,7 +672,7 @@ func NewCellColourInt(colour int, text string, value int64) Cell {
 }
 
 // NewCellFloat quick wrapper to return a cell object containing the given colour, string and float
-func NewCellColourFloat(colour int, text string, value float64) Cell {
+func NewCellColourFloat(colour [2]int, text string, value float64) Cell {
 	return Cell{
 		text:   text,
 		float:  value,
