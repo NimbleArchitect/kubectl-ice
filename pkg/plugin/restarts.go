@@ -68,6 +68,7 @@ func Restarts(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args
 
 	table := Table{}
 	table.ColourOutput = commonFlagList.outputAsColour
+	table.CustomColours = commonFlagList.useTheseColours
 
 	builder.Table = &table
 	builder.ShowTreeView = commonFlagList.showTreeView

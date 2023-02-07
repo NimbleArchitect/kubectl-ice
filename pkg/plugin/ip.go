@@ -49,6 +49,7 @@ func IP(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []str
 	}
 	table := Table{}
 	table.ColourOutput = commonFlagList.outputAsColour
+	table.CustomColours = commonFlagList.useTheseColours
 	table.SetHeader(
 		"NAME", "IP",
 	)
