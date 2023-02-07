@@ -804,6 +804,7 @@
   <li>Most sub commands utilize aliases meaning less typing (eg command and cmd are the same)</li>
   <li>Easily view securityContext details and POSIX capabilities</li>
   <li>Use the show-namespace flag to output the pods namespace</li>
+  <li>Colour output</li>
 </ul>
 
       </p>
@@ -1521,6 +1522,111 @@ web-pod  debugger-k5znj  -           -       -          -       -               
  make it feel more like a native kubectl command, this also works if you have kubectl set as an alias, for example
  if k is aliased to kubectl you can type <code class="language-plaintext highlighter-rouge">k ice subcommand</code> instead of <code class="language-plaintext highlighter-rouge">kubectl-ice subcommand</code></p>
 
+<p>all sub commands support the <code class="language-plaintext highlighter-rouge">--color argument</code> flag, this flag can also be set using the environment variable ICE_COLOR, the <code class="language-plaintext highlighter-rouge">--color</code> flag overrides the environment variable when both are set</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><strong>Argument</strong></td>
+      <td><strong>Description</strong></td>
+    </tr>
+    <tr>
+      <td>columns</td>
+      <td>displays each column in a different colour (there are only 14 colours, so expect repeats if you have more columns)</td>
+    </tr>
+    <tr>
+      <td>errors</td>
+      <td>cpu, mem and status have fields that report state in true/false/% fields. This argument shows true as green false as red and 0-74% green, 75-89% yellow and 90-100% red</td>
+    </tr>
+    <tr>
+      <td>mix</td>
+      <td>displays using the columns colouring with state fields coloured using errors colouring</td>
+    </tr>
+    <tr>
+      <td>none</td>
+      <td>removes all colouring</td>
+    </tr>
+    <tr>
+      <td>custom</td>
+      <td>allows setting custom colours for columns, the custom argument is a “;” seperated list in the format lx,y more info in the custom colour section below</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="custom-colours">custom colours</h3>
+<p>the custom colours string is a ; spearated list with the word custom prefixed, each element in the list takes the format lx.y where:
+| l | can be one of the following:<br />missing (empty),<br />g (good),<br />w (warning),<br />b (bad) |
+| x | is the modifier, known values are<br />1 bright<br />4 underlined<br />5 flashing |
+| y | is the colour code, refer to the colour codes table below |</p>
+
+<p>when there are more columns that specified colours the colours are repeated in order as many times as needed.</p>
+
+<p>each column is a different colour</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>kubectl-ice status <span class="nt">--color</span> column
+</code></pre>
+  </div>
+</div>
+
+<p>choosing the colour of each column (colours repeat if there are more columns than colours) in this case the colours are blue, magenta, cyan, blue, magenta, cyan, etc</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>kubectl-ice status <span class="nt">--color</span> <span class="s2">"custom;0.94;0.95;0.96"</span>
+</code></pre>
+  </div>
+</div>
+
+<p>showing the columns in colour with cpu usage coloured as good (green), warning (yellow) and bad (red)</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>kubectl-ice cpu <span class="nt">--color</span> mix
+</code></pre>
+  </div>
+</div>
+
+<p>memory output with custom colours for each column but warning is flashing yellow and bad is flashing red</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code>kubectl-ice memory <span class="nt">--colour</span> <span class="s2">"custom;0.33;0.34;0.35;0.36;0.90;0.93;0.94;g1.92;w5.33;b5.91"</span>
+</code></pre>
+  </div>
+</div>
+
+<p>finally if you want ice to show colour by default you can use one of the following in your profile depending on your needs</p>
+<div class="language-shell highlighter-rouge">
+  <div class="highlight">
+    <pre class="highlight"><code><span class="nb">export </span><span class="nv">ICE_COLOR</span><span class="o">=</span>mix
+<span class="nb">export </span><span class="nv">ICE_COLOR</span><span class="o">=</span>columns
+<span class="nb">export </span><span class="nv">ICE_COLOR</span><span class="o">=</span><span class="s2">"custom;0.33;0.34;0.35;0.36;0.90;0.93;0.94;g1.92;w5.33;b5.91"</span>
+</code></pre>
+  </div>
+</div>
+
+<h3 id="colour-codes">Colour codes</h3>
+<p>Default		 39
+Black		 30	
+Dark red	 31	
+Dark green	 32	
+Dark yellow  33	
+Dark blue	 34	
+Dark magenta 35	
+Dark cyan	 36	
+Light gray	 37	
+Dark gray	 90	
+Red		     91	
+Green		 92	
+Orange		 93	
+Blue		 94	
+Magenta		 95	
+Cyan		 96	
+White		 97</p>
+
+<h3 id="modifiers">Modifiers</h3>
+<p>brighter     1
+underlined   4
+flashing     5</p>
+
 <p>The following commands are available for <code class="language-plaintext highlighter-rouge">kubectl-ice</code></p>
 
       </p>
@@ -1559,6 +1665,7 @@ web-pod  debugger-k5znj  -           -       -          -       -               
         <div class="language-shell highlighter-rouge">
   <div class="highlight">
     <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--color</span> string                   Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none <span class="o">(</span>overrides <span class="nb">env </span>variable ICE_COLOUR<span class="o">)</span>
       <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
   <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
   <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
@@ -1655,6 +1762,7 @@ kubectl-ice capabilities <span class="nt">-l</span> <span class="s2">"app in (we
         <div class="language-shell highlighter-rouge">
   <div class="highlight">
     <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--color</span> string                   Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none <span class="o">(</span>overrides <span class="nb">env </span>variable ICE_COLOUR<span class="o">)</span>
       <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
   <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
   <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
@@ -1752,6 +1860,7 @@ kubectl-ice restarts <span class="nt">-l</span> <span class="s2">"app in (web,ma
         <div class="language-shell highlighter-rouge">
   <div class="highlight">
     <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--color</span> string                   Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none <span class="o">(</span>overrides <span class="nb">env </span>variable ICE_COLOUR<span class="o">)</span>
       <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
   <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
   <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
@@ -1849,6 +1958,7 @@ kubectl-ice security <span class="nt">-l</span> <span class="s2">"app in (web,ma
         <div class="language-shell highlighter-rouge">
   <div class="highlight">
     <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--color</span> string                   Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none <span class="o">(</span>overrides <span class="nb">env </span>variable ICE_COLOUR<span class="o">)</span>
       <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
   <span class="nt">-d</span>, <span class="nt">--details</span>                        Display the timestamp instead of age along with the message column
   <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
@@ -1952,6 +2062,7 @@ kubectl-ice status <span class="nt">-l</span> <span class="s2">"app in (web,mail
         <div class="language-shell highlighter-rouge">
   <div class="highlight">
     <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--color</span> string                   Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none <span class="o">(</span>overrides <span class="nb">env </span>variable ICE_COLOUR<span class="o">)</span>
       <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
   <span class="nt">-d</span>, <span class="nt">--device</span>                         show raw block device mappings within a container
   <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
@@ -2049,6 +2160,7 @@ kubectl-ice volumes <span class="nt">-l</span> <span class="s2">"app in (web,mai
         <div class="language-shell highlighter-rouge">
   <div class="highlight">
     <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--color</span> string                   Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none <span class="o">(</span>overrides <span class="nb">env </span>variable ICE_COLOUR<span class="o">)</span>
       <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
   <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
   <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
@@ -2145,6 +2257,7 @@ kubectl-ice <span class="nb">command</span> <span class="nt">-l</span> <span cla
         <div class="language-shell highlighter-rouge">
   <div class="highlight">
     <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--color</span> string                   Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none <span class="o">(</span>overrides <span class="nb">env </span>variable ICE_COLOUR<span class="o">)</span>
       <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
   <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
   <span class="nt">-i</span>, <span class="nt">--include-init</span>                   include init container<span class="o">(</span>s<span class="o">)</span> <span class="k">in </span>the output, by default init containers are hidden
@@ -2244,6 +2357,7 @@ kubectl-ice cpu <span class="nt">-l</span> <span class="s2">"app in (web,mail)"<
         <div class="language-shell highlighter-rouge">
   <div class="highlight">
     <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--color</span> string                   Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none <span class="o">(</span>overrides <span class="nb">env </span>variable ICE_COLOUR<span class="o">)</span>
       <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
   <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
   <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
@@ -2341,6 +2455,7 @@ kubectl-ice <span class="nb">env</span> <span class="nt">-l</span> <span class="
         <div class="language-shell highlighter-rouge">
   <div class="highlight">
     <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--color</span> string                   Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none <span class="o">(</span>overrides <span class="nb">env </span>variable ICE_COLOUR<span class="o">)</span>
       <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
   <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
       <span class="nt">--id</span>                             Show running containers <span class="nb">id</span>
@@ -2438,6 +2553,7 @@ kubectl-ice image <span class="nt">-l</span> <span class="s2">"app in (web,mail)
         <div class="language-shell highlighter-rouge">
   <div class="highlight">
     <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--color</span> string                   Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none <span class="o">(</span>overrides <span class="nb">env </span>variable ICE_COLOUR<span class="o">)</span>
       <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
   <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
   <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
@@ -2522,6 +2638,7 @@ kubectl-ice ip <span class="nt">-l</span> <span class="s2">"app in (web,mail)"</
         <div class="language-shell highlighter-rouge">
   <div class="highlight">
     <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--color</span> string                   Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none <span class="o">(</span>overrides <span class="nb">env </span>variable ICE_COLOUR<span class="o">)</span>
       <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
   <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
   <span class="nt">-i</span>, <span class="nt">--include-init</span>                   include init container<span class="o">(</span>s<span class="o">)</span> <span class="k">in </span>the output, by default init containers are hidden
@@ -2622,6 +2739,7 @@ kubectl-ice memory <span class="nt">-l</span> <span class="s2">"app in (web,mail
         <div class="language-shell highlighter-rouge">
   <div class="highlight">
     <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--color</span> string                   Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none <span class="o">(</span>overrides <span class="nb">env </span>variable ICE_COLOUR<span class="o">)</span>
       <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
   <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
   <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
@@ -2718,6 +2836,7 @@ kubectl-ice ports <span class="nt">-l</span> <span class="s2">"app in (web,mail)
         <div class="language-shell highlighter-rouge">
   <div class="highlight">
     <pre class="highlight"><code>      <span class="nt">--annotation</span> string              Show the selected annotation as a column
+      <span class="nt">--color</span> string                   Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none <span class="o">(</span>overrides <span class="nb">env </span>variable ICE_COLOUR<span class="o">)</span>
       <span class="nt">--columns</span> string                 list of column names to show <span class="k">in </span>the table output, all other columns are hidden
   <span class="nt">-f</span>, <span class="nt">--filename</span> string                <span class="nb">read </span>pod information from this yaml file instead
   <span class="nt">-m</span>, <span class="nt">--match</span> string                   Filters out results, comma seperated list of COLUMN OP VALUE, where OP can be one of <span class="o">==</span>,&lt;,&gt;,&lt;<span class="o">=</span>,&gt;<span class="o">=</span> and <span class="o">!=</span> 
