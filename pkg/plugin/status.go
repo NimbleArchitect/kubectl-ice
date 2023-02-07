@@ -94,6 +94,7 @@ func Status(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args [
 
 	table := Table{}
 	table.ColourOutput = commonFlagList.outputAsColour
+	table.CustomColours = commonFlagList.useTheseColours
 
 	builder.Table = &table
 	log.Debug("commonFlagList.showTreeView =", commonFlagList.showTreeView)
@@ -203,20 +204,20 @@ func (s *status) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, er
 	// rowOut[10] // message
 
 	rowOut[0].text = "true"
-	rowOut[0].colour = [2]int{colourOk, colourModOk}
+	rowOut[0].colour = colourOk
 	rowOut[1].text = "true"
-	rowOut[1].colour = [2]int{colourOk, colourModOk}
+	rowOut[1].colour = colourOk
 
 	// loop through each row in podTotals and add the columns in each row
 	for _, r := range rows {
 		if r[0].text == "false" {
 			// ready = false
 			rowOut[0].text = "false" // ready
-			rowOut[0].colour = [2]int{colourBad, colourModBad}
+			rowOut[0].colour = colourBad
 		}
 		if r[1].text == "false" {
 			rowOut[1].text = "false" // started
-			rowOut[1].colour = [2]int{colourBad, colourModBad}
+			rowOut[1].colour = colourBad
 		}
 		rowOut[2].number += r[2].number // restarts
 
@@ -232,7 +233,7 @@ func (s *status) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, er
 			rowOut[3].text = string(info.Data.pod.Status.Phase) // state
 		} else {
 			rowOut[3].text = "Terminating" // state
-			rowOut[3].colour = [2]int{colourWarn, colourModWarn}
+			rowOut[3].colour = colourWarn
 		}
 		rowOut[4].text = info.Data.pod.Status.Reason                             // reason
 		rowOut[8].text = info.Data.pod.CreationTimestamp.Format(timestampFormat) // timestamp
@@ -277,7 +278,7 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 		message = state.Waiting.Message
 		// waiting state dosent have a start time so we skip setting the age variable, used further down
 		skipAgeCalculation = true
-		colourcode = [2]int{colourWarn, colourModWarn}
+		colourcode = colourWarn
 	}
 
 	if state.Terminated != nil {
@@ -292,9 +293,9 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 		message = state.Terminated.Message
 
 		if rawExitCode == 0 {
-			colourcode = [2]int{colourOk, colourModOk}
+			colourcode = colourOk
 		} else {
-			colourcode = [2]int{colourBad, colourModBad}
+			colourcode = colourBad
 		}
 	}
 
@@ -302,7 +303,7 @@ func (s *status) BuildContainerStatus(container v1.ContainerStatus, info Builder
 		strState = "Running"
 		startedAt = state.Running.StartedAt.Format(timestampFormat)
 		startTime = state.Running.StartedAt.Time
-		colourcode = [2]int{colourOk, colourModOk}
+		colourcode = colourOk
 	}
 
 	if container.Started != nil {

@@ -34,14 +34,16 @@ type commonFlags struct {
 	annotationPodName  string
 	showColumnByName   string // list of column names to show, overrides other hidden columns
 	outputAsColour     int    // which coloring type do we use when displaying columns
+	useTheseColours    [][2]int
 }
 
 const (
-	COLOUR_NONE    = 0
-	COLOUR_ERRORS  = 1
-	COLOUR_COLUMNS = 2
-	COLOUR_MIX     = 3
-	COLOUR_CUSTOM  = 4
+	COLOUR_NONE      = 0
+	COLOUR_ERRORS    = 1
+	COLOUR_COLUMNS   = 2
+	COLOUR_MIX       = 3
+	COLOUR_CUSTOM    = 4
+	COLOUR_CUSTOMMIX = 5
 )
 
 func InitSubCommands(rootCmd *cobra.Command) {
@@ -390,7 +392,7 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().StringP("annotation", "", "", `Show the selected annotation as a column`)
 	cmdObj.Flags().StringP("filename", "f", "", `read pod information from this yaml file instead`)
 	cmdObj.Flags().StringP("columns", "", "", `list of column names to show in the table output, all other columns are hidden`)
-	cmdObj.Flags().StringP("color", "", "", `Colour columns in the table output. string can be one of: columns, errors, mix, none`)
+	cmdObj.Flags().StringP("color", "", "", `Add some much needed colour to the table output. string can be one of: columns, custom, errors, mix and none (overrides env variable ICE_COLOUR)`)
 }
 
 func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
@@ -562,7 +564,10 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 
 	if len(colourOut) > 0 {
 		// we use a switch to match --colour flag so I can expand in future
-		switch strings.ToLower(colourOut) {
+		colourEnv := strings.ToLower(colourOut)
+		colourSet := strings.Split(colourEnv, ";")
+
+		switch strings.ToLower(colourSet[0]) {
 		case "mix":
 			f.outputAsColour = COLOUR_MIX
 		case "columns":
@@ -571,9 +576,15 @@ func processCommonFlags(cmd *cobra.Command) (commonFlags, error) {
 			f.outputAsColour = COLOUR_ERRORS
 		case "none":
 			f.outputAsColour = COLOUR_NONE
+		case "custom":
+			// f.outputAsColour = COLOUR_CUSTOM
+			f.useTheseColours, f.outputAsColour, err = getColourSetFromString(colourSet[1:])
+			if err != nil {
+				return commonFlags{}, err
+			}
 
 		default:
-			return commonFlags{}, errors.New("unknown colour type only columns, errors, mix and none are supported")
+			return commonFlags{}, errors.New("unknown colour type only columns, custom, errors, mix and none are supported")
 		}
 	}
 

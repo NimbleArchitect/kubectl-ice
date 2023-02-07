@@ -39,6 +39,7 @@ type Table struct {
 	placeHolder   map[int][]Cell
 	placeHolderID int
 	ColourOutput  int
+	CustomColours [][2]int
 }
 
 // SetHeader sets the header row to the specified array of strings
@@ -178,18 +179,41 @@ func (t *Table) Print() {
 	var cellcolour [2]int
 	var withColour bool
 	var visibleColumns int
+
 	headLine := ""
 	colourArray := make([][2]int, t.headCount)
 
-	if t.ColourOutput != COLOUR_NONE {
+	switch t.ColourOutput {
+	case COLOUR_NONE:
+		withColour = false
+	case COLOUR_CUSTOMMIX:
+		fallthrough
+	case COLOUR_CUSTOM:
+		withColour = true
+		maxColours := len(t.CustomColours)
+		for i := 0; i < t.headCount; i++ {
+			colourCode := int(math.Mod(float64(i), float64(maxColours)))
+			colourArray[i][0] = t.CustomColours[colourCode][0] // colour
+			colourArray[i][1] = t.CustomColours[colourCode][1] // colour modifier
+		}
+	default:
 		withColour = true
 
-		maxColours := 7
+		// generate the colour numbers for the default colour wheel, the colour set is repeated if there are more heades than colours
+		maxColours := 14
 		modFlip := 0
 
 		for i := 0; i < t.headCount; i++ {
 			colourCode := int(math.Mod(float64(i), float64(maxColours)))
-			colourArray[i][0] = colourCode + 30
+			if colourCode < 6 {
+				// we start at 31 and increase for 6 colours this allow us to excclude black and light gray
+				colourArray[i][0] = colourCode + 31
+			} else {
+				// the second set covers the dark variations of the colours
+				colourArray[i][0] = colourCode + 84
+			}
+
+			// we flip the text to bold after every colour run
 			colourArray[i][1] = modFlip
 
 			if colourCode >= maxColours-1 {
@@ -219,7 +243,7 @@ func (t *Table) Print() {
 			word = "-"
 		}
 
-		if t.ColourOutput == COLOUR_MIX || t.ColourOutput == COLOUR_COLUMNS {
+		if t.ColourOutput != COLOUR_NONE && t.ColourOutput != COLOUR_ERRORS {
 			word = fmt.Sprintf("\033[%d;%dm%s%s", cellcolour[1], cellcolour[0], word, colourEnd)
 		}
 		pad := strings.Repeat(" ", t.head[idx].columnLength-runelen)
@@ -257,7 +281,26 @@ func (t *Table) Print() {
 				continue
 			}
 
-			cellcolour := colourArray[visibleColumns]
+			if withColour { // if colour wanted
+				cellcolour = colourArray[visibleColumns] //set colour from wheel as default colour
+				switch t.ColourOutput {
+				case COLOUR_ERRORS:
+					// override if we should only show error colours
+					if cell.colour[0] != -1 {
+						cellcolour = cell.colour
+					} else {
+						cellcolour[0] = -1
+					}
+				case COLOUR_CUSTOMMIX:
+					fallthrough
+				case COLOUR_MIX:
+					// override if we should mix colours
+					if cell.colour[0] > 0 {
+						cellcolour = cell.colour
+					}
+				}
+			}
+
 			visibleColumns += 1
 
 			if len(cell.text) == 0 {
@@ -273,20 +316,9 @@ func (t *Table) Print() {
 			pad := strings.Repeat(" ", spaceCount)
 
 			// colour output has been set and the cell has data
-			if withColour {
-				if t.ColourOutput == COLOUR_MIX || t.ColourOutput == COLOUR_COLUMNS {
-					celltxt = fmt.Sprintf("\033[%d;%dm%s%s", cellcolour[1], cellcolour[0], origtxt, colourEnd)
-				}
-
-				// we check for errors last so it can overwrite the column colours when we are using the mix colour set
-				if cell.colour[0] > -1 && (t.ColourOutput == COLOUR_ERRORS || t.ColourOutput == COLOUR_MIX) {
-					// error colour set uses red/yellow/green for ok/warning/problem
-					if cell.colour[0] == 0 && t.ColourOutput == COLOUR_MIX {
-						celltxt = fmt.Sprintf("\033[%d;%dm%s%s", cellcolour[1], cellcolour[0], origtxt, colourEnd)
-					} else {
-						celltxt = fmt.Sprintf("\033[%d;%dm%s%s", cell.colour[1], cell.colour[0], origtxt, colourEnd)
-					}
-				}
+			if withColour && cellcolour[0] != -1 {
+				// so we add the colour codes and modifier
+				celltxt = fmt.Sprintf("\033[%d;%dm%s%s", cellcolour[1], cellcolour[0], origtxt, colourEnd)
 			}
 
 			line += fmt.Sprint(celltxt, pad)

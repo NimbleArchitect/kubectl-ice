@@ -1,8 +1,10 @@
 package plugin
 
 import (
+	"errors"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -10,12 +12,11 @@ import (
 
 const colourEnd = "\033[0m"
 const colourNone = -1
-const colourBad = 31
-const colourModBad = 0
-const colourOk = 32
-const colourModOk = 0
-const colourWarn = 33
-const colourModWarn = 0
+
+// [0] = colour, [1] = modifier // bold,flashing,underline, etc
+var colourBad = [2]int{31, 0}
+var colourOk = [2]int{32, 0}
+var colourWarn = [2]int{33, 0}
 
 // always returns false if the flagList.container is empty as we expect to show all containers
 // returns true if we dont have a match
@@ -137,27 +138,115 @@ func portAsString(port intstr.IntOrString) string {
 	return ""
 }
 
+// setColourValue set the colour by value, currently 0-74=good, 75-89=warning, 76-100=bad
 func setColourValue(value int) [2]int {
 	var colour [2]int
 
-	colour = [2]int{colourOk, colourModOk}
+	colour = colourOk
 	if value > 90 {
-		colour = [2]int{colourBad, colourModBad}
+		colour = colourBad
 	} else if value > 75 {
-		colour = [2]int{colourWarn, colourModWarn}
+		colour = colourWarn
 	}
 
 	return colour
 }
 
+// setColourBoolean set the colour form bool currently: true=good, false=bad
 func setColourBoolean(value bool) [2]int {
 	var colour [2]int
 
 	if value {
-		colour = [2]int{colourOk, colourModOk}
+		colour = colourOk
 	} else {
-		colour = [2]int{colourBad, colourModBad}
+		colour = colourBad
 	}
 
 	return colour
+}
+
+// splitColourString decodes a given colour string item (0.0 or x0.0) into its component parts
+//
+//	returns state srting (g, w, b) if found, colour, modifier and error state
+func splitColourString(colour string) (string, int, int, error) {
+	var colourCode int
+	var colourMod int
+
+	log := logger{location: "splitColourString"}
+	log.Debug("Start")
+
+	rawColour := colour
+	rawColourArray := strings.Split(rawColour, "")
+
+	prefixChar := rawColourArray[0]
+
+	_, err := strconv.Atoi(prefixChar)
+	if err == nil {
+		// we only have a number.number to deal with
+		prefixChar = ""
+	} else {
+		colourArray := rawColourArray[1:len(rawColourArray)]
+		rawColour = strings.Join(colourArray, "")
+	}
+
+	// we only have a number.number to deal with
+	rawColourString := strings.Split(rawColour, ".")
+
+	colourMod, err = strconv.Atoi(rawColourString[0])
+	if err != nil {
+		return "", 0, 0, errors.New("invalid custom colour modifier")
+	}
+	colourCode, err = strconv.Atoi(rawColourString[1])
+	if err != nil {
+		return "", 0, 0, errors.New("invalid custom colour")
+	}
+
+	return prefixChar, colourCode, colourMod, nil
+}
+
+// getColourSetFromString splits the colour string into colour parts, seperated by ;
+//
+//	the colours for good, warning and bad are also set when found
+//	colourset is set to COLOUR_CUSTOM by default, if g, w or b is found in the colour then COLOUR_CUSTOMMIX is returned instead
+//	returns the colours as an array[x][2], colourset and error state
+func getColourSetFromString(colours []string) ([][2]int, int, error) {
+	var colourArray [][2]int
+	colourset := COLOUR_CUSTOM
+
+	log := logger{location: "getColourSetFromString"}
+	log.Debug("Start")
+
+	for _, v := range colours {
+		if len(v) == 0 {
+			continue
+		}
+		if len(v) <= 3 {
+			return [][2]int{}, COLOUR_NONE, errors.New("invalid custom colour detected")
+		}
+
+		prefix, code, mod, err := splitColourString(v)
+		if err != nil {
+			return [][2]int{}, COLOUR_NONE, err
+		}
+
+		switch prefix {
+		case "g": // good colour code
+			colourOk = [2]int{code, mod}
+			colourset = COLOUR_CUSTOMMIX
+		case "w": // warning colour code
+			colourWarn = [2]int{code, mod}
+			colourset = COLOUR_CUSTOMMIX
+		case "b": // bad colour code
+			colourBad = [2]int{code, mod}
+			colourset = COLOUR_CUSTOMMIX
+		case "":
+			colourCode := [2]int{code, mod}
+			colourArray = append(colourArray, colourCode)
+		}
+	}
+
+	if len(colourArray) == 0 {
+		colourArray = append(colourArray, [2]int{-1, 0})
+	}
+	return colourArray, colourset, nil
 }
