@@ -11,7 +11,7 @@ import (
 
 var probesShort = "Shows details of configured startup, readiness and liveness probes of each container"
 
-var probesDescription = ` Prints details of the currently configured startup, liveness and rediness probes for each 
+var probesDescription = ` Prints details of the currently configured startup, liveness and readiness probes for each 
 container. Details like the delay timeout and action are printed along with the configured probe
 type. If no name is specified the container probe details of all pods in the current namespace
 are shown.`
@@ -185,7 +185,7 @@ func (s *probes) buildProbeList(container v1.Container) map[string][]probeAction
 		probes["readiness"] = s.buildProbeAction("readiness", container.ReadinessProbe)
 	}
 	if container.StartupProbe != nil {
-		probes["startup"] = s.buildProbeAction("liveness", container.StartupProbe)
+		probes["startup"] = s.buildProbeAction("startup", container.StartupProbe)
 	}
 
 	return probes
