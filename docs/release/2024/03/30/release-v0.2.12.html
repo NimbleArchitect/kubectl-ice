@@ -3,21 +3,22 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>About | kubectl-ice</title>
+<title>New Release V0.2.12 | kubectl-ice</title>
 <meta name="generator" content="Jekyll v3.9.5" />
-<meta property="og:title" content="About" />
+<meta property="og:title" content="New Release V0.2.12" />
 <meta name="author" content="NimbleArchitect" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="kubectl-ice cleanly lists all containers in kubernetes pods including init containers you can view running kubernetes information about the multi-container pods to assist in troubleshooting and information gathering" />
-<meta property="og:description" content="kubectl-ice cleanly lists all containers in kubernetes pods including init containers you can view running kubernetes information about the multi-container pods to assist in troubleshooting and information gathering" />
-<link rel="canonical" href="https://nimblearchitect.github.io/kubectl-ice/about/" />
-<meta property="og:url" content="https://nimblearchitect.github.io/kubectl-ice/about/" />
+<meta name="description" content="Kubectl-ice v0.2.12 has been released!" />
+<meta property="og:description" content="Kubectl-ice v0.2.12 has been released!" />
+<link rel="canonical" href="https://nimblearchitect.github.io/kubectl-ice/release/2024/03/30/release-v0.2.12.html" />
+<meta property="og:url" content="https://nimblearchitect.github.io/kubectl-ice/release/2024/03/30/release-v0.2.12.html" />
 <meta property="og:site_name" content="kubectl-ice" />
-<meta property="og:type" content="website" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-03-30T11:57:28+00:00" />
 <meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="About" />
+<meta property="twitter:title" content="New Release V0.2.12" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","author":{"@type":"Person","name":"NimbleArchitect"},"description":"kubectl-ice cleanly lists all containers in kubernetes pods including init containers you can view running kubernetes information about the multi-container pods to assist in troubleshooting and information gathering","headline":"About","name":"kubectl-ice","url":"https://nimblearchitect.github.io/kubectl-ice/about/"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"NimbleArchitect"},"dateModified":"2024-03-30T11:57:28+00:00","datePublished":"2024-03-30T11:57:28+00:00","description":"Kubectl-ice v0.2.12 has been released!","headline":"New Release V0.2.12","mainEntityOfPage":{"@type":"WebPage","@id":"https://nimblearchitect.github.io/kubectl-ice/release/2024/03/30/release-v0.2.12.html"},"url":"https://nimblearchitect.github.io/kubectl-ice/release/2024/03/30/release-v0.2.12.html"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/kubectl-ice/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://nimblearchitect.github.io/kubectl-ice/feed.xml" title="kubectl-ice" /><script>
 if(!(window.doNotTrack === "1" || navigator.doNotTrack === "1" || navigator.doNotTrack === "yes" || navigator.msDoNotTrack === "1")) {
@@ -49,40 +50,43 @@ if(!(window.doNotTrack === "1" || navigator.doNotTrack === "1" || navigator.doNo
 </header>
 <main class="page-content" aria-label="Content">
       <div class="wrapper">
-        <article class="post">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
-    <h1 class="post-title">About</h1>
+    <h1 class="post-title p-name" itemprop="name headline">New Release V0.2.12</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-03-30T11:57:28+00:00" itemprop="datePublished">Mar 30, 2024
+      </time></p>
   </header>
 
-  <div class="post-content">
-    <h3 id="history">History</h3>
-<p>ice originally started off as a quick one liner that went something like the following:</p>
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Kubectl-ice v0.2.12 has been released!</p>
 
-<p><code class="language-plaintext highlighter-rouge">kubectl get pods -o jsonpath='{range .status.containerStatuses[*]}{@.name}{" "}{@.restartCount}{"\n"}{end}' trial-nginx-ingress-559d574cd5-nv4gx</code></p>
+<p>Quite a small release this time, the bigest change is with the ports and IP sub commands. Basically I have now merged the IP command into the Ports command, this meant grabbing the ip address from the pod information and adding a new ip column to the ports command, the ip address is hidden by default and can be made visible via the <code class="language-plaintext highlighter-rouge">--show-ip flag</code>, these changes meant that that I could merge the IP command in and adjust it to only show the pod name and IP address as a result we are now able to use the <code class="language-plaintext highlighter-rouge">--match</code> flag to match to show only specific rows, this also works in the ports command, see examples below.</p>
 
-<p>the above allowed me to list the container names and their restart count, meaning I could easily field the “which container is restating” questions and to be honest this worked well (for a few days) until I got bored of the copy pasting and created an alias instead, then when I was asked “what’s the current memory limit for container xyz in pod abc?” the alias was accompanied with another, that also went something like:</p>
+<h3 id="examples">Examples</h3>
+<p>show only pods that have an ip address starting with 172</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl-ice ip <span class="nt">--match</span> <span class="s2">"ip=172.*"</span>
+</code></pre></div></div>
 
-<p><code class="language-plaintext highlighter-rouge">kubectl get pods -o jsonpath='{range .spec.containers[*]}{@.name}{" "}{@.resources.limits.cpu}{"\n"}{end}' mypod-2mhhp</code></p>
+<p>show pods with an ip address that ends in .7</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl-ice ip <span class="nt">--match</span> <span class="s2">"ip=*.7"</span>
+</code></pre></div></div>
 
-<p>this soon turned into a bash script (which worked, I might add) but I kept hitting issues when trying to list containers from multiple pods or when listing the container restart count of all pods in a namespace. This was to become the foundations of kubectl-ice, a python proof of concept quickly gave way to the go program we have now, which allow listing single containers across multiple pods over multiple namespaces (the bash scripts would neve have coped)</p>
+<p>show all pods with an ip that contains an octet of 17 and a port number of 80</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl-ice ports <span class="nt">--match</span> <span class="s2">"ip=*.17.*,port=80"</span> <span class="nt">--show-ip</span>
+</code></pre></div></div>
 
-<h3 id="today">Today</h3>
-<p>kubectl-ice now allows you to view much more that just the restart count of a container are the memory limit that has been set. With it you can also view:</p>
+<p>we can also exclude using the same process (notice != in the command below),
+only show pods with port 80 but not if they have a 7 in the ip address</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl-ice ports <span class="nt">--match</span> <span class="s2">"ip!=7*,port=80"</span> <span class="nt">--show-ip</span>
+</code></pre></div></div>
 
-<ul>
-  <li>volume information</li>
-  <li>memory/cpu usage as a percent of the limits and requests</li>
-  <li>container status information</li>
-  <li>Unix capabilities and plenty more.</li>
-</ul>
+<p>as usual full details are in the documentation</p>
 
-<p>If your looking for a tree view similar to the DOS/Unix tree command ice can do that. If you want to sort the cpu table by the used column, that can also be done, or maybe you would prefer to view a specific node/pod label as a column in the output then guess what… that can be done as well. Oh wait, I hear you say. I bet it can’t read yaml files! At which point I reply with a smug grin “yes it can! it can even read yaml from stdin so you can run commands like <code class="language-plaintext highlighter-rouge">helm template mychart | kubectl-ice image</code> to get a list of images that are used with mychart”</p>
+<p>NimbleArchitect</p>
 
-<p>In short kubectl-ice is the goto tool when you want quick cli based access to advanced container information along with some nice added bells and whistles.</p>
-
-  </div>
-
+  </div><a class="u-url" href="/kubectl-ice/release/2024/03/30/release-v0.2.12.html" hidden></a>
 </article>
 
       </div>
