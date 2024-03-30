@@ -340,3 +340,7 @@ func (s *volumes) mountsBuildRow(mountInfo v1.VolumeDevice) []Cell {
 
 	return cellList
 }
+
+func (s *volumes) BuildPodRow(pod v1.Pod, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}

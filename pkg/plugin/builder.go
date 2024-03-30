@@ -14,6 +14,7 @@ type Looper interface {
 	BuildContainerSpec(container v1.Container, info BuilderInformation) ([][]Cell, error)
 	BuildEphemeralContainerSpec(container v1.EphemeralContainer, info BuilderInformation) ([][]Cell, error)
 	BuildContainerStatus(container v1.ContainerStatus, info BuilderInformation) ([][]Cell, error)
+	BuildPodRow(pod v1.Pod, info BuilderInformation) ([][]Cell, error)
 	Headers() []string
 	HideColumns(info BuilderInformation) []int
 }
@@ -36,6 +37,7 @@ type RowBuilder struct {
 	ShowInitContainers bool
 	ShowContainerType  bool
 	ShowNodeTree       bool                  // show the tree view with the nodes at the root level rather than just the resource sets at root
+	DontListContainers bool                  // dont loop through containers, only the main pod
 	FilterList         map[string]matchValue // used to filter out rows from the table during Print function
 	CalcFiltered       bool                  // the filterd out rows are included in the branch calculations
 	DefaultHeaderLen   int
@@ -344,7 +346,7 @@ func (b *RowBuilder) setValuesAnnotationLabel(pod v1.Pod) {
 }
 
 func (b *RowBuilder) populateAnnotationsLabels(podList []v1.Pod) error {
-	log := logger{location: "RowBuilder:BuildContainerTable"}
+	log := logger{location: "RowBuilder:populateAnnotationsLabels"}
 	log.Debug("Start")
 	//                          type       kind       pod        label  value
 	b.annotationLabel = make(map[string]map[string]map[string]map[string]string)
@@ -567,6 +569,9 @@ func (b *RowBuilder) setVisibleColumns(info *BuilderInformation) {
 		b.Table.HideColumn(3)
 	}
 
+	if b.DontListContainers {
+		b.Table.HideColumn(4)
+	}
 }
 
 // PodLoop given a pod we loop over all containers adding to the table as we go
@@ -577,6 +582,26 @@ func (b *RowBuilder) podLoop(loop Looper, info BuilderInformation, pod v1.Pod, i
 
 	log := logger{location: "RowBuilder:PodLoop"}
 	log.Debug("Start")
+
+	if b.DontListContainers {
+		log.Debug("skipping containers")
+		info.ContainerType = TypeIDPod
+		info.TypeName = TypeNamePod
+
+		allRows, err := loop.BuildPodRow(pod, info)
+		if err != nil {
+			return [][]Cell{}, err
+		}
+		for _, row := range allRows {
+			rowsOut := b.makeFullRow(&info, indentLevel, row)
+			if !b.matchShouldExclude(rowsOut) {
+				b.Table.AddRow(rowsOut...)
+			}
+		}
+		podRowsOut = append(podRowsOut, allRows...)
+
+		return podRowsOut, nil
+	}
 
 	if b.ShowInitContainers {
 		log.Debug("loop init Container")
@@ -795,6 +820,10 @@ func (b *RowBuilder) getDefaultHead(info *BuilderInformation) []string {
 		headList = []string{
 			"T", "NAMESPACE", "NODE",
 		}
+		// } else if b.DontListContainers {
+		// 	headList = []string{
+		// 		"T", "NAMESPACE", "NODE", "PODNAME",
+		// 	}
 	} else {
 		headList = []string{
 			"T", "NAMESPACE", "NODE", "PODNAME", "CONTAINER",

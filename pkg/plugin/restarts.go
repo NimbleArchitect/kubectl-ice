@@ -150,3 +150,7 @@ func (s restarts) restartsBuildRow(info BuilderInformation, restartCount int32) 
 
 	return cellList
 }
+
+func (s restarts) BuildPodRow(pod v1.Pod, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}

@@ -146,3 +146,7 @@ func (s *commands) commandsBuildRow(cmdLine commandLine, info BuilderInformation
 
 	return cellList
 }
+
+func (s *commands) BuildPodRow(pod v1.Pod, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}

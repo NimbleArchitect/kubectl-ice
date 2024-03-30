@@ -255,3 +255,7 @@ func (s *probes) buildProbeAction(name string, probe *v1.Probe) []probeAction {
 
 	return probeList
 }
+
+func (s *probes) BuildPodRow(pod v1.Pod, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}

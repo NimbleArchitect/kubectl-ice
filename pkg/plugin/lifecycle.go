@@ -211,3 +211,7 @@ func (s *lifecycle) buildLifecycleAction(lifecycle *v1.LifecycleHandler) lifecyc
 
 	return lifecycleAction{}
 }
+
+func (s *lifecycle) BuildPodRow(pod v1.Pod, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}

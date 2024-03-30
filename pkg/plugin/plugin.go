@@ -50,6 +50,9 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	var includeInitShort string = "include init container(s) in the output, by default init containers are hidden"
 	var odditiesShort string = "show only the outlier rows that dont fall within the computed range"
 	var sizeShort string = "allows conversion to the selected size rather then the default megabyte output"
+	var treeShort string = "Display tree like view instead of the standard list"
+	var nodetreeShort string = "Displays the tree with the nodes as the root"
+	var showIPShort string = "Show the pods IP address column"
 	// var treeShort string = "Display tree like view instead of the standard list"
 
 	log := logger{location: "InitSubCommands"}
@@ -75,6 +78,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdCapabilities.Flags())
+	cmdCapabilities.Flags().BoolP("tree", "t", false, treeShort)
+	cmdCapabilities.Flags().BoolP("node-tree", "", false, nodetreeShort)
 	addCommonFlags(cmdCapabilities)
 	rootCmd.AddCommand(cmdCapabilities)
 
@@ -95,6 +100,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdCommands.Flags())
+	cmdCommands.Flags().BoolP("tree", "t", false, treeShort)
+	cmdCommands.Flags().BoolP("node-tree", "", false, nodetreeShort)
 	addCommonFlags(cmdCommands)
 	rootCmd.AddCommand(cmdCommands)
 
@@ -117,6 +124,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	cmdCPU.Flags().BoolP("include-init", "i", false, includeInitShort)
 	cmdCPU.Flags().BoolP("oddities", "", false, odditiesShort)
 	cmdCPU.Flags().BoolP("raw", "r", false, "show raw values")
+	cmdCPU.Flags().BoolP("tree", "t", false, treeShort)
+	cmdCPU.Flags().BoolP("node-tree", "", false, nodetreeShort)
 	addCommonFlags(cmdCPU)
 	rootCmd.AddCommand(cmdCPU)
 
@@ -138,6 +147,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	KubernetesConfigFlags.AddFlags(cmdEnvironment.Flags())
 	cmdEnvironment.Flags().BoolP("translate", "", false, "read the configmap show its values")
+	cmdEnvironment.Flags().BoolP("tree", "t", false, treeShort)
+	cmdEnvironment.Flags().BoolP("node-tree", "", false, nodetreeShort)
 	addCommonFlags(cmdEnvironment)
 	rootCmd.AddCommand(cmdEnvironment)
 
@@ -149,7 +160,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		Example: fmt.Sprintf(ipExample, rootCmd.CommandPath()),
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := IP(cmd, KubernetesConfigFlags, args); err != nil {
+			if err := Ports(cmd, KubernetesConfigFlags, args, true); err != nil {
 				return err
 			}
 
@@ -178,6 +189,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	KubernetesConfigFlags.AddFlags(cmdImage.Flags())
 	cmdImage.Flags().BoolP("id", "", false, "Show running containers id")
+	cmdImage.Flags().BoolP("tree", "t", false, treeShort)
+	cmdImage.Flags().BoolP("node-tree", "", false, nodetreeShort)
 	addCommonFlags(cmdImage)
 	rootCmd.AddCommand(cmdImage)
 
@@ -198,6 +211,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdLifecycle.Flags())
+	cmdLifecycle.Flags().BoolP("tree", "t", false, treeShort)
+	cmdLifecycle.Flags().BoolP("node-tree", "", false, nodetreeShort)
 	addCommonFlags(cmdLifecycle)
 	rootCmd.AddCommand(cmdLifecycle)
 
@@ -223,6 +238,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	cmdMemory.Flags().BoolP("oddities", "", false, odditiesShort)
 	cmdMemory.Flags().BoolP("raw", "r", false, "show raw values")
 	cmdMemory.Flags().String("size", "Mi", sizeShort)
+	cmdMemory.Flags().BoolP("tree", "t", false, treeShort)
+	cmdMemory.Flags().BoolP("node-tree", "", false, nodetreeShort)
 	addCommonFlags(cmdMemory)
 	rootCmd.AddCommand(cmdMemory)
 
@@ -235,7 +252,7 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		Aliases: []string{"port", "po"},
 		// SuggestFor: []string{""},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := Ports(cmd, KubernetesConfigFlags, args); err != nil {
+			if err := Ports(cmd, KubernetesConfigFlags, args, false); err != nil {
 				return err
 			}
 
@@ -243,6 +260,9 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdPorts.Flags())
+	cmdPorts.Flags().BoolP("tree", "t", false, treeShort)
+	cmdPorts.Flags().BoolP("node-tree", "", false, nodetreeShort)
+	cmdPorts.Flags().BoolP("show-ip", "", false, showIPShort)
 	addCommonFlags(cmdPorts)
 	rootCmd.AddCommand(cmdPorts)
 
@@ -263,6 +283,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 		},
 	}
 	KubernetesConfigFlags.AddFlags(cmdProbes.Flags())
+	cmdProbes.Flags().BoolP("tree", "t", false, treeShort)
+	cmdProbes.Flags().BoolP("node-tree", "", false, nodetreeShort)
 	addCommonFlags(cmdProbes)
 	rootCmd.AddCommand(cmdProbes)
 
@@ -285,6 +307,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	KubernetesConfigFlags.AddFlags(cmdRestart.Flags())
 	cmdRestart.Flags().BoolP("oddities", "", false, odditiesShort)
+	cmdRestart.Flags().BoolP("tree", "t", false, treeShort)
+	cmdRestart.Flags().BoolP("node-tree", "", false, nodetreeShort)
 	addCommonFlags(cmdRestart)
 	rootCmd.AddCommand(cmdRestart)
 
@@ -306,6 +330,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	KubernetesConfigFlags.AddFlags(cmdSecurity.Flags())
 	cmdSecurity.Flags().BoolP("selinux", "", false, "show the SELinux context thats applied to the containers")
+	cmdSecurity.Flags().BoolP("tree", "t", false, treeShort)
+	cmdSecurity.Flags().BoolP("node-tree", "", false, nodetreeShort)
 	addCommonFlags(cmdSecurity)
 	rootCmd.AddCommand(cmdSecurity)
 
@@ -333,6 +359,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	cmdStatus.Flags().BoolP("oddities", "", false, odditiesShort)
 	cmdStatus.Flags().BoolP("previous", "p", false, "Show previous state")
 	cmdStatus.Flags().BoolP("id", "", false, "Show running containers id")
+	cmdStatus.Flags().BoolP("tree", "t", false, treeShort)
+	cmdStatus.Flags().BoolP("node-tree", "", false, nodetreeShort)
 	// TODO: check if I can add labels for service/replicaset/configmap etc.
 	addCommonFlags(cmdStatus)
 	rootCmd.AddCommand(cmdStatus)
@@ -366,6 +394,8 @@ func InitSubCommands(rootCmd *cobra.Command) {
 	}
 	KubernetesConfigFlags.AddFlags(cmdVolume.Flags())
 	cmdVolume.Flags().BoolP("device", "d", false, "show raw block device mappings within a container")
+	cmdVolume.Flags().BoolP("tree", "t", false, treeShort)
+	cmdVolume.Flags().BoolP("node-tree", "", false, nodetreeShort)
 	addCommonFlags(cmdVolume)
 	rootCmd.AddCommand(cmdVolume)
 
@@ -385,8 +415,6 @@ func addCommonFlags(cmdObj *cobra.Command) {
 	cmdObj.Flags().BoolP("show-node", "", false, `Show the node name column`)
 	cmdObj.Flags().BoolP("show-type", "T", false, `Show the container type column, where:
     I=init container, C=container, E=ephemerial container, P=Pod, D=Deployment, R=ReplicaSet, A=DaemonSet, S=StatefulSet, N=Node`)
-	cmdObj.Flags().BoolP("tree", "t", false, `Display tree like view instead of the standard list`)
-	cmdObj.Flags().BoolP("node-tree", "", false, `Displayes the tree with the nodes as the root`)
 	cmdObj.Flags().StringP("node-label", "", "", `Show the selected node label as a column`)
 	cmdObj.Flags().StringP("pod-label", "", "", `Show the selected pod label as a column`)
 	cmdObj.Flags().StringP("annotation", "", "", `Show the selected annotation as a column`)

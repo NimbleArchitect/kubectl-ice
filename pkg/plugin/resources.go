@@ -405,3 +405,7 @@ func (s *resource) podMetrics2Hashtable(stateList []v1beta1.PodMetrics) map[stri
 	}
 	return podState
 }
+
+func (s *resource) BuildPodRow(pod v1.Pod, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}

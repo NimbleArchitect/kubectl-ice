@@ -389,3 +389,7 @@ func (s *status) trimStatusMessage(message string, podName string, containerName
 	}
 	return strings.TrimSpace(newMessage)
 }
+
+func (s *status) BuildPodRow(pod v1.Pod, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}

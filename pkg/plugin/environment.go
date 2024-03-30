@@ -201,3 +201,7 @@ func (s *environment) buildEnvFromEphemeral(container v1.EphemeralContainer) []v
 	}
 	return container.Env
 }
+
+func (s *environment) BuildPodRow(pod v1.Pod, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}

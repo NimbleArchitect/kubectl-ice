@@ -286,3 +286,7 @@ func (s *security) seLinuxBuildRow(info BuilderInformation, csc *v1.SecurityCont
 
 	return cellList
 }
+
+func (s *security) BuildPodRow(pod v1.Pod, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}

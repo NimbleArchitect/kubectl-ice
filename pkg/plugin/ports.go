@@ -43,15 +43,33 @@ var portsExample = `  # List containers port info from pods
   # List container port info from all pods where the pod label app is either web or mail
   %[1]s ports -l "app in (web,mail)"`
 
-func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string) error {
+// Ports show the port infor for each container
+//
+//		runip - true = show ip details only
+//	          - false = show all port info except ip info
+func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []string, runip bool) error {
 
 	log := logger{location: "Ports"}
 	log.Debug("Start")
 
 	loopinfo := ports{}
 	builder := RowBuilder{}
-	builder.LoopSpec = true
+
+	if runip {
+		builder.DontListContainers = true
+		loopinfo.DontListContainers = builder.DontListContainers
+	}
+
+	if cmd.Flag("show-ip") != nil {
+		if cmd.Flag("show-ip").Value.String() == "true" {
+			log.Debug("loopinfo.ShowIPAddress = true")
+			loopinfo.ShowIPAddress = true
+		}
+	}
+
 	builder.ShowInitContainers = true
+	builder.LoopSpec = true
+
 	builder.PodName = args
 
 	connect := Connector{}
@@ -88,11 +106,13 @@ func Ports(cmd *cobra.Command, kubeFlags *genericclioptions.ConfigFlags, args []
 }
 
 type ports struct {
+	DontListContainers bool
+	ShowIPAddress      bool
 }
 
 func (s *ports) Headers() []string {
 	return []string{
-		"PORTNAME", "PORT", "PROTO", "HOSTPORT",
+		"PORTNAME", "PORT", "PROTO", "HOSTPORT", "IP",
 	}
 }
 
@@ -105,11 +125,19 @@ func (s *ports) BuildEphemeralContainerStatus(container v1.ContainerStatus, info
 }
 
 func (s *ports) HideColumns(info BuilderInformation) []int {
-	return []int{}
+	if s.ShowIPAddress {
+		return []int{}
+	}
+	if s.DontListContainers {
+		return []int{0, 1, 2, 3}
+	} else {
+		return []int{4}
+	}
 }
 
 func (s *ports) BuildBranch(info BuilderInformation, rows [][]Cell) ([]Cell, error) {
 	out := []Cell{
+		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),
 		NewCellText(""),
@@ -154,6 +182,19 @@ func (s *ports) portsBuildRow(info BuilderInformation, port v1.ContainerPort) []
 		NewCellInt(fmt.Sprintf("%d", port.ContainerPort), int64(port.ContainerPort)),
 		NewCellText(string(port.Protocol)),
 		hostPort,
+		NewCellText(info.Data.pod.Status.PodIP),
 	)
 	return cellList
+}
+
+func (s *ports) BuildPodRow(pod v1.Pod, info BuilderInformation) ([][]Cell, error) {
+	out := make([][]Cell, 1)
+	out[0] = append([]Cell{},
+		NewCellEmpty(),
+		NewCellEmpty(),
+		NewCellEmpty(),
+		NewCellEmpty(),
+		NewCellText(info.Data.pod.Status.PodIP),
+	)
+	return out, nil
 }

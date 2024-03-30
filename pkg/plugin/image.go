@@ -201,3 +201,7 @@ func (s *image) imageBuildRow(info BuilderInformation, imageName string, pullPol
 
 	return cellList
 }
+
+func (s *image) BuildPodRow(pod v1.Pod, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}

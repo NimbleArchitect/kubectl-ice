@@ -154,3 +154,7 @@ func (s *capabilities) capabilitiesBuildRow(securityContext *v1.SecurityContext,
 
 	return cellList
 }
+
+func (s *capabilities) BuildPodRow(pod v1.Pod, info BuilderInformation) ([][]Cell, error) {
+	return [][]Cell{}, nil
+}
