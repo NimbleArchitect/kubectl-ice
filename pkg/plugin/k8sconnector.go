@@ -220,10 +220,6 @@ func (c *Connector) GetNodes(nodeNameList []string) ([]v1.Node, error) {
 	selector := metav1.ListOptions{}
 
 	if len(nodeNameList) > 0 {
-		if len(c.Flags.labels) > 0 {
-			return []v1.Node{}, fmt.Errorf("error: you cannot specify a node name and a selector together")
-		}
-
 		// single node
 		for _, nodename := range nodeNameList {
 			node, err := c.clientSet.CoreV1().Nodes().Get(context.TODO(), nodename, metav1.GetOptions{})
